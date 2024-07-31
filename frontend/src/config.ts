@@ -5,4 +5,5 @@ export const config = {
     rootURL: import.meta.env.VITE_GOOGLE_OAUTH_ROOT_URL,
   },
   apiURL: import.meta.env.VITE_API_URL,
+  wsURL: import.meta.env.VITE_WS_URL,
 }

@@ -22,7 +22,6 @@ import {
 import { useState } from 'react'
 import { CreateRoom as TCreateRoom } from '@/types'
 import { useCreateRoom } from '@/hooks/mutations/useCreateRoom'
-import { setSourceMapsEnabled } from 'process'
 
 type Props = {
   setOpen: (open: boolean) => void

@@ -122,3 +122,16 @@ func (r *Repo) ListRooms(ctx context.Context) ([]*types.Room, error) {
 
 	return rooms, nil
 }
+
+func (r *Repo) ListRoom(ctx context.Context, roomID int) (*types.Room, error) {
+	query := `
+	  SELECT id, topic, max_participants, language, created_by 
+	  FROM rooms WHERE id = $1;
+	`
+	var room types.Room
+	err := r.pool.QueryRow(ctx, query, roomID).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Language, &room.CreatedBy)
+	if err != nil {
+		return nil, err
+	}
+	return &room, nil
+}

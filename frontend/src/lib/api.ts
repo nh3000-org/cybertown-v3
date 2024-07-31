@@ -1,6 +1,6 @@
 import { config } from "@/config"
 import { fetchWrapper } from "@/lib/fetchWrapper"
-import { CreateRoom, Room, User } from "@/types"
+import { CreateRoom, Room, RoomRes, User } from "@/types"
 
 export const api = {
   async me() {
@@ -26,9 +26,15 @@ export const api = {
     return data.roomID
   },
 
-  async listRooms() {
+  async getRooms() {
     const url = config.apiURL + "/rooms"
-    const data = await fetchWrapper<"rooms", Room[]>(url)
+    const data = await fetchWrapper<"rooms", RoomRes[]>(url)
     return data.rooms
+  },
+
+  async getRoom(roomID: string) {
+    const url = config.apiURL + `/rooms/${roomID}`
+    const data = await fetchWrapper<"room", Room>(url)
+    return data.room
   },
 }

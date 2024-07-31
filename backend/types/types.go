@@ -12,7 +12,7 @@ type User struct {
 }
 
 type Room struct {
-	ID              string `json:"id"`
+	ID              int    `json:"id"`
 	Topic           string `json:"topic"`
 	Language        string `json:"language"`
 	MaxParticipants int    `json:"maxParticipants"`
@@ -47,4 +47,9 @@ type CreateRoomRequest struct {
 	Topic           string `json:"topic"`
 	MaxParticipants int    `json:"maxParticipants"`
 	Language        string `json:"language"`
+}
+
+type RoomsResponse struct {
+	*Room
+	Users []*User `json:"users"`
 }

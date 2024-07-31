@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -126,14 +127,62 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 	})
 }
 
-func (app *application) listRoomsHandler(w http.ResponseWriter, _ *http.Request) {
+func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) {
 	rooms, err := app.repo.ListRooms(context.Background())
 	if err != nil {
 		serverError(w, err)
 		return
 	}
 
+	var res []*types.RoomsResponse
+	for _, room := range rooms {
+		roomRes := types.RoomsResponse{
+			Room:  room,
+			Users: make([]*types.User, 0),
+		}
+		if _, ok := ss.rooms[room.ID]; ok {
+			for conn := range ss.rooms[room.ID] {
+				if u, ok := ss.connUserMap[conn]; ok {
+					roomRes.Users = append(roomRes.Users, u)
+				}
+			}
+		}
+		res = append(res, &roomRes)
+	}
+
 	jsonResponse(w, http.StatusOK, map[string]any{
-		"rooms": rooms,
+		"rooms": res,
+	})
+}
+
+func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
+	roomID := r.PathValue("roomID")
+
+	id, err := strconv.Atoi(roomID)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	room, err := app.repo.ListRoom(context.Background(), id)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	roomRes := types.RoomsResponse{
+		Room:  room,
+		Users: make([]*types.User, 0),
+	}
+	if _, ok := ss.rooms[room.ID]; ok {
+		for conn := range ss.rooms[room.ID] {
+			if u, ok := ss.connUserMap[conn]; ok {
+				roomRes.Users = append(roomRes.Users, u)
+			}
+		}
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"room": roomRes,
 	})
 }
