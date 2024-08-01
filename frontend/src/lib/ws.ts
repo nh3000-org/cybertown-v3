@@ -1,11 +1,12 @@
 import { config } from "@/config";
-import { JoinRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
+import { JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
 import { queryClient } from "./utils";
 import { useRoomStore } from "@/stores/roomStore";
 
 class WS {
   private socket: WebSocket
   private static instance: WS
+  currentRoomID: string | null = null
 
   public static getInstance(): WS {
     if (!WS.instance) {
@@ -25,6 +26,7 @@ class WS {
     socket.onmessage = function(e: MessageEvent) {
       try {
         const event: SocketEvent = JSON.parse(e.data)
+        console.log("received event", event)
         switch (event.name) {
           case "JOINED_ROOM":
           case "LEFT_ROOM":
@@ -51,6 +53,18 @@ class WS {
       }
     }
     this.socket.send(JSON.stringify(event))
+    this.currentRoomID = roomID
+  }
+
+  leaveRoom(roomID: string) {
+    const event: LeaveRoomEvent = {
+      name: "LEAVE_ROOM",
+      data: {
+        roomID: Number(roomID),
+      }
+    }
+    this.socket.send(JSON.stringify(event))
+    this.currentRoomID = null
   }
 
   sendMessage(message: string, roomID: string) {

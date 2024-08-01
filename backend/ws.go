@@ -29,23 +29,12 @@ func (s *socketServer) accept(conn *websocket.Conn, user *types.User) {
 func (s *socketServer) close(conn *websocket.Conn, roomID int, user *types.User) {
 	delete(s.conns, conn)
 	delete(s.connUserMap, conn)
-
 	if _, ok := s.rooms[roomID]; ok {
 		delete(s.rooms[roomID], conn)
-
 		if user == nil {
 			return
 		}
-
-		for conn := range ss.conns {
-			utils.WriteEvent(conn, &types.Event{
-				Name: "LEFT_ROOM",
-				Data: map[string]any{
-					"roomID": roomID,
-					"user":   user,
-				},
-			})
-		}
+		ss.leaveRoom(roomID, conn, user)
 	}
 }
 
@@ -62,6 +51,21 @@ func (s *socketServer) joinRoom(roomID int, conn *websocket.Conn) {
 		s.rooms[roomID] = make(map[*websocket.Conn]struct{})
 	}
 	s.rooms[roomID][conn] = struct{}{}
+}
+
+func (s *socketServer) leaveRoom(roomID int, conn *websocket.Conn, user *types.User) {
+	if _, ok := s.rooms[roomID]; ok {
+		delete(s.rooms[roomID], conn)
+		for conn := range ss.conns {
+			utils.WriteEvent(conn, &types.Event{
+				Name: "LEFT_ROOM",
+				Data: map[string]any{
+					"roomID": roomID,
+					"user":   user,
+				},
+			})
+		}
+	}
 }
 
 func newSocketServer() *socketServer {
@@ -152,6 +156,12 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// is the user allowed to join?
+			if _, ok := ss.connUserMap[conn]; !ok {
+				log.Println("you need to be authenticated to join room")
+				return
+			}
+
 			// can this user send a message to this room?
 			// is the message is valid?
 			if !ss.isInRoom(data.RoomID, conn) {
@@ -169,6 +179,25 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 					},
 				})
 			}
+		case "LEAVE_ROOM":
+			var data types.LeaveRoom
+			err := json.Unmarshal(b, &data)
+			if err != nil {
+				log.Printf("failed to unmarshal LEAVE_ROOM data: %v\n", err)
+				return
+			}
+
+			// is the user allowed to join?
+			if _, ok := ss.connUserMap[conn]; !ok {
+				log.Println("you need to be authenticated to join room")
+				return
+			}
+
+			if !ss.isInRoom(data.RoomID, conn) {
+				return
+			}
+
+			ss.leaveRoom(roomID, conn, user)
 		}
 	}
 }

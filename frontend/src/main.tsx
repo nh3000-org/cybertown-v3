@@ -10,15 +10,22 @@ import {
 import { HomePage } from '@/pages/home'
 import { RoomPage } from '@/pages/room'
 import '@/lib/ws'
+import { RouteListener } from '@/components/RouteListener'
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomePage />
-  },
-  {
-    path: "/room/:roomID",
-    element: <RoomPage />,
+    element: <RouteListener />,
+    children: [
+      {
+        path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "/room/:roomID",
+        element: <RoomPage />,
+      },
+    ]
   },
 ]);
 

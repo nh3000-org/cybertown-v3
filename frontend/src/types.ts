@@ -53,6 +53,13 @@ export type NewMessageEvent = {
   }
 }
 
+export type LeaveRoomEvent = {
+  name: "LEAVE_ROOM"
+  data: {
+    roomID: number
+  }
+}
+
 export type NewMessageBroadcastEvent = {
   name: "NEW_MESSAGE_BROADCAST"
   data: RoomMessage
@@ -64,3 +71,4 @@ export type RoomMessage = {
   createdAt: string
   from: User
 }
+
