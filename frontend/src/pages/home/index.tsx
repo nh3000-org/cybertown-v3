@@ -3,6 +3,7 @@ import { useRooms } from "@/hooks/queries/useRooms";
 import { useState } from "react";
 import { RoomCard } from "@/pages/home/components/RoomCard";
 import { UserHeader } from "@/pages/home/components/UserHeader";
+import { LoginAlert } from "./components/LoginAlert";
 
 export function HomePage() {
   const { data: rooms } = useRooms()
@@ -25,6 +26,8 @@ export function HomePage() {
           )
         })}
       </div>
+
+      <LoginAlert />
     </main>
   )
 }

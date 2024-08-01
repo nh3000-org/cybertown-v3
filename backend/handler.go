@@ -142,7 +142,7 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 		}
 		if _, ok := ss.rooms[room.ID]; ok {
 			for conn := range ss.rooms[room.ID] {
-				if u, ok := ss.connUserMap[conn]; ok {
+				if u, ok := ss.conns[conn]; ok {
 					roomRes.Users = append(roomRes.Users, u)
 				}
 			}
@@ -176,7 +176,7 @@ func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, ok := ss.rooms[room.ID]; ok {
 		for conn := range ss.rooms[room.ID] {
-			if u, ok := ss.connUserMap[conn]; ok {
+			if u, ok := ss.conns[conn]; ok {
 				roomRes.Users = append(roomRes.Users, u)
 			}
 		}

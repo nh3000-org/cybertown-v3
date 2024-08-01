@@ -1,7 +1,7 @@
 import { config } from "@/config";
 import { JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
 import { queryClient } from "./utils";
-import { useRoomStore } from "@/stores/roomStore";
+import { useAppStore } from "@/stores/appStore";
 
 class WS {
   private socket: WebSocket
@@ -23,7 +23,7 @@ class WS {
     socket.onclose = function(e: CloseEvent) {
       console.log("socket connection closed", e.code)
     }
-    socket.onmessage = function(e: MessageEvent) {
+    socket.onmessage = (e: MessageEvent) => {
       try {
         const event: SocketEvent = JSON.parse(e.data)
         console.log("received event", event)
@@ -35,7 +35,7 @@ class WS {
             })
             break;
           case "NEW_MESSAGE_BROADCAST":
-            useRoomStore.getState().addMessage(event.data)
+            useAppStore.getState().addMessage(event.data, this.currentRoomID!)
             break;
         }
       } catch (err) {
@@ -64,6 +64,7 @@ class WS {
       }
     }
     this.socket.send(JSON.stringify(event))
+    useAppStore.getState().clearMessages(this.currentRoomID!)
     this.currentRoomID = null
   }
 

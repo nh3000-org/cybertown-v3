@@ -1,15 +1,10 @@
 import { Button } from "@/components/ui/button"
-import { useMe } from "@/hooks/queries/useMe"
 import { getGoogleOAuthURL } from "@/lib/utils"
 import { Logout } from "@/pages/home/components/Logout"
+import { useAppStore } from "@/stores/appStore"
 
 export function UserHeader() {
-  const { data: user, isLoading } = useMe()
-
-  if (isLoading) {
-    return null
-  }
-
+  const user = useAppStore().user
   return (
     <div className="flex">
       {user ? <Logout user={user} /> :

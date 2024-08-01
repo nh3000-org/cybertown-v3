@@ -22,6 +22,7 @@ import {
 import { useState } from 'react'
 import { CreateRoom as TCreateRoom } from '@/types'
 import { useCreateRoom } from '@/hooks/mutations/useCreateRoom'
+import { useAppStore } from '@/stores/appStore'
 
 type Props = {
   setOpen: (open: boolean) => void
@@ -29,18 +30,26 @@ type Props = {
 }
 
 export function CreateRoom(props: Props) {
+  const user = useAppStore().user
+  const setShowLoginAlert = useAppStore().setShowLoginAlert
   const [room, setRoom] = useState<TCreateRoom>({
     topic: '',
-    language: 'english',
+    language: '',
     maxParticipants: -1,
   })
-  const [maxParticipants, setMaxParticipants] = useState('-1')
+  const [maxParticipants, setMaxParticipants] = useState('')
   const { mutateAsync: createRoom } = useCreateRoom()
 
   return (
     <Dialog open={props.open} onOpenChange={props.setOpen}>
-      <DialogTrigger asChild>
-        <Button onClick={() => props.setOpen(true)}>
+      <DialogTrigger asChild onClick={e => e.preventDefault()}>
+        <Button onClick={() => {
+          if (!user) {
+            setShowLoginAlert(true)
+            return
+          }
+          props.setOpen(true)
+        }}>
           <PlusIcon className="mr-2 h-4 w-4" /> Create New Room
         </Button>
       </DialogTrigger>

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/types"
+	t "backend/types"
 	"backend/utils"
 	"context"
 	"encoding/json"
@@ -15,30 +15,33 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
+type connUserMap map[*websocket.Conn]*t.User
+
 type socketServer struct {
-	conns       map[*websocket.Conn]struct{}
-	connUserMap map[*websocket.Conn]*types.User
-	rooms       map[int]map[*websocket.Conn]struct{}
+	conns connUserMap
+	rooms map[int]map[*websocket.Conn]struct{}
 }
 
-func (s *socketServer) accept(conn *websocket.Conn, user *types.User) {
-	s.conns[conn] = struct{}{}
-	s.connUserMap[conn] = user
-}
-
-func (s *socketServer) close(conn *websocket.Conn, roomID int, user *types.User) {
-	delete(s.conns, conn)
-	delete(s.connUserMap, conn)
-	if _, ok := s.rooms[roomID]; ok {
-		delete(s.rooms[roomID], conn)
-		if user == nil {
-			return
-		}
-		ss.leaveRoom(roomID, conn, user)
+func newSocketServer() *socketServer {
+	return &socketServer{
+		conns: make(connUserMap),
+		rooms: make(map[int]map[*websocket.Conn]struct{}),
 	}
 }
 
-func (s *socketServer) isInRoom(roomID int, conn *websocket.Conn) bool {
+func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
+	s.conns[conn] = user
+}
+
+func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
+	delete(s.conns, conn)
+	if !s.isInRoom(conn, roomID) {
+		return
+	}
+	ss.leaveRoom(conn, roomID, user)
+}
+
+func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
 	if _, ok := s.rooms[roomID]; ok {
 		_, ok := s.rooms[roomID][conn]
 		return ok
@@ -46,34 +49,99 @@ func (s *socketServer) isInRoom(roomID int, conn *websocket.Conn) bool {
 	return false
 }
 
-func (s *socketServer) joinRoom(roomID int, conn *websocket.Conn) {
+func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 	if _, ok := s.rooms[roomID]; !ok {
 		s.rooms[roomID] = make(map[*websocket.Conn]struct{})
 	}
 	s.rooms[roomID][conn] = struct{}{}
 }
 
-func (s *socketServer) leaveRoom(roomID int, conn *websocket.Conn, user *types.User) {
-	if _, ok := s.rooms[roomID]; ok {
-		delete(s.rooms[roomID], conn)
-		for conn := range ss.conns {
-			utils.WriteEvent(conn, &types.Event{
-				Name: "LEFT_ROOM",
-				Data: map[string]any{
-					"roomID": roomID,
-					"user":   user,
-				},
-			})
-		}
+func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User) {
+	delete(s.rooms[roomID], conn)
+	ss.broadcastEvent(&t.Event{
+		Name: "LEFT_ROOM",
+		Data: map[string]any{
+			"roomID": roomID,
+			"user":   user,
+		},
+	})
+}
+
+func (s *socketServer) broadcastEvent(event *t.Event) {
+	for conn := range ss.conns {
+		utils.WriteEvent(conn, event)
 	}
 }
 
-func newSocketServer() *socketServer {
-	return &socketServer{
-		conns:       make(map[*websocket.Conn]struct{}),
-		connUserMap: make(map[*websocket.Conn]*types.User),
-		rooms:       make(map[int]map[*websocket.Conn]struct{}),
+func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
+	conns, ok := ss.rooms[roomID]
+	if !ok {
+		log.Printf("broadcast to room failed, room not found: %d\n", roomID)
+		return
 	}
+	for conn := range conns {
+		utils.WriteEvent(conn, event)
+	}
+}
+
+func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.User) (int, error) {
+	var data t.JoinRoom
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		return 0, nil
+	}
+
+	// can the same user join the room from different
+	// socket connections?
+	ss.joinRoom(conn, data.RoomID)
+
+	ss.broadcastEvent(&t.Event{
+		Name: "JOINED_ROOM",
+		Data: map[string]any{
+			"roomID": data.RoomID,
+			"user":   user,
+		},
+	})
+
+	return data.RoomID, nil
+}
+
+func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.LeaveRoom
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal LEAVE_ROOM data: %v\n", err)
+		return
+	}
+	if !ss.isInRoom(conn, data.RoomID) {
+		return
+	}
+	ss.leaveRoom(conn, data.RoomID, user)
+}
+
+func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.NewMessage
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal NEW_MESSAGE data: %v\n", err)
+		return
+	}
+
+	// can this user send a message to this room?
+	// is the message is valid?
+	if !ss.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+		Name: "NEW_MESSAGE_BROADCAST",
+		Data: map[string]any{
+			"id":        shortuuid.New(),
+			"message":   data.Message,
+			"from":      user,
+			"createdAt": time.Now().UTC().Format(time.RFC3339),
+		},
+	})
 }
 
 var ss = newSocketServer()
@@ -87,14 +155,15 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed to accept socket connection: %v", err)
 		return
 	}
-
-	user, ok := r.Context().Value("user").(*types.User)
-	if !ok {
-		user = nil
-	}
+	log.Println("connection established")
 
 	// last joined room
 	var roomID int
+
+	user, ok := r.Context().Value("user").(*t.User)
+	if !ok {
+		user = nil
+	}
 
 	defer func() {
 		ss.close(conn, roomID, user)
@@ -102,14 +171,18 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("number of connections: %d\n", len(ss.conns))
 	}()
 
-	log.Println("connection established")
 	ss.accept(conn, user)
 
 	for {
-		var event types.Event
+		var event t.Event
 		err := wsjson.Read(context.Background(), conn, &event)
 		if err != nil {
 			log.Printf("failed to read message: %v", err)
+			return
+		}
+
+		// only users who are authenticated can send event
+		if user == nil {
 			return
 		}
 
@@ -119,85 +192,16 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// learn how generics in golang to make this better
 		switch event.Name {
 		case "JOIN_ROOM":
-			var data types.JoinRoom
-			err := json.Unmarshal(b, &data)
+			roomID, err = ss.joinRoomHandler(conn, b, user)
 			if err != nil {
-				log.Printf("failed to unmarshal JOIN_ROOM data: %v\n", err)
-				return
-			}
-
-			// is the user allowed to join?
-			if _, ok := ss.connUserMap[conn]; !ok {
-				log.Println("you need to be authenticated to join room")
-				return
-			}
-
-			// is this a valid room? and the user is allowed to join?
-			ss.joinRoom(data.RoomID, conn)
-			roomID = data.RoomID
-
-			for conn := range ss.conns {
-				utils.WriteEvent(conn, &types.Event{
-					Name: "JOINED_ROOM",
-					Data: map[string]any{
-						"roomID": data.RoomID,
-						"user":   user,
-					},
-				})
+				log.Printf("failed to join room: %v\n", err)
 			}
 		case "NEW_MESSAGE":
-			var data types.NewMessage
-			err := json.Unmarshal(b, &data)
-			if err != nil {
-				log.Printf("failed to unmarshal NEW_MESSAGE data: %v\n", err)
-				return
-			}
-
-			// is the user allowed to join?
-			if _, ok := ss.connUserMap[conn]; !ok {
-				log.Println("you need to be authenticated to join room")
-				return
-			}
-
-			// can this user send a message to this room?
-			// is the message is valid?
-			if !ss.isInRoom(data.RoomID, conn) {
-				return
-			}
-
-			for conn := range ss.rooms[data.RoomID] {
-				utils.WriteEvent(conn, &types.Event{
-					Name: "NEW_MESSAGE_BROADCAST",
-					Data: map[string]any{
-						"id":        shortuuid.New(),
-						"message":   data.Message,
-						"from":      user,
-						"createdAt": time.Now().UTC().Format(time.RFC3339),
-					},
-				})
-			}
+			ss.newMessageHandler(conn, b, user)
 		case "LEAVE_ROOM":
-			var data types.LeaveRoom
-			err := json.Unmarshal(b, &data)
-			if err != nil {
-				log.Printf("failed to unmarshal LEAVE_ROOM data: %v\n", err)
-				return
-			}
-
-			// is the user allowed to join?
-			if _, ok := ss.connUserMap[conn]; !ok {
-				log.Println("you need to be authenticated to join room")
-				return
-			}
-
-			if !ss.isInRoom(data.RoomID, conn) {
-				return
-			}
-
-			ss.leaveRoom(roomID, conn, user)
+			ss.leaveRoomHandler(conn, b, user)
 		}
 	}
 }

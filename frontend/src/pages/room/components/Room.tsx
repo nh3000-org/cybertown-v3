@@ -1,13 +1,14 @@
 import { Textarea } from "@/components/ui/textarea"
 import { ws } from "@/lib/ws"
-import { useRoomStore } from "@/stores/roomStore"
+import { useAppStore } from "@/stores/appStore"
 
 type Props = {
   roomID: string
 }
 
 export function Room(props: Props) {
-  const messages = useRoomStore().messages
+  const { roomID } = props
+  const messages = useAppStore().rooms[roomID] ?? []
 
   return (
     <main className="h-full w-full grid grid-cols-[1fr_400px]">

@@ -6,18 +6,30 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppStore } from '@/stores/appStore'
 
 type Props = {
   room: RoomRes
 }
 
 export function RoomCard(props: Props) {
+  const user = useAppStore().user
+  const setShowLoginAlert = useAppStore().setShowLoginAlert
   const { room } = props
+  const navigate = useNavigate()
 
   const style = {
     width: room.maxParticipants > 3 ? 58 : 96,
     height: room.maxParticipants > 3 ? 58 : 96,
+  }
+
+  function joinRoom(roomID: number) {
+    if (!user) {
+      setShowLoginAlert(true)
+      return
+    }
+    navigate(`/room/${roomID}`)
   }
 
   return (
@@ -37,8 +49,8 @@ export function RoomCard(props: Props) {
           })}
         </div>
       </CardContent>
-      <Button asChild variant="outline" className="mt-auto self-center">
-        <Link to={`/room/${room.id}`}>Join Room</Link>
+      <Button variant="outline" className="mt-auto self-center" onClick={() => joinRoom(room.id)}>
+        Join Room
       </Button>
     </Card >
   )
