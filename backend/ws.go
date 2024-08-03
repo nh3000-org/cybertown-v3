@@ -82,6 +82,19 @@ func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 	for conn := range conns {
 		utils.WriteEvent(conn, event)
 	}
+
+}
+
+func (s *socketServer) getUsersInRoom(roomID int) []*t.User {
+	users := make([]*t.User, 0)
+	if _, ok := ss.rooms[roomID]; ok {
+		for conn := range ss.rooms[roomID] {
+			if u, ok := ss.conns[conn]; ok {
+				users = append(users, u)
+			}
+		}
+	}
+	return users
 }
 
 func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.User) (int, error) {

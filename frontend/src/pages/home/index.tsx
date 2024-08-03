@@ -1,33 +1,33 @@
-import { CreateRoom } from "@/pages/home/components/CreateRoom";
-import { useRooms } from "@/hooks/queries/useRooms";
-import { useState } from "react";
-import { RoomCard } from "@/pages/home/components/RoomCard";
-import { UserHeader } from "@/pages/home/components/UserHeader";
-import { LoginAlert } from "./components/LoginAlert";
+import { LoginAlert } from './components/LoginAlert'
+import { useAppStore } from '@/stores/appStore'
+import { UserMenu } from './components/UserMenu'
+import { LogoutAlert } from './components/LogoutAlert'
+import { CreateRoom } from './components/CreateRoom'
+import { useState } from 'react'
+import { useRooms } from '@/hooks/queries/useRooms'
+import { RoomCard } from './components/RoomCard'
 
 export function HomePage() {
-  const { data: rooms } = useRooms()
+  const user = useAppStore().user
   const [open, setOpen] = useState(false)
+  const { data: rooms } = useRooms()
 
   return (
-    <main className="max-w-7xl mx-auto my-4 px-8">
-      <UserHeader />
-
-      <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-center my-6">
-        Cybertown
-      </h1>
+    <main className="max-w-7xl mx-auto p-4">
+      <div className="flex justify-end">
+        {user ? <UserMenu /> : <LoginAlert />}
+      </div>
+      <h1 className="text-4xl font-bold text-center my-8">Cybertown</h1>
 
       <CreateRoom open={open} setOpen={setOpen} />
 
-      <div className="mt-8 rooms gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rooms?.map(room => {
-          return (
-            <RoomCard key={room.id} room={room} />
-          )
+          return <RoomCard room={room} />
         })}
       </div>
 
-      <LoginAlert />
+      <LogoutAlert />
     </main>
   )
 }

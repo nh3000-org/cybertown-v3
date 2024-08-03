@@ -20,7 +20,7 @@ export type CreateRoom = {
   language: string
 }
 
-export type SocketEvent = JoinRoomEvent | JoinedRoomEvent | LeftRoomEvent | NewMessageEvent | NewMessageBroadcastEvent
+export type SocketEvent = JoinRoomEvent | JoinedRoomEvent | LeftRoomEvent | NewMessageEvent | NewMessageBroadcastEvent | NewRoomEvent
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
@@ -60,6 +60,13 @@ export type LeaveRoomEvent = {
   }
 }
 
+export type NewRoomEvent = {
+  name: "NEW_ROOM"
+  data: {
+    roomID: number
+  }
+}
+
 export type NewMessageBroadcastEvent = {
   name: "NEW_MESSAGE_BROADCAST"
   data: RoomMessage
@@ -71,4 +78,3 @@ export type RoomMessage = {
   createdAt: string
   from: User
 }
-

@@ -1,11 +1,4 @@
 import { RoomRes } from '@/types'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
-import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/appStore'
 
@@ -33,25 +26,22 @@ export function RoomCard(props: Props) {
   }
 
   return (
-    <Card className="p-4 flex flex-col">
-      <CardTitle className="text-md pb-1">{room.topic}</CardTitle>
-      <CardDescription>{room.language}</CardDescription>
-      <CardContent className="p-0 mt-4 min-h-[100px] flex flex-col">
-        <div className="flex gap-4 flex-wrap mb-8">
-          {room.users.map(user => {
-            return (
-              <img referrerPolicy="no-referrer" className="rounded-full" key={user.id} src={user.avatar} style={style}>
-              </img>
-            )
-          })}
-          {Array.from({ length: room.maxParticipants - room.users.length }).map((_, idx) => {
-            return <div key={idx} style={style} className="rounded-full border"></div>
-          })}
-        </div>
-      </CardContent>
-      <Button variant="outline" className="mt-auto self-center" onClick={() => joinRoom(room.id)}>
-        Join Room
-      </Button>
-    </Card >
+    <div className="p-4 border border-border rounded-md bg-bg-2 text-fg-2 flex flex-col">
+      <p className="text-lg font-semibold mb-1">{room.topic}</p>
+      <p className="text-muted">{room.language}</p>
+
+      <div className="min-h-[60px] mt-4 flex flex-wrap gap-4">
+        {room.users.map(user => {
+          return <img key={user.id} src={user.avatar} referrerPolicy="no-referrer" style={style} className="rounded-full" />
+        })}
+        {Array.from({ length: room.maxParticipants - room.users.length }).map((_, i) => {
+          return <div key={i} style={style} className="rounded-full border border-border border-dashed" />
+        })}
+      </div>
+
+      <button className="mt-12 bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center" onClick={() => {
+        joinRoom(room.id)
+      }}>Join Room</button>
+    </div>
   )
 }

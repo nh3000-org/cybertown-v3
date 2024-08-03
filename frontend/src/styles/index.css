@@ -4,41 +4,40 @@
 
 @layer base {
   :root {
-    --background: 20 14.3% 4.1%;
-    --foreground: 0 0% 95%;
-    --card: 24 9.8% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 142.1 70.6% 45.3%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142.4 71.8% 29.2%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.5rem;
+    --bg: 25 26 34;
+    --fg: 255 255 255;
+
+    --accent: 87 90 198;
+    --accent-fg: 255 255 255;
+
+    --bg-2: 34 36 46;
+    --fg-2: 229 229 239;
+
+    --bg-3: 47 49 64;
+    --fg-3: 229 229 239;
+
+    --border: 44 45 58;
+    --muted: 158 159 168;
+
+    --sidebar: 21 22 28;
+    --highlight: 50 52 70;
+    --danger: 235 86 86;
+    --overlay: 25 26 34;
+
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+  }
+
+  @supports (font-variation-settings: normal) {
+    :root { 
+      font-family: InterVariable, sans-serif; 
+    }
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-background text-foreground;
+    @apply bg-bg text-fg;
   }
 
   html, body, #root {
@@ -47,6 +46,13 @@
 
   .rooms {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+
+  button:focus, input:focus, textarea:focus {
+    @apply outline-none ring-accent ring-1;
+  }
+
+  input::placeholder, textarea::placeholder {
+    @apply text-muted;
   }
 }

@@ -7,71 +7,26 @@ module.exports = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  prefix: "",
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+        'bg': 'rgb(var(--bg) / 1)',
+        'bg-2': 'rgb(var(--bg-2) / 1)',
+        'bg-3': 'rgb(var(--bg-3) / 1)',
+        'fg': 'rgb(var(--fg) / 1)',
+        'fg-2': 'rgb(var(--fg-2) / 1)',
+        'fg-3': 'rgb(var(--fg-3) / 1)',
+        'border': 'rgb(var(--border) / 1)',
+        'muted': 'rgb(var(--muted) / 1)',
+        'highlight': 'rgb(var(--highlight) / 1)',
+        'danger': 'rgb(var(--danger) / 1)',
+        'overlay': 'rgb(var(--overlay) / 1)',
+        'sidebar': 'rgb(var(--sidebar) / 1)',
+        'accent': {
+          'DEFAULT': 'rgb(var(--accent) / 1)',
+          'fg': 'rgb(var(--accent-fg) / 1)'
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
-    },
+    }
   },
-  plugins: [require("tailwindcss-animate")],
 }

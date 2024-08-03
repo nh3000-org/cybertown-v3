@@ -1,0 +1,43 @@
+import { useLogout } from "@/hooks/mutations/useLogout";
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import { useAppStore } from '@/stores/appStore'
+import { LoadingIcon } from "./LoadingIcon";
+
+export function LogoutAlert() {
+  const showLogoutAlert = useAppStore().showLogoutAlert
+  const { mutateAsync: logout, isLoading } = useLogout()
+  const setShowLogoutAlert = useAppStore().setShowLogoutAlert
+
+  return (
+    <AlertDialog.Root open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="bg-overlay/30 fixed inset-0" />
+        <AlertDialog.Content className="border border-border w-[90vw] max-w-[550px] rounded-lg fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none bg-bg-2">
+          <AlertDialog.Title className="text-xl font-bold mb-2">
+            Are you sure you want to logout?
+          </AlertDialog.Title>
+          <AlertDialog.Description className="mb-8 text-muted">
+            Think about you friends. You want to leave them like this?
+          </AlertDialog.Description>
+          <AlertDialog.Action asChild onClick={e => e.preventDefault()}>
+            <div className="flex justify-end gap-5 items-center">
+              <button className="bg-bg-3 text-fg-3 px-4 py-1 rounded" onClick={() => {
+                setShowLogoutAlert(false)
+              }}>Cancel</button>
+              <button className="bg-danger text-white px-4 py-1 rounded focus:ring-danger focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg flex gap-3 items-center disabled:opacity-70" disabled={isLoading} onClick={async () => {
+                try {
+                  await logout()
+                  setShowLogoutAlert(false)
+                } catch (err) {
+                }
+              }}>
+                {isLoading && <LoadingIcon className="fill-danger" />}
+                <span>Log Out</span>
+              </button>
+            </div>
+          </AlertDialog.Action>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
+  )
+};

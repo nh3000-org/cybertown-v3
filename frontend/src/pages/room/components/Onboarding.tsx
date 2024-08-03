@@ -22,7 +22,7 @@ export function Onboarding(props: Props) {
       <div className="flex flex-col gap-6 items-center">
         <p>Yoo, {props.user.username}</p>
         <img className="w-40 h-40 rounded-full" src={props.user.avatar} referrerPolicy="no-referrer" />
-        <p className="text-lg font-semibold">Tap anywhere and let the fun begin!</p>
+        <p>Tap anywhere and let the fun begin!</p>
       </div>
     </main>
   )

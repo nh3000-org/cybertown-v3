@@ -30,6 +30,7 @@ class WS {
         switch (event.name) {
           case "JOINED_ROOM":
           case "LEFT_ROOM":
+          case "NEW_ROOM":
             queryClient.invalidateQueries({
               queryKey: ['rooms']
             })

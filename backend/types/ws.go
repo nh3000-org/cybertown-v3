@@ -9,7 +9,9 @@ type JoinRoom struct {
 	RoomID int `json:"roomID"`
 }
 
-type LeaveRoom JoinRoom
+type LeaveRoom struct {
+	RoomID int `json:"roomID"`
+}
 
 type NewMessage struct {
 	RoomID  int    `json:"roomID"`
