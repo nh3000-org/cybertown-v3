@@ -1,4 +1,4 @@
-import { DeleteMessageEvent, EditRoomMessage, RoomMessage, User } from '@/types'
+import { EditRoomMessage, RoomMessage, User } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 

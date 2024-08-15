@@ -44,3 +44,15 @@ export function toHHMM(createdAt: string) {
   const formattedTime = date.toLocaleString('en-US', options);
   return formattedTime;
 }
+
+export function scrollToMessage(id: string) {
+  const el = document.getElementById(`message-${id}`)
+  if (!el) {
+    return
+  }
+  el.classList.add("blink-bg")
+  el.scrollIntoView()
+  setTimeout(() => {
+    el.classList.remove("blink-bg")
+  }, 1500)
+}

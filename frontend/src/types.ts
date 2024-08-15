@@ -56,6 +56,7 @@ export type NewMessageEvent = {
   data: {
     message: string
     roomID: number
+    replyTo?: string
   }
 }
 
@@ -113,6 +114,7 @@ export type RoomMessage = {
   roomID: number
   isEdited?: boolean
   isDeleted?: boolean
+  replyTo?: string
 }
 
 export type EditRoomMessage = {

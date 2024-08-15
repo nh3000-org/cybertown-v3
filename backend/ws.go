@@ -153,6 +153,7 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 			"from":      user,
 			"createdAt": time.Now().UTC().Format(time.RFC3339),
 			"roomID":    data.RoomID,
+			"replyTo":   data.ReplyTo,
 		},
 	})
 }
@@ -267,5 +268,3 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
-// hi

@@ -16,6 +16,7 @@ type LeaveRoom struct {
 type NewMessage struct {
 	RoomID  int    `json:"roomID"`
 	Message string `json:"message"`
+	ReplyTo string `json:"replyTo"`
 }
 
 type EditMessage struct {

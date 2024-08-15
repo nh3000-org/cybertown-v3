@@ -107,11 +107,11 @@ class WS {
     this.socket.send(JSON.stringify(event))
   }
 
-  newMessage(roomID: number, message: string) {
+  newMessage(roomID: number, data: { message: string, replyTo?: string }) {
     const event: NewMessageEvent = {
       name: "NEW_MESSAGE",
       data: {
-        message,
+        ...data,
         roomID,
       }
     }
