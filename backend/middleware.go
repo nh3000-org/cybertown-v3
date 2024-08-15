@@ -44,9 +44,6 @@ func (app *application) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("session")
 		if err != nil || c.Value == "" {
-			if err != nil {
-				log.Printf("failed get cookie value: %v\n", err)
-			}
 			next.ServeHTTP(w, r)
 			return
 		}

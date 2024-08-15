@@ -1,10 +1,11 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Label } from '@radix-ui/react-label';
 import { Select } from './Select';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { z } from "zod";
 import { useCreateRoom } from '@/hooks/mutations/useCreateRoom';
 import { LoadingIcon } from './LoadingIcon';
+import { useAppStore } from '@/stores/appStore';
 
 const createRoomSchema = z.object({
   topic: z.string().min(3),
@@ -18,6 +19,8 @@ type Props = {
 }
 
 export function CreateRoom(props: Props) {
+  const user = useAppStore().user
+  const setAlert = useAppStore().setAlert
   const { mutateAsync: createRoom, isLoading } = useCreateRoom()
 
   const [room, setRoom] = useState({
@@ -76,7 +79,14 @@ export function CreateRoom(props: Props) {
   return (
     <Dialog.Root open={props.open} onOpenChange={props.setOpen}>
       <Dialog.Trigger asChild>
-        <button className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
+        <button onClick={e => {
+          e.preventDefault()
+          if (user) {
+            props.setOpen(true)
+            return
+          }
+          setAlert('login', true)
+        }} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
           <span>Create Room</span>
         </button>
       </Dialog.Trigger>

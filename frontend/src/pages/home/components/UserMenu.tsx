@@ -5,7 +5,7 @@ import { LogOut as LogOutIcon } from 'lucide-react'
 
 export function UserMenu() {
   const user = useAppStore().user!
-  const setShowLogoutAlert = useAppStore().setShowLogoutAlert
+  const setAlert = useAppStore().setAlert
 
   return (
     <Dropdown.Root>
@@ -24,7 +24,7 @@ export function UserMenu() {
             <span>Switch Theme</span>
           </Dropdown.Item>
           <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-            setShowLogoutAlert(true)
+            setAlert('logout', true)
           }}>
             <LogOutIcon size={20} className="text-muted" />
             <span>Log Out</span>

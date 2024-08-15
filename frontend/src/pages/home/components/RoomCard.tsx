@@ -8,7 +8,7 @@ type Props = {
 
 export function RoomCard(props: Props) {
   const user = useAppStore().user
-  const setShowLoginAlert = useAppStore().setShowLoginAlert
+  const setAlert = useAppStore().setAlert
   const { room } = props
   const navigate = useNavigate()
 
@@ -19,7 +19,7 @@ export function RoomCard(props: Props) {
 
   function joinRoom(roomID: number) {
     if (!user) {
-      setShowLoginAlert(true)
+      setAlert('login', true)
       return
     }
     navigate(`/room/${roomID}`)

@@ -55,4 +55,17 @@
   input::placeholder, textarea::placeholder {
     @apply text-muted;
   }
+
+  .scroller::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
+
+  .scroller::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroller::-webkit-scrollbar-thumb {
+    background: theme(colors.gray.300);
+  }
 }

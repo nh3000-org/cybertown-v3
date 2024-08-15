@@ -1,12 +1,12 @@
 import { config } from "@/config";
-import { JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
+import { DeleteMessageEvent, EditMessageEvent, JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
 import { queryClient } from "./utils";
 import { useAppStore } from "@/stores/appStore";
 
 class WS {
   private socket: WebSocket
   private static instance: WS
-  currentRoomID: string | null = null
+  currentRoomID: number | null = null
 
   public static getInstance(): WS {
     if (!WS.instance) {
@@ -36,7 +36,22 @@ class WS {
             })
             break;
           case "NEW_MESSAGE_BROADCAST":
-            useAppStore.getState().addMessage(event.data, this.currentRoomID!)
+            if (event.data.roomID !== this.currentRoomID) {
+              return
+            }
+            useAppStore.getState().addMessage(this.currentRoomID, event.data)
+            break;
+          case "EDIT_MESSAGE_BROADCAST":
+            if (event.data.roomID !== this.currentRoomID) {
+              return
+            }
+            useAppStore.getState().editMessage(this.currentRoomID, event.data)
+            break;
+          case "DELETE_MESSAGE_BROADCAST":
+            if (event.data.roomID !== this.currentRoomID) {
+              return
+            }
+            useAppStore.getState().deleteMessage(this.currentRoomID, event.data.id, event.data.from)
             break;
         }
       } catch (err) {
@@ -46,7 +61,7 @@ class WS {
     this.socket = socket
   }
 
-  joinRoom(roomID: string) {
+  joinRoom(roomID: number) {
     const event: JoinRoomEvent = {
       name: "JOIN_ROOM",
       data: {
@@ -57,7 +72,7 @@ class WS {
     this.currentRoomID = roomID
   }
 
-  leaveRoom(roomID: string) {
+  leaveRoom(roomID: number) {
     const event: LeaveRoomEvent = {
       name: "LEAVE_ROOM",
       data: {
@@ -69,12 +84,35 @@ class WS {
     this.currentRoomID = null
   }
 
-  sendMessage(message: string, roomID: string) {
+  editMessage(roomID: number, id: string, message: string) {
+    const event: EditMessageEvent = {
+      name: "EDIT_MESSAGE",
+      data: {
+        id,
+        message,
+        roomID,
+      }
+    }
+    this.socket.send(JSON.stringify(event))
+  }
+
+  deleteMessage(roomID: number, msgID: string) {
+    const event: DeleteMessageEvent = {
+      name: "DELETE_MESSAGE",
+      data: {
+        id: msgID,
+        roomID,
+      }
+    }
+    this.socket.send(JSON.stringify(event))
+  }
+
+  newMessage(roomID: number, message: string) {
     const event: NewMessageEvent = {
       name: "NEW_MESSAGE",
       data: {
         message,
-        roomID: Number(roomID),
+        roomID,
       }
     }
     this.socket.send(JSON.stringify(event))

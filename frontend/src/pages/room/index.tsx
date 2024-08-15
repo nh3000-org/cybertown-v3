@@ -9,7 +9,7 @@ import { useAppStore } from "@/stores/appStore"
 
 export function RoomPage() {
   const [isOnboarding, setIsOnBoarding] = useState(true)
-  const { roomID } = useParams()
+  const roomID = Number(useParams().roomID)
   const user = useAppStore().user
   const { data: room, isLoading: isRoomLoading, error: roomError } = useRoom(roomID!, user !== null)
 

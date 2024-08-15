@@ -33,3 +33,14 @@ export function getGoogleOAuthURL() {
 
   return `${config.googleOAuth.rootURL}?${qs.toString()}`;
 }
+
+export function toHHMM(createdAt: string) {
+  const date = new Date(createdAt);
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true
+  } as const;
+  const formattedTime = date.toLocaleString('en-US', options);
+  return formattedTime;
+}

@@ -4,12 +4,14 @@ import { useAppStore } from '@/stores/appStore'
 import { LoadingIcon } from "./LoadingIcon";
 
 export function LogoutAlert() {
-  const showLogoutAlert = useAppStore().showLogoutAlert
+  const open = useAppStore().alerts.logout
   const { mutateAsync: logout, isLoading } = useLogout()
-  const setShowLogoutAlert = useAppStore().setShowLogoutAlert
+  const setAlert = useAppStore().setAlert
 
   return (
-    <AlertDialog.Root open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
+    <AlertDialog.Root open={open} onOpenChange={(visibility) => {
+      setAlert("logout", visibility)
+    }}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="bg-overlay/30 fixed inset-0" />
         <AlertDialog.Content className="border border-border w-[90vw] max-w-[550px] rounded-lg fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none bg-bg-2">
@@ -22,12 +24,12 @@ export function LogoutAlert() {
           <AlertDialog.Action asChild onClick={e => e.preventDefault()}>
             <div className="flex justify-end gap-5 items-center">
               <button className="bg-bg-3 text-fg-3 px-4 py-1 rounded" onClick={() => {
-                setShowLogoutAlert(false)
+                setAlert('logout', false)
               }}>Cancel</button>
               <button className="bg-danger text-white px-4 py-1 rounded focus:ring-danger focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg flex gap-3 items-center disabled:opacity-70" disabled={isLoading} onClick={async () => {
                 try {
                   await logout()
-                  setShowLogoutAlert(false)
+                  setAlert('logout', false)
                 } catch (err) {
                 }
               }}>

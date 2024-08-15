@@ -17,3 +17,14 @@ type NewMessage struct {
 	RoomID  int    `json:"roomID"`
 	Message string `json:"message"`
 }
+
+type EditMessage struct {
+	ID      string `json:"id"`
+	RoomID  int    `json:"roomID"`
+	Message string `json:"message"`
+}
+
+type DeleteMessage struct {
+	ID     string `json:"id"`
+	RoomID int    `json:"roomID"`
+}

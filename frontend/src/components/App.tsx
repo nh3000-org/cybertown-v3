@@ -19,10 +19,10 @@ export function App(props: Props) {
       const isHomeRoute = location.pathname === '/'
 
       const paths = pathnameRef.current.split("/")
-      const isRoomRoute = paths.length === 3 && ws.currentRoomID === paths[2]
+      const isRoomRoute = paths.length === 3 && ws.currentRoomID === Number(paths[2])
 
       if (isHomeRoute && isRoomRoute) {
-        ws.leaveRoom(paths[2])
+        ws.leaveRoom(Number(paths[2]))
       }
     }
     pathnameRef.current = location.pathname

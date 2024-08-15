@@ -1,20 +1,23 @@
-import { RoomMessage, User } from '@/types'
+import { DeleteMessageEvent, EditRoomMessage, RoomMessage, User } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 type State = {
   user: User | null
   rooms: Record<string, RoomMessage[]>
-  showLoginAlert: boolean
-  showLogoutAlert: boolean
+  alerts: {
+    login: boolean
+    logout: boolean
+  }
 }
 
 type Actions = {
-  addMessage: (message: RoomMessage, roomID: string) => void
+  addMessage: (roomID: number, message: RoomMessage) => void
+  editMessage: (roomID: number, message: EditRoomMessage) => void
+  deleteMessage: (roomID: number, msgID: string, from: User) => void
   setUser: (user: User | null) => void
-  clearMessages: (roomID: string) => void
-  setShowLoginAlert: (visibility: boolean) => void
-  setShowLogoutAlert: (visibility: boolean) => void
+  clearMessages: (roomID: number) => void
+  setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
 }
 
 export const useAppStore = create<State & Actions>()(
@@ -22,15 +25,44 @@ export const useAppStore = create<State & Actions>()(
     user: null,
     messages: [],
     rooms: {},
-    showLoginAlert: false,
-    showLogoutAlert: false,
+    alerts: {
+      login: false,
+      logout: false,
+    },
 
-    setShowLoginAlert: (visibility) => set((state) => {
-      state.showLoginAlert = visibility
+    setAlert: (alert, visibility) => set((state) => {
+      state.alerts[alert] = visibility
     }),
 
-    setShowLogoutAlert: (visibility) => set((state) => {
-      state.showLogoutAlert = visibility
+    editMessage: (roomID, message) => set((state) => {
+      const messages = state.rooms[roomID]
+      if (!messages) {
+        return
+      }
+      const index = messages.findIndex(msg => msg.id == message.id && msg.from.id === message.from.id)
+      if (index === -1) {
+        return
+      }
+      messages[index] = {
+        ...messages[index],
+        isEdited: true,
+        message: message.message
+      }
+    }),
+
+    deleteMessage: (roomID, msgID, from) => set((state) => {
+      const messages = state.rooms[roomID]
+      if (!messages) {
+        return
+      }
+      const index = messages.findIndex(msg => msg.id == msgID && msg.from.id === from.id)
+      if (index === -1) {
+        return
+      }
+      messages[index] = {
+        ...messages[index],
+        isDeleted: true,
+      }
     }),
 
     clearMessages: (roomID) => set((state) => {
@@ -41,7 +73,7 @@ export const useAppStore = create<State & Actions>()(
       state.user = user
     }),
 
-    addMessage: (message, roomID) =>
+    addMessage: (roomID, message) =>
       set((state) => {
         if (!state.rooms[roomID]) {
           state.rooms[roomID] = []

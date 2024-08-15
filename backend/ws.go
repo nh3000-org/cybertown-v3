@@ -82,7 +82,6 @@ func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 	for conn := range conns {
 		utils.WriteEvent(conn, event)
 	}
-
 }
 
 func (s *socketServer) getUsersInRoom(roomID int) []*t.User {
@@ -153,6 +152,52 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 			"message":   data.Message,
 			"from":      user,
 			"createdAt": time.Now().UTC().Format(time.RFC3339),
+			"roomID":    data.RoomID,
+		},
+	})
+}
+
+func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.EditMessage
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal EDIT_MESSAGE data: %v\n", err)
+		return
+	}
+
+	if !ss.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+		Name: "EDIT_MESSAGE_BROADCAST",
+		Data: map[string]any{
+			"id":      data.ID,
+			"roomID":  data.RoomID,
+			"message": data.Message,
+			"from":    user,
+		},
+	})
+}
+
+func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.DeleteMessage
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal DELETE_MESSAGE data: %v\n", err)
+		return
+	}
+
+	if !ss.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+		Name: "DELETE_MESSAGE_BROADCAST",
+		Data: map[string]any{
+			"id":     data.ID,
+			"roomID": data.RoomID,
+			"from":   user,
 		},
 	})
 }
@@ -213,8 +258,14 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		case "NEW_MESSAGE":
 			ss.newMessageHandler(conn, b, user)
+		case "EDIT_MESSAGE":
+			ss.editMessageHandler(conn, b, user)
+		case "DELETE_MESSAGE":
+			ss.deleteMessageHandler(conn, b, user)
 		case "LEAVE_ROOM":
 			ss.leaveRoomHandler(conn, b, user)
 		}
 	}
 }
+
+// hi

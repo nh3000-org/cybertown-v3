@@ -32,7 +32,7 @@ export const api = {
     return data.rooms
   },
 
-  async getRoom(roomID: string) {
+  async getRoom(roomID: number) {
     const url = config.apiURL + `/rooms/${roomID}`
     const data = await fetchWrapper<"room", Room>(url)
     return data.room
