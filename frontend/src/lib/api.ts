@@ -37,4 +37,11 @@ export const api = {
     const data = await fetchWrapper<"room", Room>(url)
     return data.room
   },
+
+  async emoji() {
+    const url = "https://cdn.jsdelivr.net/npm/@emoji-mart/data"
+    const res = await fetch(url)
+    const data = await res.json()
+    return data
+  },
 }

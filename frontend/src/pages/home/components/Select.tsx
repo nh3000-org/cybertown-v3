@@ -1,5 +1,7 @@
+import { VerticalScrollbar } from '@/components/VerticalScrollbar';
 import * as RSelect from '@radix-ui/react-select';
 import { ChevronDown as ChevronDownIcon } from 'lucide-react'
+import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 export type Option = {
   label: string
@@ -33,16 +35,21 @@ export function Select(props: Props) {
         </RSelect.Icon>
       </RSelect.Trigger>
       <RSelect.Portal>
-        <RSelect.Content className="rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 border border-border" position='popper' sideOffset={10}>
-          <RSelect.Viewport className='max-h-[200px] flex flex-col gap-2'>
-            {props.options.map(option => {
-              return (
-                <RSelect.Item key={option.value} value={option.value} className="data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md">
-                  {option.label}
-                </RSelect.Item>
-              )
-            })}
-          </RSelect.Viewport>
+        <RSelect.Content className="rounded-lg shadow-md bg-bg-2 text-fg-2 border border-border h-[200px] overflow-hidden" position='popper' sideOffset={10}>
+          <ScrollArea.Root className="overflow-hidden">
+            <RSelect.Viewport asChild>
+              <ScrollArea.Viewport className="h-full w-full p-2">
+                {props.options.map(option => {
+                  return (
+                    <RSelect.Item key={option.value} value={option.value} className="data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md mb-1">
+                      {option.label}
+                    </RSelect.Item>
+                  )
+                })}
+              </ScrollArea.Viewport>
+            </RSelect.Viewport>
+            <VerticalScrollbar />
+          </ScrollArea.Root>
         </RSelect.Content>
       </RSelect.Portal>
     </RSelect.Root>

@@ -29,3 +29,9 @@ type DeleteMessage struct {
 	ID     string `json:"id"`
 	RoomID int    `json:"roomID"`
 }
+
+type ReactionToMessage struct {
+	ID       string `json:"id"`
+	Reaction string `json:"reaction"`
+	RoomID   int    `json:"roomID"`
+}

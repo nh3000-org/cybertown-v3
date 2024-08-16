@@ -1,5 +1,5 @@
 import { config } from "@/config";
-import { DeleteMessageEvent, EditMessageEvent, JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, SocketEvent } from "@/types";
+import { DeleteMessageEvent, EditMessageEvent, JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, ReactionEvent, SocketEvent } from "@/types";
 import { queryClient } from "./utils";
 import { useAppStore } from "@/stores/appStore";
 
@@ -53,6 +53,12 @@ class WS {
             }
             useAppStore.getState().deleteMessage(this.currentRoomID, event.data.id, event.data.from)
             break;
+          case "REACTION_TO_MESSAGE_BROADCAST":
+            if (event.data.roomID !== this.currentRoomID) {
+              return
+            }
+            useAppStore.getState().react(event.data)
+            break;
         }
       } catch (err) {
         console.error("failed to parse socket data", err)
@@ -102,6 +108,18 @@ class WS {
       data: {
         id: msgID,
         roomID,
+      }
+    }
+    this.socket.send(JSON.stringify(event))
+  }
+
+  react(roomID: number, msgID: string, reaction: string) {
+    const event: ReactionEvent = {
+      name: 'REACTION_TO_MESSAGE',
+      data: {
+        reaction,
+        roomID,
+        id: msgID,
       }
     }
     this.socket.send(JSON.stringify(event))

@@ -1,4 +1,4 @@
-import { EditRoomMessage, RoomMessage, User } from '@/types'
+import { EditRoomMessage, ReactionToMessage, RoomMessage, User } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -18,6 +18,7 @@ type Actions = {
   setUser: (user: User | null) => void
   clearMessages: (roomID: number) => void
   setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
+  react: (data: ReactionToMessage) => void
 }
 
 export const useAppStore = create<State & Actions>()(
@@ -32,6 +33,30 @@ export const useAppStore = create<State & Actions>()(
 
     setAlert: (alert, visibility) => set((state) => {
       state.alerts[alert] = visibility
+    }),
+
+    react: (data) => set((state) => {
+      const messages = state.rooms[data.roomID]
+      if (!messages) {
+        return
+      }
+      const index = messages.findIndex(msg => msg.id === data.id)
+      if (index === -1) {
+        return
+      }
+      const reactions = messages[index].reactions
+      if (!reactions[data.reaction]) {
+        reactions[data.reaction] = {}
+      }
+      const isReacted = reactions[data.reaction][data.from.id]
+      if (isReacted) {
+        delete reactions[data.reaction][data.from.id]
+        if (!Object.keys(reactions[data.reaction]).length) {
+          delete reactions[data.reaction]
+        }
+      } else {
+        reactions[data.reaction][data.from.id] = data.from
+      }
     }),
 
     editMessage: (roomID, message) => set((state) => {

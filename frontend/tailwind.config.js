@@ -22,6 +22,7 @@ module.exports = {
         'danger': 'rgb(var(--danger) / 1)',
         'overlay': 'rgb(var(--overlay) / 1)',
         'sidebar': 'rgb(var(--sidebar) / 1)',
+        'scrollbar': 'rgb(var(--scrollbar) / 1)',
         'accent': {
           'DEFAULT': 'rgb(var(--accent) / 1)',
           'fg': 'rgb(var(--accent-fg) / 1)'

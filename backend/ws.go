@@ -154,6 +154,7 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 			"createdAt": time.Now().UTC().Format(time.RFC3339),
 			"roomID":    data.RoomID,
 			"replyTo":   data.ReplyTo,
+			"reactions": map[string]any{},
 		},
 	})
 }
@@ -177,6 +178,29 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *
 			"roomID":  data.RoomID,
 			"message": data.Message,
 			"from":    user,
+		},
+	})
+}
+
+func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.ReactionToMessage
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal REACTION_TO_MESSAGE data: %v\n", err)
+		return
+	}
+
+	if !ss.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+		Name: "REACTION_TO_MESSAGE_BROADCAST",
+		Data: map[string]any{
+			"id":       data.ID,
+			"roomID":   data.RoomID,
+			"reaction": data.Reaction,
+			"from":     user,
 		},
 	})
 }
@@ -265,6 +289,8 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			ss.deleteMessageHandler(conn, b, user)
 		case "LEAVE_ROOM":
 			ss.leaveRoomHandler(conn, b, user)
+		case "REACTION_TO_MESSAGE":
+			ss.reactionToMsgHandler(conn, b, user)
 		}
 	}
 }

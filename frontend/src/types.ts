@@ -26,7 +26,8 @@ export type SocketEvent =
   LeftRoomEvent |
   NewMessageBroadcastEvent |
   EditMessageBroadcastEvent |
-  DeleteMessageBroadcastEvent
+  DeleteMessageBroadcastEvent |
+  ReactionToMessageBroadcastEvent
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
@@ -91,6 +92,15 @@ export type NewRoomEvent = {
   }
 }
 
+export type ReactionEvent = {
+  name: "REACTION_TO_MESSAGE"
+  data: {
+    id: string
+    reaction: string
+    roomID: number
+  }
+}
+
 export type NewMessageBroadcastEvent = {
   name: "NEW_MESSAGE_BROADCAST"
   data: RoomMessage
@@ -106,6 +116,11 @@ export type DeleteMessageBroadcastEvent = {
   data: DeleteRoomMessage
 }
 
+export type ReactionToMessageBroadcastEvent = {
+  name: "REACTION_TO_MESSAGE_BROADCAST"
+  data: ReactionToMessage
+}
+
 export type RoomMessage = {
   id: string
   message: string
@@ -115,6 +130,7 @@ export type RoomMessage = {
   isEdited?: boolean
   isDeleted?: boolean
   replyTo?: string
+  reactions: Record<string, Record<string, User>>
 }
 
 export type EditRoomMessage = {
@@ -128,4 +144,11 @@ export type DeleteRoomMessage = {
   id: string
   from: User
   roomID: number
+}
+
+export type ReactionToMessage = {
+  id: string
+  roomID: number
+  from: User
+  reaction: string
 }

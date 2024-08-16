@@ -1,10 +1,12 @@
 import { RoomMessage } from '@/types'
-import { ChevronDown as ChevronDownIcon, SquarePen as PencilIcon, Trash as TrashIcon, ReplyAll as ReplyIcon } from 'lucide-react'
+import { ChevronDown as ChevronDownIcon, SquarePen as PencilIcon, Trash as TrashIcon, ReplyAll as ReplyIcon, SmilePlus as EmojiIcon } from 'lucide-react'
 import * as Dropdown from '@radix-ui/react-dropdown-menu'
 import { useState } from 'react'
 import { cn, scrollToMessage, toHHMM } from '@/lib/utils'
 import { ws } from '@/lib/ws'
 import { useAppStore } from '@/stores/appStore'
+import { EmojiPicker } from '@/components/EmojiPicker'
+import * as HoverCard from '@radix-ui/react-hover-card';
 
 type Props = {
   message: RoomMessage
@@ -13,7 +15,11 @@ type Props = {
   setReplyTo: (messageID: string | null) => void
 }
 
-function MessageOptions(props: Props) {
+type MessageOptionsProps = Props & {
+  setEmojiOpen: (open: boolean) => void
+}
+
+function MessageOptions(props: MessageOptionsProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -60,6 +66,10 @@ function MessageOptions(props: Props) {
             <ReplyIcon size={20} className="text-muted" />
             <span>Reply</span>
           </Dropdown.Item>
+          <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => props.setEmojiOpen(true)}>
+            <EmojiIcon size={20} className="text-muted" />
+            <span>React</span>
+          </Dropdown.Item>
         </Dropdown.Content>
       </Dropdown.Portal>
     </Dropdown.Root>
@@ -70,6 +80,7 @@ export function Message(props: Props) {
   const { message } = props
   const messages = useAppStore().rooms[message.roomID] ?? []
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
+  const [emojiOpen, setEmojiOpen] = useState(false)
 
   return (
     <div className='px-4 py-2 flex gap-3 items-start group' id={`message-${message.id}`}>
@@ -78,11 +89,21 @@ export function Message(props: Props) {
         <div className="flex items-center justify-between text-muted text-sm mb-1">
           <div className="flex items-center gap-3">
             <p>{message.from.username}</p>
-            <MessageOptions {...props} />
+            <MessageOptions {...props} setEmojiOpen={setEmojiOpen} />
           </div>
           <div className="flex gap-2 items-center">
             {message.isEdited && <PencilIcon size={14} className="text-muted" />}
             <span className="text-xs">{toHHMM(message.createdAt)}</span>
+            <EmojiPicker
+              align='start'
+              open={emojiOpen}
+              setOpen={setEmojiOpen}
+              onSelect={emoji => {
+                ws.react(props.message.roomID, props.message.id, emoji)
+                setEmojiOpen(false)
+              }}
+              trigger={null}
+            />
           </div>
         </div>
         {replyToMsg && (
@@ -97,6 +118,32 @@ export function Message(props: Props) {
         <p className={cn({
           'italic text-muted': message.isDeleted
         })}>{message.isDeleted ? 'This message has been deleted' : message.message}</p>
+        {!message.isDeleted && (
+          <div className="flex gap-2 mt-1 text-sm items-center flex-wrap">
+            {Object.entries(message.reactions).map(([reaction, userMap]) => {
+              return (
+                <HoverCard.Root key={reaction}>
+                  <HoverCard.Trigger asChild>
+                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.react(props.message.roomID, props.message.id, reaction)}>
+                      <span>{reaction}</span>
+                      <span className='font-semibold'>{Object.keys(userMap).length}</span>
+                    </button>
+                  </HoverCard.Trigger>
+                  <HoverCard.Portal>
+                    <HoverCard.Content className='rounded-lg p-3 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-3 border border-border' sideOffset={10}>
+                      {Object.values(userMap).map(user => {
+                        return <div key={user.id} className='flex gap-2 items-center'>
+                          <img className="w-4 h-4 rounded-md" src={user.avatar} referrerPolicy="no-referrer" />
+                          <p className='text-xs'>{user.username}</p>
+                        </div>
+                      })}
+                    </HoverCard.Content>
+                  </HoverCard.Portal>
+                </HoverCard.Root>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
