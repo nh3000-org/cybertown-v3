@@ -31,10 +31,10 @@ export function RoomCard(props: Props) {
       <p className="text-muted">{room.language}</p>
 
       <div className="min-h-[60px] mt-4 flex flex-wrap gap-4">
-        {room.users.map(user => {
-          return <img key={user.id} src={user.avatar} referrerPolicy="no-referrer" style={style} className="rounded-full" />
+        {room.participants.map(p => {
+          return <img key={p.id} src={p.avatar} referrerPolicy="no-referrer" style={style} className="rounded-full" />
         })}
-        {Array.from({ length: room.maxParticipants - room.users.length }).map((_, i) => {
+        {Array.from({ length: room.maxParticipants - room.participants.length }).map((_, i) => {
           return <div key={i} style={style} className="rounded-full border border-border border-dashed" />
         })}
       </div>

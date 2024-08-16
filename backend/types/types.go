@@ -51,5 +51,5 @@ type CreateRoomRequest struct {
 
 type RoomsResponse struct {
 	*Room
-	Users []*User `json:"users"`
+	Participants []*User `json:"participants"`
 }

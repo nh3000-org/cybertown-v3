@@ -1,12 +1,13 @@
 import { config } from "@/config";
-import { DeleteMessageEvent, EditMessageEvent, JoinRoomEvent, LeaveRoomEvent, NewMessageEvent, ReactionEvent, SocketEvent } from "@/types";
+import { ClientEvent } from "@/types/client-event";
+import { BroadcastEvent } from "@/types/broadcast";
 import { queryClient } from "./utils";
 import { useAppStore } from "@/stores/appStore";
 
 class WS {
   private socket: WebSocket
   private static instance: WS
-  currentRoomID: number | null = null
+  roomID: number | null = null
 
   public static getInstance(): WS {
     if (!WS.instance) {
@@ -17,124 +18,127 @@ class WS {
 
   constructor() {
     const socket = new WebSocket(config.wsURL);
+
     socket.onopen = function() {
       console.log("socket connection established")
     }
+
     socket.onclose = function(e: CloseEvent) {
       console.log("socket connection closed", e.code)
     }
+
+
     socket.onmessage = (e: MessageEvent) => {
       try {
-        const event: SocketEvent = JSON.parse(e.data)
+        const event: BroadcastEvent = JSON.parse(e.data)
         console.log("received event", event)
         switch (event.name) {
-          case "JOINED_ROOM":
-          case "LEFT_ROOM":
-          case "NEW_ROOM":
+          case "JOINED_ROOM_BROADCAST":
+          case "LEFT_ROOM_BROADCAST":
+          case "NEW_ROOM_BROADCAST":
             queryClient.invalidateQueries({
               queryKey: ['rooms']
             })
             break;
           case "NEW_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.currentRoomID) {
+            if (event.data.roomID !== this.roomID) {
               return
             }
-            useAppStore.getState().addMessage(this.currentRoomID, event.data)
+            useAppStore.getState().addMsg(event)
             break;
           case "EDIT_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.currentRoomID) {
+            if (event.data.roomID !== this.roomID) {
               return
             }
-            useAppStore.getState().editMessage(this.currentRoomID, event.data)
+            useAppStore.getState().editMsg(event)
             break;
           case "DELETE_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.currentRoomID) {
+            if (event.data.roomID !== this.roomID) {
               return
             }
-            useAppStore.getState().deleteMessage(this.currentRoomID, event.data.id, event.data.from)
+            useAppStore.getState().deleteMsg(event)
             break;
           case "REACTION_TO_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.currentRoomID) {
+            if (event.data.roomID !== this.roomID) {
               return
             }
-            useAppStore.getState().react(event.data)
+            useAppStore.getState().reactionToMsg(event)
             break;
         }
       } catch (err) {
-        console.error("failed to parse socket data", err)
+        console.error("failed to parse broadcast event 'data' field", err)
       }
     }
     this.socket = socket
   }
 
   joinRoom(roomID: number) {
-    const event: JoinRoomEvent = {
+    this.roomID = roomID
+    this.sendClientEvent({
       name: "JOIN_ROOM",
       data: {
-        roomID: Number(roomID),
+        roomID: roomID,
       }
-    }
-    this.socket.send(JSON.stringify(event))
-    this.currentRoomID = roomID
+    })
   }
 
   leaveRoom(roomID: number) {
-    const event: LeaveRoomEvent = {
+    this.roomID = null
+    useAppStore.getState().clearMessages()
+    this.sendClientEvent({
       name: "LEAVE_ROOM",
       data: {
-        roomID: Number(roomID),
+        roomID: roomID,
       }
-    }
-    this.socket.send(JSON.stringify(event))
-    useAppStore.getState().clearMessages(this.currentRoomID!)
-    this.currentRoomID = null
+    })
   }
 
-  editMessage(roomID: number, id: string, message: string) {
-    const event: EditMessageEvent = {
+  editMsg(id: string, content: string) {
+    this.sendClientEvent({
       name: "EDIT_MESSAGE",
       data: {
         id,
-        message,
-        roomID,
+        content,
+        roomID: this.roomID!,
       }
-    }
-    this.socket.send(JSON.stringify(event))
+    })
   }
 
-  deleteMessage(roomID: number, msgID: string) {
-    const event: DeleteMessageEvent = {
+  deleteMsg(id: string) {
+    this.sendClientEvent({
       name: "DELETE_MESSAGE",
       data: {
-        id: msgID,
-        roomID,
+        id,
+        roomID: this.roomID!,
       }
-    }
-    this.socket.send(JSON.stringify(event))
+    })
   }
 
-  react(roomID: number, msgID: string, reaction: string) {
-    const event: ReactionEvent = {
+  reactionToMsg(id: string, reaction: string) {
+    this.sendClientEvent({
       name: 'REACTION_TO_MESSAGE',
       data: {
+        id,
         reaction,
-        roomID,
-        id: msgID,
+        roomID: this.roomID!,
       }
-    }
-    this.socket.send(JSON.stringify(event))
+    })
   }
 
-  newMessage(roomID: number, data: { message: string, replyTo?: string }) {
-    const event: NewMessageEvent = {
+  newMessage(content: string, replyTo?: string) {
+    this.sendClientEvent({
       name: "NEW_MESSAGE",
       data: {
-        ...data,
-        roomID,
+        content,
+        replyTo,
+        roomID: this.roomID!,
       }
-    }
+    })
+  }
+
+  sendClientEvent(event: ClientEvent) {
     this.socket.send(JSON.stringify(event))
   }
 }
 
-export let ws = WS.getInstance()
+export const ws = WS.getInstance()

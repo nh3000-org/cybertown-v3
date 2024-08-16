@@ -32,4 +32,4 @@ export function LoginAlert() {
       </AlertDialog.Portal>
     </AlertDialog.Root>
   )
-};
+}

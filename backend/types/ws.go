@@ -15,14 +15,14 @@ type LeaveRoom struct {
 
 type NewMessage struct {
 	RoomID  int    `json:"roomID"`
-	Message string `json:"message"`
+	Content string `json:"content"`
 	ReplyTo string `json:"replyTo"`
 }
 
 type EditMessage struct {
 	ID      string `json:"id"`
+	Content string `json:"content"`
 	RoomID  int    `json:"roomID"`
-	Message string `json:"message"`
 }
 
 type DeleteMessage struct {

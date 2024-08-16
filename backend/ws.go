@@ -59,7 +59,7 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User) {
 	delete(s.rooms[roomID], conn)
 	ss.broadcastEvent(&t.Event{
-		Name: "LEFT_ROOM",
+		Name: "LEFT_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
 			"user":   user,
@@ -84,16 +84,16 @@ func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 	}
 }
 
-func (s *socketServer) getUsersInRoom(roomID int) []*t.User {
-	users := make([]*t.User, 0)
+func (s *socketServer) getParticipantsInRoom(roomID int) []*t.User {
+	participants := make([]*t.User, 0)
 	if _, ok := ss.rooms[roomID]; ok {
 		for conn := range ss.rooms[roomID] {
 			if u, ok := ss.conns[conn]; ok {
-				users = append(users, u)
+				participants = append(participants, u)
 			}
 		}
 	}
-	return users
+	return participants
 }
 
 func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.User) (int, error) {
@@ -108,7 +108,7 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.U
 	ss.joinRoom(conn, data.RoomID)
 
 	ss.broadcastEvent(&t.Event{
-		Name: "JOINED_ROOM",
+		Name: "JOINED_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": data.RoomID,
 			"user":   user,
@@ -149,7 +149,7 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 		Name: "NEW_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":        shortuuid.New(),
-			"message":   data.Message,
+			"content":   data.Content,
 			"from":      user,
 			"createdAt": time.Now().UTC().Format(time.RFC3339),
 			"roomID":    data.RoomID,
@@ -176,7 +176,7 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *
 		Data: map[string]any{
 			"id":      data.ID,
 			"roomID":  data.RoomID,
-			"message": data.Message,
+			"content": data.Content,
 			"from":    user,
 		},
 	})
@@ -238,7 +238,6 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed to accept socket connection: %v", err)
 		return
 	}
-	log.Println("connection established")
 
 	// last joined room
 	var roomID int

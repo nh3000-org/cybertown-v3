@@ -123,7 +123,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	ss.broadcastEvent(&types.Event{
-		Name: "NEW_ROOM",
+		Name: "NEW_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
 		},
@@ -144,8 +144,8 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 	var res []*types.RoomsResponse
 	for _, room := range rooms {
 		roomRes := types.RoomsResponse{
-			Room:  room,
-			Users: ss.getUsersInRoom(room.ID),
+			Room:         room,
+			Participants: ss.getParticipantsInRoom(room.ID),
 		}
 		res = append(res, &roomRes)
 	}
@@ -171,8 +171,8 @@ func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roomRes := types.RoomsResponse{
-		Room:  room,
-		Users: ss.getUsersInRoom(room.ID),
+		Room:         room,
+		Participants: ss.getParticipantsInRoom(room.ID),
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]any{

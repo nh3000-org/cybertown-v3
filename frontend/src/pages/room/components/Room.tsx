@@ -8,13 +8,8 @@ import { EmojiPicker } from "@/components/EmojiPicker"
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { VerticalScrollbar } from "@/components/VerticalScrollbar"
 
-type Props = {
-  roomID: number
-}
-
-export function Room(props: Props) {
-  const { roomID } = props
-  const messages = useAppStore().rooms[roomID] ?? []
+export function Room() {
+  const messages = useAppStore().messages
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [editMsgID, setEditMsgID] = useState<string | null>(null)
@@ -33,12 +28,9 @@ export function Room(props: Props) {
       }
 
       if (editMsgID) {
-        ws.editMessage(props.roomID, editMsgID, value.trim())
+        ws.editMsg(editMsgID, value.trim())
       } else {
-        ws.newMessage(props.roomID, {
-          message: value.trim(),
-          replyTo: replyTo ?? undefined
-        })
+        ws.newMessage(value.trim(), replyTo ?? undefined)
       }
 
       setEditMsgID(null)
@@ -74,7 +66,7 @@ export function Room(props: Props) {
         <div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
           <div className="flex gap-1 self-end mr-1.5">
             <EmojiPicker trigger={<button><EmojiIcon strokeWidth={1.5} size={20} className="text-muted" /></button>} open={emojiOpen} setOpen={setEmojiOpen} onSelect={(emoji) => {
-              ws.newMessage(props.roomID, { message: emoji })
+              ws.newMessage(emoji)
               setEmojiOpen(false)
             }} />
             {editMsgID && (
@@ -104,7 +96,7 @@ export function Room(props: Props) {
                     <CloseIcon size={20} className="text-muted" />
                   </button>
                 </div>
-                <p className="ellipsis w-[300px]">{replyToMsg.message}</p>
+                <p className="ellipsis w-[300px]">{replyToMsg.content}</p>
               </div>
             </div>
           )}

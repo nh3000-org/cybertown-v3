@@ -17,7 +17,7 @@ export function RoomPage() {
     if (room) {
       ws.joinRoom(roomID!)
     }
-  }, [room])
+  }, [room, roomID])
 
   if (isRoomLoading) {
     return null
@@ -35,5 +35,5 @@ export function RoomPage() {
     return <Onboarding user={user} setIsOnboarding={setIsOnBoarding} />
   }
 
-  return <Room roomID={roomID!} />
+  return <Room />
 }

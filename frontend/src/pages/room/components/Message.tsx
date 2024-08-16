@@ -1,4 +1,3 @@
-import { RoomMessage } from '@/types'
 import { ChevronDown as ChevronDownIcon, SquarePen as PencilIcon, Trash as TrashIcon, ReplyAll as ReplyIcon, SmilePlus as EmojiIcon } from 'lucide-react'
 import * as Dropdown from '@radix-ui/react-dropdown-menu'
 import { useState } from 'react'
@@ -7,9 +6,10 @@ import { ws } from '@/lib/ws'
 import { useAppStore } from '@/stores/appStore'
 import { EmojiPicker } from '@/components/EmojiPicker'
 import * as HoverCard from '@radix-ui/react-hover-card';
+import { Message as TMessage } from '@/types/broadcast'
 
 type Props = {
-  message: RoomMessage
+  message: TMessage
   textareaRef: React.RefObject<HTMLTextAreaElement>
   setEditMsgID: (messageID: string | null) => void
   setReplyTo: (messageID: string | null) => void
@@ -21,38 +21,45 @@ type MessageOptionsProps = Props & {
 
 function MessageOptions(props: MessageOptionsProps) {
   const [open, setOpen] = useState(false)
+  const user = useAppStore().user
+  const isMyMessage = user?.id === props.message.from.id
 
   return (
     <Dropdown.Root onOpenChange={setOpen}>
       <Dropdown.Trigger asChild>
-        <button className={cn('invisible group-hover:visible', {
-          'visible': open
+        <button className={cn('invisible', {
+          'visible': open,
+          'group-hover:visible': !props.message.isDeleted
         })}>
           <ChevronDownIcon size={18} className="text-muted" />
         </button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content className="rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border" side='bottom' sideOffset={12} align='start' onCloseAutoFocus={e => e.preventDefault()}>
-          <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-            props.setReplyTo(null)
-            props.setEditMsgID(props.message.id)
-            // if you remove the `setTimeout`, it won't work
-            setTimeout(() => {
-              if (props.textareaRef.current) {
-                props.textareaRef.current.focus()
-                props.textareaRef.current.value = props.message.message
-              }
-            }, 0)
-          }}>
-            <PencilIcon size={20} className="text-muted" />
-            <span>Edit</span>
-          </Dropdown.Item>
-          <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-            ws.deleteMessage(props.message.roomID, props.message.id)
-          }}>
-            <TrashIcon size={20} className="text-muted" />
-            <span>Delete</span>
-          </Dropdown.Item>
+          {isMyMessage && (
+            <>
+              <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
+                props.setReplyTo(null)
+                props.setEditMsgID(props.message.id)
+                // if you remove the `setTimeout`, it won't work
+                setTimeout(() => {
+                  if (props.textareaRef.current) {
+                    props.textareaRef.current.focus()
+                    props.textareaRef.current.value = props.message.content
+                  }
+                }, 0)
+              }}>
+                <PencilIcon size={20} className="text-muted" />
+                <span>Edit</span>
+              </Dropdown.Item>
+              <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
+                ws.deleteMsg(props.message.id)
+              }}>
+                <TrashIcon size={20} className="text-muted" />
+                <span>Delete</span>
+              </Dropdown.Item>
+            </>
+          )}
           <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
             props.setEditMsgID(null)
             props.setReplyTo(props.message.id)
@@ -78,7 +85,7 @@ function MessageOptions(props: MessageOptionsProps) {
 
 export function Message(props: Props) {
   const { message } = props
-  const messages = useAppStore().rooms[message.roomID] ?? []
+  const messages = useAppStore().messages
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
   const [emojiOpen, setEmojiOpen] = useState(false)
 
@@ -99,7 +106,7 @@ export function Message(props: Props) {
               open={emojiOpen}
               setOpen={setEmojiOpen}
               onSelect={emoji => {
-                ws.react(props.message.roomID, props.message.id, emoji)
+                ws.reactionToMsg(props.message.id, emoji)
                 setEmojiOpen(false)
               }}
               trigger={null}
@@ -111,20 +118,20 @@ export function Message(props: Props) {
             <img className="w-6 h-6 rounded-md" src={replyToMsg.from.avatar} referrerPolicy="no-referrer" />
             <div className="flex-1 flex flex-col gap-1 text-sm">
               <p className="text-muted">{replyToMsg.from.username}</p>
-              <p className="ellipsis w-[269px]">{replyToMsg.message}</p>
+              <p className="ellipsis w-[269px]">{replyToMsg.content}</p>
             </div>
           </div>
         )}
         <p className={cn({
           'italic text-muted': message.isDeleted
-        })}>{message.isDeleted ? 'This message has been deleted' : message.message}</p>
+        })}>{message.isDeleted ? 'This message has been deleted' : message.content}</p>
         {!message.isDeleted && (
           <div className="flex gap-2 mt-1 text-sm items-center flex-wrap">
             {Object.entries(message.reactions).map(([reaction, userMap]) => {
               return (
                 <HoverCard.Root key={reaction}>
                   <HoverCard.Trigger asChild>
-                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.react(props.message.roomID, props.message.id, reaction)}>
+                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.reactionToMsg(props.message.id, reaction)}>
                       <span>{reaction}</span>
                       <span className='font-semibold'>{Object.keys(userMap).length}</span>
                     </button>

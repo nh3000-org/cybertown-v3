@@ -42,4 +42,4 @@ export function LogoutAlert() {
       </AlertDialog.Portal>
     </AlertDialog.Root>
   )
-};
+}
