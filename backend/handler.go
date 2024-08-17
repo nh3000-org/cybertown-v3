@@ -119,7 +119,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 	roomID, err := app.repo.CreateRoom(context.Background(), &types.Room{
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
-		Language:        req.Language,
+		Languages:       req.Languages,
 		CreatedBy:       u.ID,
 	})
 

@@ -31,6 +31,20 @@ func (v *Validator) Count(key string, value *string, op string, count int) *Vali
 	return v
 }
 
+func (v *Validator) CountSlice(key string, value []string, op string, count int) *Validator {
+	switch op {
+	case "min":
+		if len(value) < count {
+			v.Errors[key] = fmt.Sprintf("should contain minimum of %d element(s)", count)
+		}
+	case "max":
+		if len(value) > count {
+			v.Errors[key] = fmt.Sprintf("should contain maximum of %d elements", count)
+		}
+	}
+	return v
+}
+
 func (v *Validator) IsInStr(key string, value *string, values []string) *Validator {
 	*value = strings.Trim(*value, " ")
 	if !isIn(*value, values) {
@@ -42,6 +56,15 @@ func (v *Validator) IsInStr(key string, value *string, values []string) *Validat
 func (v *Validator) IsInInt(key string, value int, values []int) *Validator {
 	if !isIn(value, values) {
 		v.Errors[key] = fmt.Sprintf("%d is not allowed", value)
+	}
+	return v
+}
+
+func (v *Validator) IsInSlice(key string, items []string, values []string) *Validator {
+	for _, item := range items {
+		if !isIn(item, values) {
+			v.Errors[key] = fmt.Sprintf("%d is not allowed", item)
+		}
 	}
 	return v
 }

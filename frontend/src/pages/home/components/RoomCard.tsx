@@ -28,7 +28,7 @@ export function RoomCard(props: Props) {
   return (
     <div className="p-4 border border-border rounded-md bg-bg-2 text-fg-2 flex flex-col">
       <p className="text-lg font-semibold mb-1">{room.topic}</p>
-      <p className="text-muted">{room.language}</p>
+      <p className="text-muted">{room.languages.join(" + ")}</p>
 
       <div className="min-h-[60px] mt-4 flex flex-wrap gap-4">
         {room.participants.map(p => {

@@ -15,16 +15,16 @@ var (
 )
 
 type CreateRoomRequest struct {
-	Topic           string `json:"topic"`
-	MaxParticipants int    `json:"maxParticipants"`
-	Language        string `json:"language"`
+	Topic           string   `json:"topic"`
+	MaxParticipants int      `json:"maxParticipants"`
+	Languages       []string `json:"languages"`
 }
 
 func (r *CreateRoomRequest) Validate() (bool, error) {
 	vd := v.NewValidator()
 	vd.Count("topic", &r.Topic, "min", minTopicLen).
 		Count("topic", &r.Topic, "max", maxTopicLen).
-		IsInStr("language", &r.Language, allowedLanguages).
+		IsInSlice("language", r.Languages, allowedLanguages).
 		IsInInt("maxParticipants", r.MaxParticipants, allowedMaxParticipants)
 	return vd.IsValid(), vd
 }

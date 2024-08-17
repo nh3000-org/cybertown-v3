@@ -12,11 +12,11 @@ type User struct {
 }
 
 type Room struct {
-	ID              int    `json:"id"`
-	Topic           string `json:"topic"`
-	Language        string `json:"language"`
-	MaxParticipants int    `json:"maxParticipants"`
-	CreatedBy       int    `json:"createdBy"`
+	ID              int      `json:"id"`
+	Topic           string   `json:"topic"`
+	Languages       []string `json:"languages"`
+	MaxParticipants int      `json:"maxParticipants"`
+	CreatedBy       int      `json:"createdBy"`
 }
 
 type GoogleOAuthToken struct {

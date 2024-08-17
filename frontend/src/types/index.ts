@@ -12,7 +12,7 @@ export type Room = {
 export type CreateRoom = {
   topic: string
   maxParticipants: number
-  language: string
+  languages: string[]
 }
 
 export type RoomRes = Room & { participants: User[] }

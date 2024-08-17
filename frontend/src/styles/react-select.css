@@ -1,0 +1,71 @@
+.react-select__control {
+  @apply bg-transparent border-border rounded-md text-muted !important;
+}
+
+.react-select__input:focus {
+  @apply outline-none ring-0 shadow-none !important;
+}
+
+.react-select__indicator-separator {
+  @apply hidden !important;
+}
+
+.react-select__indicator svg {
+  @apply fill-muted !important;
+}
+
+.react-select__control--is-focused {
+  @apply shadow-none ring-1 ring-accent !important;
+}
+
+.react-select__control--is-focused {
+  @apply shadow-none ring-1 ring-accent !important;
+}
+
+.react-select__menu {
+  @apply rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 border border-border !important;
+}
+
+.react-select__option {
+  @apply rounded-md !important;
+}
+
+.react-select__option--is-focused, .react-select__option--is-selected {
+  @apply bg-highlight !important;
+}
+
+.react-select__option--is-selected {
+  @apply bg-accent/20 !important;
+}
+
+.react-select__single-value {
+  @apply text-fg-2 !important;
+}
+
+.react-select__input-container {
+  @apply text-fg-2 border-0 !important;
+}
+
+.react-select__menu-list::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+.react-select__menu-list::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.react-select__menu-list::-webkit-scrollbar-thumb {
+  @apply bg-scrollbar;
+}
+
+.react-select__multi-value {
+  @apply border border-accent/60 text-accent-fg bg-accent/20 rounded-md !important;
+}
+
+.react-select__multi-value__label {
+  @apply text-accent-fg !important;
+}
+
+.react-select__multi-value__remove:hover {
+  @apply text-inherit bg-transparent !important;
+}

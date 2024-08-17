@@ -1,16 +1,17 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Label } from '@radix-ui/react-label';
-import { Select } from './Select';
-import { useState } from 'react';
+import { Option, Select } from './Select';
+import { useEffect, useState } from 'react';
 import { z } from "zod";
 import { useCreateRoom } from '@/hooks/mutations/useCreateRoom';
 import { LoadingIcon } from './LoadingIcon';
 import { useAppStore } from '@/stores/appStore';
+import { MultiValue, SingleValue } from 'react-select'
 
 const createRoomSchema = z.object({
   topic: z.string().min(3, { message: 'Should be minimum of 3 characters' }).max(128, { message: 'Exceeded maximum of 128 characters' }),
-  maxParticipants: z.string().min(1, { message: 'Provide a value' }),
-  language: z.string().min(1, { message: 'Provide a value' }),
+  maxParticipants: z.number({ message: 'Provide a value' }),
+  languages: z.string().array().min(1, { message: 'Provide a value' }),
 })
 
 type Props = {
@@ -23,19 +24,22 @@ export function CreateRoom(props: Props) {
   const setAlert = useAppStore().setAlert
   const { mutateAsync: createRoom, isLoading } = useCreateRoom()
 
-  const [room, setRoom] = useState({
+  const [room, setRoom] = useState<{
+    topic: string
+    maxParticipants?: SingleValue<Option>
+    languages: MultiValue<Option>
+  }>({
     topic: '',
-    maxParticipants: '',
-    language: '',
+    languages: []
   })
 
   const [errors, setErrors] = useState({
     topic: '',
     maxParticipants: '',
-    language: '',
+    languages: '',
   })
 
-  function onChange(key: keyof typeof room, value: string) {
+  function onChange(key: keyof typeof room, value: any) {
     setErrors(prev => ({ ...prev, [key]: '' }))
     setRoom(prev => ({
       ...prev,
@@ -44,14 +48,17 @@ export function CreateRoom(props: Props) {
   }
 
   async function handleCreateRoom() {
-    const result = createRoomSchema.safeParse({ ...room, topic: room.topic.trim() })
+    const payload = {
+      topic: room.topic.trim(),
+      maxParticipants: room.maxParticipants ? Number(room.maxParticipants.value) : undefined,
+      languages: room.languages.map(el => el.value),
+    }
+
+    const result = createRoomSchema.safeParse(payload)
     if (result.success) {
       try {
-        await createRoom({
-          topic: room.topic.trim(),
-          maxParticipants: Number(room.maxParticipants),
-          language: room.language
-        })
+        console.log(result.data)
+        await createRoom(result.data)
         props.setOpen(false)
       } catch {
       }
@@ -76,6 +83,23 @@ export function CreateRoom(props: Props) {
     }))
   }
 
+  // this is a workaround to clear the state when
+  // the modal gets closed
+  useEffect(() => {
+    if (!props.open) {
+      setRoom({
+        topic: '',
+        languages: [],
+        maxParticipants: undefined
+      })
+      setErrors({
+        topic: '',
+        maxParticipants: '',
+        languages: '',
+      })
+    }
+  }, [props.open])
+
   return (
     <Dialog.Root open={props.open} onOpenChange={props.setOpen}>
       <Dialog.Trigger asChild>
@@ -99,46 +123,44 @@ export function CreateRoom(props: Props) {
 
           <div className="flex flex-col gap-3 mb-8">
             <Label htmlFor="topic">Topic</Label>
-            <input id="topic" type="text" className="w-full border border-border bg-transparent rounded-md py-2 px-4" autoComplete="off" placeholder="Enter topic name" value={room.topic} onChange={(e) => {
+            <input id="topic" type="text" className="w-full border border-border bg-transparent rounded-md p-2 px-3" autoComplete="off" placeholder="Enter topic name" value={room.topic} onChange={(e) => {
               onChange('topic', e.target.value)
             }} />
             {errors.topic ? <span className="text-danger text-sm">{errors.topic}</span> : null}
           </div>
 
-          <div className="flex gap-8 flex-col md:flex-row md:gap-3">
-            <div className="flex flex-col gap-3 flex-1">
-              <Label htmlFor="maxParticipants">Max Participants</Label>
-              <Select placeholder="Select participants" id="maxParticipants" value={room.maxParticipants} setValue={(maxParticipnats) => {
-                onChange("maxParticipants", maxParticipnats)
-              }} options={[
-                { value: '-1', label: 'Unlimited' },
-                { value: '1', label: '1' },
-                { value: '2', label: '2' },
-                { value: '3', label: '3' },
-                { value: '4', label: '4' },
-                { value: '5', label: '5' },
-                { value: '6', label: '6' },
-                { value: '7', label: '7' },
-                { value: '8', label: '8' },
-                { value: '9', label: '9' },
-                { value: '10', label: '10' },
-              ]} />
-              {errors.maxParticipants ? <span className="text-danger text-sm">{errors.maxParticipants}</span> : null}
-            </div>
+          <div className="flex flex-col gap-3 flex-1 mb-8">
+            <Label htmlFor="maxParticipants">Max Participants</Label>
+            <Select placeholder="Select participants" value={room.maxParticipants} setValue={(participants) => {
+              onChange('maxParticipants', participants ?? undefined)
+            }} options={[
+              { value: '-1', label: 'Unlimited' },
+              { value: '1', label: '1' },
+              { value: '2', label: '2' },
+              { value: '3', label: '3' },
+              { value: '4', label: '4' },
+              { value: '5', label: '5' },
+              { value: '6', label: '6' },
+              { value: '7', label: '7' },
+              { value: '8', label: '8' },
+              { value: '9', label: '9' },
+              { value: '10', label: '10' },
+            ]} />
+            {errors.maxParticipants ? <span className="text-danger text-sm">{errors.maxParticipants}</span> : null}
+          </div>
 
-            <div className="flex flex-col gap-3 flex-1">
-              <Label htmlFor="language">Language</Label>
-              <Select id="language" placeholder="Select language" value={room.language} setValue={(language) => {
-                onChange('language', language)
-              }} options={[
-                { value: 'english', label: 'English' },
-                { value: 'tamil', label: 'Tamil' },
-                { value: 'hindi', label: 'Hindi' },
-                { value: 'vietnamese', label: 'Vietnamese' },
-                { value: 'indonesian', label: 'Indonesian' },
-              ]} />
-              {errors.language ? <span className="text-danger text-sm">{errors.language}</span> : null}
-            </div>
+          <div className="flex flex-col gap-3 flex-1">
+            <Label htmlFor="language">Language</Label>
+            <Select multiCount={2} value={room.languages} setValue={(language) => {
+              onChange('languages', language ?? [])
+            }} isMulti placeholder="Select language" options={[
+              { value: 'english', label: 'English' },
+              { value: 'tamil', label: 'Tamil' },
+              { value: 'hindi', label: 'Hindi' },
+              { value: 'vietnamese', label: 'Vietnamese' },
+              { value: 'indonesian', label: 'Indonesian' },
+            ]} />
+            {errors.languages ? <span className="text-danger text-sm">{errors.languages}</span> : null}
           </div>
 
           <div className="justify-end flex justify-end gap-4 items-center mt-12">

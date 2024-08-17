@@ -88,18 +88,18 @@ func (r *Repo) DeleteSessionForUser(ctx context.Context, sessionID string, userI
 
 func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
 	query := `
-		INSERT INTO rooms(topic, max_participants, language, created_by)
+		INSERT INTO rooms(topic, max_participants, languages, created_by)
 		VALUES ($1, $2, $3, $4)
 	  RETURNING id;
 	`
 	var roomID int
-	err := r.pool.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Language, room.CreatedBy).Scan(&roomID)
+	err := r.pool.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.CreatedBy).Scan(&roomID)
 	return roomID, err
 }
 
 func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	query := `
-	  SELECT id, topic, max_participants, language, created_by 
+	  SELECT id, topic, max_participants, languages, created_by 
 	  FROM rooms ORDER BY created_at DESC;
 	`
 
@@ -111,7 +111,7 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	var rooms []*types.Room
 	for rows.Next() {
 		var room types.Room
-		err := rows.Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Language, &room.CreatedBy)
+		err := rows.Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedBy)
 		if err != nil {
 			log.Printf("failed to scan room: %v", err)
 			continue
@@ -124,11 +124,11 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 
 func (r *Repo) GetRoom(ctx context.Context, roomID int) (*types.Room, error) {
 	query := `
-	  SELECT id, topic, max_participants, language, created_by 
+	  SELECT id, topic, max_participants, languages, created_by 
 	  FROM rooms WHERE id = $1;
 	`
 	var room types.Room
-	err := r.pool.QueryRow(ctx, query, roomID).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Language, &room.CreatedBy)
+	err := r.pool.QueryRow(ctx, query, roomID).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedBy)
 	if err != nil {
 		return nil, err
 	}

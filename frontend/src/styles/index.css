@@ -55,16 +55,15 @@
 }
 
 .scroller::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
+  @apply w-1.5 h-1.5;
 }
 
 .scroller::-webkit-scrollbar-track {
-  background: transparent;
+  @apply bg-transparent;
 }
 
 .scroller::-webkit-scrollbar-thumb {
-  background: theme(colors.gray.300);
+  @apply bg-scrollbar;
 }
 
 .ellipsis {

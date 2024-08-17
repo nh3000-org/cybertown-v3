@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   id SERIAL PRIMARY KEY,
   topic VARCHAR(128) NOT NULL,
   max_participants INTEGER NOT NULL,
-  language VARCHAR(128) NOT NULL,
+  languages VARCHAR(64)[] NOT NULL,
   created_by INTEGER NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
   FOREIGN KEY (created_by) REFERENCES users (id)

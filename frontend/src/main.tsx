@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from 'react-query'
 import { queryClient } from '@/lib/utils'
-import '@/styles/index.css'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -11,6 +10,9 @@ import { HomePage } from '@/pages/home'
 import { RoomPage } from '@/pages/room'
 import '@/lib/ws'
 import { App } from '@/components/App'
+
+import '@/styles/index.css'
+import '@/styles/react-select.css'
 
 const router = createBrowserRouter([
   {
