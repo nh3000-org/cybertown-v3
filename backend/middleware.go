@@ -50,7 +50,7 @@ func (app *application) authMiddleware(next http.Handler) http.Handler {
 
 		user, err := app.repo.GetUserFromSession(context.Background(), c.Value)
 		if err != nil {
-			log.Printf("failed get user from session: %v\n", err)
+			log.Printf("failed to get user from session: %v\n", err)
 			next.ServeHTTP(w, r)
 			return
 		}

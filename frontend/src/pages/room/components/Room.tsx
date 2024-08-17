@@ -14,6 +14,7 @@ export function Room() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [editMsgID, setEditMsgID] = useState<string | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const [error, setError] = useState('')
 
   const [replyTo, setReplyTo] = useState<string | null>(null)
   const replyToMsg = messages.find(msg => replyTo && msg.id === replyTo)
@@ -24,6 +25,11 @@ export function Room() {
 
       const value = e.currentTarget.value
       if (!value.trim().length) {
+        return
+      }
+
+      if (value.trim().length > 1024) {
+        setError("Exceeded maximum of 1024 characters")
         return
       }
 
@@ -65,7 +71,7 @@ export function Room() {
         </ScrollArea.Root>
         <div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
           <div className="flex gap-1 self-end mr-1.5">
-            <EmojiPicker trigger={<button><EmojiIcon strokeWidth={1.5} size={20} className="text-muted" /></button>} open={emojiOpen} setOpen={setEmojiOpen} onSelect={(emoji) => {
+            <EmojiPicker trigger={<button><EmojiIcon strokeWidth={1.5} size={20} className="text-muted" /></button>} open={emojiOpen} setOpen={setEmojiOpen} onSelect={(_, emoji) => {
               ws.newMessage(emoji)
               setEmojiOpen(false)
             }} />
@@ -101,7 +107,8 @@ export function Room() {
             </div>
           )}
 
-          <textarea ref={textareaRef} onKeyDown={handleNewMessage} placeholder="Enter your message" className="bg-bg-2 text-fg-2 p-4 rounded-md border border-border" />
+          <textarea onChange={() => setError('')} ref={textareaRef} onKeyDown={handleNewMessage} placeholder="Enter your message" className="bg-bg-2 text-fg-2 p-4 rounded-md border border-border" />
+          {error ? <span className="text-danger text-sm">{error}</span> : null}
         </div>
       </div>
     </main>

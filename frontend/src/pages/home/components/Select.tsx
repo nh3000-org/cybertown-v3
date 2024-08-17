@@ -38,7 +38,7 @@ export function Select(props: Props) {
         <RSelect.Content className="rounded-lg shadow-md bg-bg-2 text-fg-2 border border-border h-[200px] overflow-hidden" position='popper' sideOffset={10}>
           <ScrollArea.Root className="overflow-hidden">
             <RSelect.Viewport asChild>
-              <ScrollArea.Viewport className="h-full w-full p-2">
+              <ScrollArea.Viewport className="h-full w-full p-2" style={{ overflowY: undefined }}>
                 {props.options.map(option => {
                   return (
                     <RSelect.Item key={option.value} value={option.value} className="data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md mb-1">

@@ -4,6 +4,7 @@ import (
 	"backend/db"
 	"backend/service"
 	"backend/types"
+	"backend/utils"
 	"log"
 	"net/http"
 
@@ -15,6 +16,7 @@ type application struct {
 	repo *db.Repo
 	svc  *service.Service
 	conf *types.Config
+	ss   *socketServer
 }
 
 func main() {
@@ -28,10 +30,17 @@ func main() {
 	pool := db.NewPool(conf.PostgresURL)
 	defer pool.Close()
 
+	emojis, err := utils.GetEmojis()
+	if err != nil {
+		log.Fatalf("failed to fetch emojis: %v", err)
+	}
+
+	repo := db.NewRepo(pool, &conf)
 	app := application{
-		repo: db.NewRepo(pool, &conf),
+		repo: repo,
 		svc:  service.NewService(&conf),
 		conf: &conf,
+		ss:   newSocketServer(repo, emojis),
 	}
 
 	server := http.Server{

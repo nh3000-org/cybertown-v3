@@ -8,9 +8,9 @@ import { LoadingIcon } from './LoadingIcon';
 import { useAppStore } from '@/stores/appStore';
 
 const createRoomSchema = z.object({
-  topic: z.string().min(3),
-  maxParticipants: z.string().min(1),
-  language: z.string().min(1),
+  topic: z.string().min(3, { message: 'Should be minimum of 3 characters' }).max(128, { message: 'Exceeded maximum of 128 characters' }),
+  maxParticipants: z.string().min(1, { message: 'Provide a value' }),
+  language: z.string().min(1, { message: 'Provide a value' }),
 })
 
 type Props = {
@@ -48,7 +48,7 @@ export function CreateRoom(props: Props) {
     if (result.success) {
       try {
         await createRoom({
-          topic: room.topic,
+          topic: room.topic.trim(),
           maxParticipants: Number(room.maxParticipants),
           language: room.language
         })
@@ -102,7 +102,7 @@ export function CreateRoom(props: Props) {
             <input id="topic" type="text" className="w-full border border-border bg-transparent rounded-md py-2 px-4" autoComplete="off" placeholder="Enter topic name" value={room.topic} onChange={(e) => {
               onChange('topic', e.target.value)
             }} />
-            {errors.topic ? <span className="text-danger text-sm">Topic should contain atleast three characters</span> : null}
+            {errors.topic ? <span className="text-danger text-sm">{errors.topic}</span> : null}
           </div>
 
           <div className="flex gap-8 flex-col md:flex-row md:gap-3">
@@ -123,7 +123,7 @@ export function CreateRoom(props: Props) {
                 { value: '9', label: '9' },
                 { value: '10', label: '10' },
               ]} />
-              {errors.maxParticipants ? <span className="text-danger text-sm">Provide a value</span> : null}
+              {errors.maxParticipants ? <span className="text-danger text-sm">{errors.maxParticipants}</span> : null}
             </div>
 
             <div className="flex flex-col gap-3 flex-1">
@@ -137,7 +137,7 @@ export function CreateRoom(props: Props) {
                 { value: 'vietnamese', label: 'Vietnamese' },
                 { value: 'indonesian', label: 'Indonesian' },
               ]} />
-              {errors.language ? <span className="text-danger text-sm">Provide a value</span> : null}
+              {errors.language ? <span className="text-danger text-sm">{errors.language}</span> : null}
             </div>
           </div>
 

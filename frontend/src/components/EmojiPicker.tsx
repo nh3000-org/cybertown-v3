@@ -4,7 +4,7 @@ import { useEmoji } from '@/hooks/queries/useEmoji';
 import React from 'react';
 
 type Props = {
-  onSelect: (emoji: string) => void
+  onSelect: (id: string, emoji: string) => void
   open: boolean
   setOpen: (visibility: boolean) => void
   trigger: React.ReactNode
@@ -24,7 +24,7 @@ export const EmojiPicker = React.forwardRef((props: Props, _ref: any) => {
       <Popover.Portal>
         <Popover.Content side='left' align={align} onCloseAutoFocus={e => e.preventDefault()} className='focus:outline-none border border-border rounded-md'>
           <Picker data={data} onEmojiSelect={(data: any) => {
-            props.onSelect(data.native)
+            props.onSelect(data.id, data.native)
           }} previewPosition="none" skinTonePosition="none" />
         </Popover.Content>
       </Popover.Portal>

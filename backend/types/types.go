@@ -43,12 +43,6 @@ type Config struct {
 	RedirectURL string `env:"REDIRECT_URL"`
 }
 
-type CreateRoomRequest struct {
-	Topic           string `json:"topic"`
-	MaxParticipants int    `json:"maxParticipants"`
-	Language        string `json:"language"`
-}
-
 type RoomsResponse struct {
 	*Room
 	Participants []*User `json:"participants"`

@@ -90,7 +90,7 @@ export function Message(props: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
 
   return (
-    <div className='px-4 py-2 flex gap-3 items-start group' id={`message-${message.id}`}>
+    <div className="px-4 py-2 flex gap-3 items-start group" id={`message-${message.id}`}>
       <img className="w-8 h-8 rounded-md" src={message.from.avatar} referrerPolicy="no-referrer" />
       <div className="flex-1">
         <div className="flex items-center justify-between text-muted text-sm mb-1">
@@ -105,8 +105,8 @@ export function Message(props: Props) {
               align='start'
               open={emojiOpen}
               setOpen={setEmojiOpen}
-              onSelect={emoji => {
-                ws.reactionToMsg(props.message.id, emoji)
+              onSelect={id => {
+                ws.reactionToMsg(props.message.id, id)
                 setEmojiOpen(false)
               }}
               trigger={null}
@@ -132,7 +132,7 @@ export function Message(props: Props) {
                 <HoverCard.Root key={reaction}>
                   <HoverCard.Trigger asChild>
                     <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.reactionToMsg(props.message.id, reaction)}>
-                      <span>{reaction}</span>
+                      <em-emoji id={reaction}></em-emoji>
                       <span className='font-semibold'>{Object.keys(userMap).length}</span>
                     </button>
                   </HoverCard.Trigger>

@@ -64,7 +64,6 @@ func (r *Repo) CreateSession(ctx context.Context, userID int) (string, error) {
 	return sessionID, err
 }
 
-// created_at: 3.30 PM now: 4.00 PM, expiration: 15m
 func (r *Repo) GetUserFromSession(ctx context.Context, sessionID string) (*types.User, error) {
 	e := r.conf.CookieExpiration.Seconds()
 	query := fmt.Sprintf(`
@@ -98,10 +97,10 @@ func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
 	return roomID, err
 }
 
-func (r *Repo) ListRooms(ctx context.Context) ([]*types.Room, error) {
+func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	query := `
 	  SELECT id, topic, max_participants, language, created_by 
-	  FROM rooms;
+	  FROM rooms ORDER BY created_at DESC;
 	`
 
 	rows, err := r.pool.Query(ctx, query)
@@ -123,7 +122,7 @@ func (r *Repo) ListRooms(ctx context.Context) ([]*types.Room, error) {
 	return rooms, nil
 }
 
-func (r *Repo) ListRoom(ctx context.Context, roomID int) (*types.Room, error) {
+func (r *Repo) GetRoom(ctx context.Context, roomID int) (*types.Room, error) {
 	query := `
 	  SELECT id, topic, max_participants, language, created_by 
 	  FROM rooms WHERE id = $1;

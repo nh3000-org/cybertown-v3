@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/db"
 	t "backend/types"
 	"backend/utils"
 	"context"
@@ -18,14 +19,18 @@ import (
 type connUserMap map[*websocket.Conn]*t.User
 
 type socketServer struct {
-	conns connUserMap
-	rooms map[int]map[*websocket.Conn]struct{}
+	conns  connUserMap
+	rooms  map[int]map[*websocket.Conn]struct{}
+	repo   *db.Repo
+	emojis map[string]struct{}
 }
 
-func newSocketServer() *socketServer {
+func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
-		conns: make(connUserMap),
-		rooms: make(map[int]map[*websocket.Conn]struct{}),
+		conns:  make(connUserMap),
+		rooms:  make(map[int]map[*websocket.Conn]struct{}),
+		emojis: emojis,
+		repo:   repo,
 	}
 }
 
@@ -38,7 +43,7 @@ func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
 	if !s.isInRoom(conn, roomID) {
 		return
 	}
-	ss.leaveRoom(conn, roomID, user)
+	s.leaveRoom(conn, roomID, user)
 }
 
 func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
@@ -58,7 +63,7 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 
 func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User) {
 	delete(s.rooms[roomID], conn)
-	ss.broadcastEvent(&t.Event{
+	s.broadcastEvent(&t.Event{
 		Name: "LEFT_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
@@ -68,15 +73,15 @@ func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User)
 }
 
 func (s *socketServer) broadcastEvent(event *t.Event) {
-	for conn := range ss.conns {
+	for conn := range s.conns {
 		utils.WriteEvent(conn, event)
 	}
 }
 
 func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
-	conns, ok := ss.rooms[roomID]
+	conns, ok := s.rooms[roomID]
 	if !ok {
-		log.Printf("broadcast to room failed, room not found: %d\n", roomID)
+		log.Printf("broadcast to room failed, room not found: %d", roomID)
 		return
 	}
 	for conn := range conns {
@@ -86,9 +91,9 @@ func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 
 func (s *socketServer) getParticipantsInRoom(roomID int) []*t.User {
 	participants := make([]*t.User, 0)
-	if _, ok := ss.rooms[roomID]; ok {
-		for conn := range ss.rooms[roomID] {
-			if u, ok := ss.conns[conn]; ok {
+	if _, ok := s.rooms[roomID]; ok {
+		for conn := range s.rooms[roomID] {
+			if u, ok := s.conns[conn]; ok {
 				participants = append(participants, u)
 			}
 		}
@@ -103,11 +108,16 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.U
 		return 0, nil
 	}
 
+	_, err = s.repo.GetRoom(context.Background(), data.RoomID)
+	if err != nil {
+		return 0, err
+	}
+
 	// can the same user join the room from different
 	// socket connections?
-	ss.joinRoom(conn, data.RoomID)
+	s.joinRoom(conn, data.RoomID)
 
-	ss.broadcastEvent(&t.Event{
+	s.broadcastEvent(&t.Event{
 		Name: "JOINED_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": data.RoomID,
@@ -122,30 +132,35 @@ func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte, user *t.
 	var data t.LeaveRoom
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		log.Printf("failed to unmarshal LEAVE_ROOM data: %v\n", err)
+		log.Printf("failed to unmarshal LEAVE_ROOM data: %v", err)
 		return
 	}
-	if !ss.isInRoom(conn, data.RoomID) {
+	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
-	ss.leaveRoom(conn, data.RoomID, user)
+	s.leaveRoom(conn, data.RoomID, user)
 }
 
 func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
 	var data t.NewMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		log.Printf("failed to unmarshal NEW_MESSAGE data: %v\n", err)
+		log.Printf("failed to unmarshal NEW_MESSAGE data: %v", err)
+		return
+	}
+
+	ok, err := utils.ValidateContent(&data.Content)
+	if !ok {
+		log.Printf("message content validation failed: %v", err)
 		return
 	}
 
 	// can this user send a message to this room?
-	// is the message is valid?
-	if !ss.isInRoom(conn, data.RoomID) {
+	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
 
-	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "NEW_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":        shortuuid.New(),
@@ -163,15 +178,21 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *
 	var data t.EditMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		log.Printf("failed to unmarshal EDIT_MESSAGE data: %v\n", err)
+		log.Printf("failed to unmarshal EDIT_MESSAGE data: %v", err)
 		return
 	}
 
-	if !ss.isInRoom(conn, data.RoomID) {
+	ok, err := utils.ValidateContent(&data.Content)
+	if !ok {
+		log.Printf("message content validation failed: %v", err)
 		return
 	}
 
-	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+	if !s.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "EDIT_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":      data.ID,
@@ -186,15 +207,20 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte, user
 	var data t.ReactionToMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		log.Printf("failed to unmarshal REACTION_TO_MESSAGE data: %v\n", err)
+		log.Printf("failed to unmarshal REACTION_TO_MESSAGE data: %v", err)
 		return
 	}
 
-	if !ss.isInRoom(conn, data.RoomID) {
+	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
 
-	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+	if _, ok := s.emojis[data.Reaction]; !ok {
+		log.Printf("the emoji is not found: %q", data.Reaction)
+		return
+	}
+
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "REACTION_TO_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":       data.ID,
@@ -209,15 +235,15 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user
 	var data t.DeleteMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
-		log.Printf("failed to unmarshal DELETE_MESSAGE data: %v\n", err)
+		log.Printf("failed to unmarshal DELETE_MESSAGE data: %v", err)
 		return
 	}
 
-	if !ss.isInRoom(conn, data.RoomID) {
+	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
 
-	ss.broadcastRoomEvent(data.RoomID, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "DELETE_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":     data.ID,
@@ -226,8 +252,6 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user
 		},
 	})
 }
-
-var ss = newSocketServer()
 
 func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 	host := strings.Split(app.conf.RedirectURL, "//")[1]
@@ -248,12 +272,12 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer func() {
-		ss.close(conn, roomID, user)
+		app.ss.close(conn, roomID, user)
 		conn.CloseNow()
-		log.Printf("number of connections: %d\n", len(ss.conns))
+		log.Printf("number of connections: %d", len(app.ss.conns))
 	}()
 
-	ss.accept(conn, user)
+	app.ss.accept(conn, user)
 
 	for {
 		var event t.Event
@@ -270,26 +294,26 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 		b, err := json.Marshal(event.Data)
 		if err != nil {
-			log.Printf("failed to marshal 'data' in event: %v\n", err)
+			log.Printf("failed to marshal 'data' in event: %v", err)
 			return
 		}
 
 		switch event.Name {
 		case "JOIN_ROOM":
-			roomID, err = ss.joinRoomHandler(conn, b, user)
+			roomID, err = app.ss.joinRoomHandler(conn, b, user)
 			if err != nil {
-				log.Printf("failed to join room: %v\n", err)
+				log.Printf("failed to join room: %v", err)
 			}
 		case "NEW_MESSAGE":
-			ss.newMessageHandler(conn, b, user)
+			app.ss.newMessageHandler(conn, b, user)
 		case "EDIT_MESSAGE":
-			ss.editMessageHandler(conn, b, user)
+			app.ss.editMessageHandler(conn, b, user)
 		case "DELETE_MESSAGE":
-			ss.deleteMessageHandler(conn, b, user)
+			app.ss.deleteMessageHandler(conn, b, user)
 		case "LEAVE_ROOM":
-			ss.leaveRoomHandler(conn, b, user)
+			app.ss.leaveRoomHandler(conn, b, user)
 		case "REACTION_TO_MESSAGE":
-			ss.reactionToMsgHandler(conn, b, user)
+			app.ss.reactionToMsgHandler(conn, b, user)
 		}
 	}
 }

@@ -104,6 +104,12 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	ok, err := req.Validate()
+	if !ok {
+		badRequest(w, err)
+		return
+	}
+
 	u, ok := r.Context().Value("user").(*types.User)
 	if !ok {
 		unauthRequest(w, nil)
@@ -122,7 +128,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ss.broadcastEvent(&types.Event{
+	app.ss.broadcastEvent(&types.Event{
 		Name: "NEW_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
@@ -135,7 +141,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) {
-	rooms, err := app.repo.ListRooms(context.Background())
+	rooms, err := app.repo.GetRooms(context.Background())
 	if err != nil {
 		serverError(w, err)
 		return
@@ -145,7 +151,7 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 	for _, room := range rooms {
 		roomRes := types.RoomsResponse{
 			Room:         room,
-			Participants: ss.getParticipantsInRoom(room.ID),
+			Participants: app.ss.getParticipantsInRoom(room.ID),
 		}
 		res = append(res, &roomRes)
 	}
@@ -164,7 +170,7 @@ func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room, err := app.repo.ListRoom(context.Background(), id)
+	room, err := app.repo.GetRoom(context.Background(), id)
 	if err != nil {
 		serverError(w, err)
 		return
@@ -172,7 +178,7 @@ func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
 
 	roomRes := types.RoomsResponse{
 		Room:         room,
-		Participants: ss.getParticipantsInRoom(room.ID),
+		Participants: app.ss.getParticipantsInRoom(room.ID),
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]any{
