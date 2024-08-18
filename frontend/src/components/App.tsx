@@ -3,6 +3,7 @@ import { ws } from '@/lib/ws'
 import { useAppStore } from '@/stores/appStore'
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { Toast } from './Toast'
 
 type Props = {
   children?: React.ReactNode
@@ -36,5 +37,10 @@ export function App(props: Props) {
     return null
   }
 
-  return props.children ?? <Outlet />
+  return (
+    <>
+      {props.children ?? <Outlet />}
+      <Toast />
+    </>
+  )
 }

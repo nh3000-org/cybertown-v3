@@ -10,12 +10,21 @@ type State = {
     login: boolean
     logout: boolean
   }
+  toast: {
+    open: boolean
+    content?: {
+      type: "info" | "error"
+      title: string
+      description: string
+    }
+  }
 }
 
 type Actions = {
   setUser: (user: User | null) => void
   setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
   clearMessages: () => void
+  setToast: (open: boolean, content?: State['toast']['content']) => void
 
   // broadcast events
   addMsg: (event: NewMsgBroadcastEvent) => void
@@ -32,6 +41,9 @@ export const useAppStore = create<State & Actions>()(
       login: false,
       logout: false,
     },
+    toast: {
+      open: false
+    },
 
     setUser: (user) => set((state) => {
       state.user = user
@@ -43,6 +55,10 @@ export const useAppStore = create<State & Actions>()(
 
     clearMessages: () => set((state) => {
       state.messages = []
+    }),
+
+    setToast: (open, content) => set((state) => {
+      state.toast = { open, content }
     }),
 
     addMsg: (event) =>

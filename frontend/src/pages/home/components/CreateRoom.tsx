@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Label } from '@radix-ui/react-label';
-import { Option, Select } from './Select';
+import { Option, Select } from '@/components/Select';
 import { useEffect, useState } from 'react';
 import { z } from "zod";
 import { useCreateRoom } from '@/hooks/mutations/useCreateRoom';
@@ -22,6 +22,7 @@ type Props = {
 export function CreateRoom(props: Props) {
   const user = useAppStore().user
   const setAlert = useAppStore().setAlert
+  const setToast = useAppStore().setToast
   const { mutateAsync: createRoom, isLoading } = useCreateRoom()
 
   const [room, setRoom] = useState<{
@@ -53,14 +54,18 @@ export function CreateRoom(props: Props) {
       maxParticipants: room.maxParticipants ? Number(room.maxParticipants.value) : undefined,
       languages: room.languages.map(el => el.value),
     }
-
     const result = createRoomSchema.safeParse(payload)
     if (result.success) {
       try {
-        console.log(result.data)
         await createRoom(result.data)
-        props.setOpen(false)
       } catch {
+        setToast(true, {
+          type: "error",
+          title: "Create Room",
+          description: "Failed to create room. Try Again"
+        })
+      } finally {
+        props.setOpen(false)
       }
       return
     }

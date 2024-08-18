@@ -7,6 +7,7 @@ export function LogoutAlert() {
   const open = useAppStore().alerts.logout
   const { mutateAsync: logout, isLoading } = useLogout()
   const setAlert = useAppStore().setAlert
+  const setToast = useAppStore().setToast
 
   return (
     <AlertDialog.Root open={open} onOpenChange={(visibility) => {
@@ -29,8 +30,14 @@ export function LogoutAlert() {
               <button className="bg-danger text-white px-4 py-1 rounded focus:ring-danger focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg flex gap-3 items-center disabled:opacity-70" disabled={isLoading} onClick={async () => {
                 try {
                   await logout()
-                  setAlert('logout', false)
                 } catch (err) {
+                  setToast(true, {
+                    type: "error",
+                    title: "Logout",
+                    description: "Failed to logout. Try Again",
+                  })
+                } finally {
+                  setAlert('logout', false)
                 }
               }}>
                 {isLoading && <LoadingIcon className="fill-danger" />}
