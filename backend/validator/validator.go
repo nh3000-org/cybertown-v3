@@ -63,7 +63,7 @@ func (v *Validator) IsInInt(key string, value int, values []int) *Validator {
 func (v *Validator) IsInSlice(key string, items []string, values []string) *Validator {
 	for _, item := range items {
 		if !isIn(item, values) {
-			v.Errors[key] = fmt.Sprintf("%d is not allowed", item)
+			v.Errors[key] = fmt.Sprintf("%s is not allowed", item)
 		}
 	}
 	return v

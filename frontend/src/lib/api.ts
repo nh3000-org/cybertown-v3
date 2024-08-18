@@ -26,6 +26,15 @@ export const api = {
     return data.roomID
   },
 
+  async updateRoom(roomID: number, room: CreateRoom) {
+    const url = config.apiURL + `/rooms/${roomID}`
+    const data = await fetchWrapper<"message", string>(url, {
+      method: 'PUT',
+      body: JSON.stringify(room),
+    })
+    return data.message
+  },
+
   async getRooms() {
     const url = config.apiURL + "/rooms"
     const data = await fetchWrapper<"rooms", RoomRes[]>(url)

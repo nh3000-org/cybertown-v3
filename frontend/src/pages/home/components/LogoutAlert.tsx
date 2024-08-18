@@ -17,10 +17,10 @@ export function LogoutAlert() {
         <AlertDialog.Overlay className="bg-overlay/30 fixed inset-0" />
         <AlertDialog.Content className="border border-border w-[90vw] max-w-[550px] rounded-lg fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none bg-bg-2">
           <AlertDialog.Title className="text-xl font-bold mb-2">
-            Are you sure you want to logout?
+            Logout
           </AlertDialog.Title>
           <AlertDialog.Description className="mb-8 text-muted">
-            Think about you friends. You want to leave them like this?
+            Are you sure you want to logout?
           </AlertDialog.Description>
           <AlertDialog.Action asChild onClick={e => e.preventDefault()}>
             <div className="flex justify-end gap-5 items-center">

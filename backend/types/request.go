@@ -24,6 +24,7 @@ func (r *CreateRoomRequest) Validate() (bool, error) {
 	vd := v.NewValidator()
 	vd.Count("topic", &r.Topic, "min", minTopicLen).
 		Count("topic", &r.Topic, "max", maxTopicLen).
+		CountSlice("language", r.Languages, "min", 1).
 		IsInSlice("language", r.Languages, allowedLanguages).
 		IsInInt("maxParticipants", r.MaxParticipants, allowedMaxParticipants)
 	return vd.IsValid(), vd

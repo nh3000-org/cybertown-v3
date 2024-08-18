@@ -1,4 +1,4 @@
-import { User } from '@/types'
+import { Room, User } from '@/types'
 import { DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
@@ -18,6 +18,10 @@ type State = {
       description: string
     }
   }
+  createOrUpdateRoom: {
+    open: boolean
+    room?: Room
+  }
 }
 
 type Actions = {
@@ -25,6 +29,7 @@ type Actions = {
   setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
   clearMessages: () => void
   setToast: (open: boolean, content?: State['toast']['content']) => void
+  setCreateOrUpdateRoom: (open: boolean, room?: Room) => void
 
   // broadcast events
   addMsg: (event: NewMsgBroadcastEvent) => void
@@ -44,6 +49,9 @@ export const useAppStore = create<State & Actions>()(
     toast: {
       open: false
     },
+    createOrUpdateRoom: {
+      open: false
+    },
 
     setUser: (user) => set((state) => {
       state.user = user
@@ -59,6 +67,15 @@ export const useAppStore = create<State & Actions>()(
 
     setToast: (open, content) => set((state) => {
       state.toast = { open, content }
+    }),
+
+    setCreateOrUpdateRoom: (open, room) => set((state) => {
+      if (open && !state.user) {
+        state.alerts['login'] = true
+        return
+      }
+      state.createOrUpdateRoom.open = open
+      state.createOrUpdateRoom.room = room
     }),
 
     addMsg: (event) =>

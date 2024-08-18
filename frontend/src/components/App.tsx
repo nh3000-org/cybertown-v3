@@ -4,6 +4,9 @@ import { useAppStore } from '@/stores/appStore'
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Toast } from './Toast'
+import { CreateRoom } from '@/pages/home/components/CreateRoom'
+import { LogoutAlert } from '@/pages/home/components/LogoutAlert'
+import { LoginAlert } from '@/pages/home/components/LoginAlert'
 
 type Props = {
   children?: React.ReactNode
@@ -41,6 +44,9 @@ export function App(props: Props) {
     <>
       {props.children ?? <Outlet />}
       <Toast />
+      <CreateRoom />
+      <LogoutAlert />
+      <LoginAlert />
     </>
   )
 }

@@ -14,6 +14,11 @@ type Repo struct {
 	conf *types.Config
 }
 
+type RoomFilter struct {
+	RoomID *int
+	UserID *int
+}
+
 func NewRepo(pool *pgxpool.Pool, conf *types.Config) *Repo {
 	return &Repo{
 		pool: pool,
@@ -93,14 +98,17 @@ func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
 	  RETURNING id;
 	`
 	var roomID int
-	err := r.pool.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.CreatedBy).Scan(&roomID)
+	err := r.pool.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.CreatedBy.ID).Scan(&roomID)
 	return roomID, err
 }
 
 func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	query := `
-	  SELECT id, topic, max_participants, languages, created_by 
-	  FROM rooms ORDER BY created_at DESC;
+	  SELECT r.id, r.topic, r.max_participants, r.languages, r.created_at,
+	  u.id, u.username, u.avatar
+	  FROM rooms r 
+	  INNER JOIN users u ON u.id = r.created_by
+	  ORDER BY r.created_at DESC;
 	`
 
 	rows, err := r.pool.Query(ctx, query)
@@ -111,7 +119,7 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	var rooms []*types.Room
 	for rows.Next() {
 		var room types.Room
-		err := rows.Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedBy)
+		err := rows.Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedAt, &room.CreatedBy.ID, &room.CreatedBy.Username, &room.CreatedBy.Avatar)
 		if err != nil {
 			log.Printf("failed to scan room: %v", err)
 			continue
@@ -123,14 +131,56 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 }
 
 func (r *Repo) GetRoom(ctx context.Context, roomID int) (*types.Room, error) {
+	return r.getRoom(ctx, RoomFilter{
+		RoomID: &roomID,
+	})
+}
+
+func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*types.Room, error) {
+	return r.getRoom(ctx, RoomFilter{
+		RoomID: &roomID,
+		UserID: &userID,
+	})
+}
+
+func (r *Repo) UpdateRoom(ctx context.Context, room *types.Room) error {
 	query := `
-	  SELECT id, topic, max_participants, languages, created_by 
-	  FROM rooms WHERE id = $1;
+	  UPDATE rooms 
+	  SET topic = $1, max_participants = $2, languages = $3
+	  WHERE id = $4;
 	`
+	_, err := r.pool.Exec(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.ID)
+	return err
+}
+
+func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, error) {
+	var values []any
+
+	query := `
+	  SELECT r.id, r.topic, r.max_participants, r.languages, r.created_at,
+	  u.id, u.username, u.avatar
+	  FROM rooms r 
+	  INNER JOIN users u ON u.id = r.created_by
+	  WHERE 1=1
+	`
+
+	if filter.RoomID != nil {
+		values = append(values, filter.RoomID)
+		query += fmt.Sprintf(" AND r.id = $%d", len(values))
+	}
+
+	if filter.UserID != nil {
+		values = append(values, filter.UserID)
+		query += fmt.Sprintf(" AND r.created_by = $%d", len(values))
+	}
+
+	fmt.Println(query)
+
 	var room types.Room
-	err := r.pool.QueryRow(ctx, query, roomID).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedBy)
+	err := r.pool.QueryRow(ctx, query, values...).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.CreatedAt, &room.CreatedBy.ID, &room.CreatedBy.Username, &room.CreatedBy.Avatar)
 	if err != nil {
 		return nil, err
 	}
+
 	return &room, nil
 }

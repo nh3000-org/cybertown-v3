@@ -7,6 +7,8 @@ import { useCreateRoom } from '@/hooks/mutations/useCreateRoom';
 import { LoadingIcon } from './LoadingIcon';
 import { useAppStore } from '@/stores/appStore';
 import { MultiValue, SingleValue } from 'react-select'
+import * as constants from '@/constants'
+import { useUpdateRoom } from '@/hooks/mutations/useUpdateRoom';
 
 const createRoomSchema = z.object({
   topic: z.string().min(3, { message: 'Should be minimum of 3 characters' }).max(128, { message: 'Exceeded maximum of 128 characters' }),
@@ -14,16 +16,13 @@ const createRoomSchema = z.object({
   languages: z.string().array().min(1, { message: 'Provide a value' }),
 })
 
-type Props = {
-  open: boolean
-  setOpen: (visibility: boolean) => void
-}
-
-export function CreateRoom(props: Props) {
-  const user = useAppStore().user
-  const setAlert = useAppStore().setAlert
+export function CreateRoom() {
   const setToast = useAppStore().setToast
+  const setOpen = useAppStore().setCreateOrUpdateRoom
+  const open = useAppStore().createOrUpdateRoom.open
+  const editRoom = useAppStore().createOrUpdateRoom.room
   const { mutateAsync: createRoom, isLoading } = useCreateRoom()
+  const { mutateAsync: updateRoom, isLoading: isUpdateLoading } = useUpdateRoom()
 
   const [room, setRoom] = useState<{
     topic: string
@@ -57,15 +56,22 @@ export function CreateRoom(props: Props) {
     const result = createRoomSchema.safeParse(payload)
     if (result.success) {
       try {
-        await createRoom(result.data)
+        if (editRoom?.id) {
+          await updateRoom({
+            room: result.data,
+            roomID: editRoom.id
+          })
+        } else {
+          await createRoom(result.data)
+        }
       } catch {
         setToast(true, {
           type: "error",
-          title: "Create Room",
-          description: "Failed to create room. Try Again"
+          title: editRoom ? "Edit Room" : "Create Room",
+          description: `Failed to ${editRoom ? 'edit' : 'create'} room. Try Again`
         })
       } finally {
-        props.setOpen(false)
+        setOpen(false)
       }
       return
     }
@@ -91,7 +97,7 @@ export function CreateRoom(props: Props) {
   // this is a workaround to clear the state when
   // the modal gets closed
   useEffect(() => {
-    if (!props.open) {
+    if (!open) {
       setRoom({
         topic: '',
         languages: [],
@@ -103,27 +109,27 @@ export function CreateRoom(props: Props) {
         languages: '',
       })
     }
-  }, [props.open])
+  }, [open])
+
+  useEffect(() => {
+    if (editRoom) {
+      const maxParticipants = constants.maxParticipants.find(p => p.value === String(editRoom.maxParticipants))
+      const languages = constants.languages.filter(p => editRoom.languages.includes(p.value))
+      setRoom({
+        topic: editRoom.topic,
+        maxParticipants,
+        languages
+      })
+    }
+  }, [editRoom])
 
   return (
-    <Dialog.Root open={props.open} onOpenChange={props.setOpen}>
-      <Dialog.Trigger asChild>
-        <button onClick={e => {
-          e.preventDefault()
-          if (user) {
-            props.setOpen(true)
-            return
-          }
-          setAlert('login', true)
-        }} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
-          <span>Create Room</span>
-        </button>
-      </Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="bg-overlay/30 inset-0 fixed" />
         <Dialog.Content className="fixed bg-bg-2 text-fg-2 rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none">
           <Dialog.Title className="text-lg font-semibold mb-8">
-            Create Room
+            {editRoom ? 'Edit' : 'Create'} Room
           </Dialog.Title>
 
           <div className="flex flex-col gap-3 mb-8">
@@ -138,19 +144,7 @@ export function CreateRoom(props: Props) {
             <Label htmlFor="maxParticipants">Max Participants</Label>
             <Select placeholder="Select participants" value={room.maxParticipants} setValue={(participants) => {
               onChange('maxParticipants', participants ?? undefined)
-            }} options={[
-              { value: '-1', label: 'Unlimited' },
-              { value: '1', label: '1' },
-              { value: '2', label: '2' },
-              { value: '3', label: '3' },
-              { value: '4', label: '4' },
-              { value: '5', label: '5' },
-              { value: '6', label: '6' },
-              { value: '7', label: '7' },
-              { value: '8', label: '8' },
-              { value: '9', label: '9' },
-              { value: '10', label: '10' },
-            ]} />
+            }} options={constants.maxParticipants} />
             {errors.maxParticipants ? <span className="text-danger text-sm">{errors.maxParticipants}</span> : null}
           </div>
 
@@ -158,23 +152,17 @@ export function CreateRoom(props: Props) {
             <Label htmlFor="language">Language</Label>
             <Select multiCount={2} value={room.languages} setValue={(language) => {
               onChange('languages', language ?? [])
-            }} isMulti placeholder="Select language" options={[
-              { value: 'english', label: 'English' },
-              { value: 'tamil', label: 'Tamil' },
-              { value: 'hindi', label: 'Hindi' },
-              { value: 'vietnamese', label: 'Vietnamese' },
-              { value: 'indonesian', label: 'Indonesian' },
-            ]} />
+            }} isMulti placeholder="Select language" options={constants.languages} />
             {errors.languages ? <span className="text-danger text-sm">{errors.languages}</span> : null}
           </div>
 
           <div className="justify-end flex justify-end gap-4 items-center mt-12">
             <button type="button" className="bg-bg-3 text-fg-3 px-4 py-1 rounded-md" onClick={() => {
-              props.setOpen(false)
+              setOpen(false)
             }}>Cancel</button>
-            <button type="submit" className="bg-accent text-accent-fg px-4 py-1 rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center" disabled={isLoading} onClick={handleCreateRoom}>
-              {isLoading ? <LoadingIcon className='fill-accent' /> : null}
-              <span>Create Room</span>
+            <button type="submit" className="bg-accent text-accent-fg px-4 py-1 rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center" disabled={isLoading || isUpdateLoading} onClick={handleCreateRoom}>
+              {(isLoading || isUpdateLoading) ? <LoadingIcon className='fill-accent' /> : null}
+              <span>Submit</span>
             </button>
           </div>
         </Dialog.Content>

@@ -6,7 +6,8 @@ export type User = {
 
 export type Room = {
   id: number
-  createdBy: number
+  createdBy: User
+  createdAt: string
 } & CreateRoom
 
 export type CreateRoom = {

@@ -11,6 +11,7 @@ func (app *application) router() http.Handler {
 	router.Handle("GET /me", ensureAuthed(http.HandlerFunc(app.meHandler)))
 
 	router.Handle("POST /rooms", ensureAuthed(http.HandlerFunc(app.createRoomHandler)))
+	router.Handle("PUT /rooms/{roomID}", ensureAuthed(http.HandlerFunc(app.updateRoomHandler)))
 	router.HandleFunc("GET /rooms", app.getRoomsHandler)
 	router.HandleFunc("GET /rooms/{roomID}", app.getRoomHandler)
 

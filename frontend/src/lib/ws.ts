@@ -36,6 +36,7 @@ class WS {
           case "JOINED_ROOM_BROADCAST":
           case "LEFT_ROOM_BROADCAST":
           case "NEW_ROOM_BROADCAST":
+          case "UPDATE_ROOM_BROADCAST":
             queryClient.invalidateQueries({
               queryKey: ['rooms']
             })

@@ -4,6 +4,7 @@ export type BroadcastEvent =
   JoinedRoomBroadcastEvent |
   LeftRoomBroadcastEvent |
   NewRoomBroadcastEvent |
+  UpdateRoomBroadcastEvent |
   NewMsgBroadcastEvent |
   EditMsgBroadcastEvent |
   DeleteMsgBroadcastEvent |
@@ -30,6 +31,11 @@ export type NewRoomBroadcastEvent = {
   data: {
     roomID: number
   }
+}
+
+export type UpdateRoomBroadcastEvent = {
+  name: "UPDATE_ROOM_BROADCAST"
+  data: ReactionToMessage
 }
 
 export type NewMsgBroadcastEvent = {

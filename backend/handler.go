@@ -120,7 +120,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
 		Languages:       req.Languages,
-		CreatedBy:       u.ID,
+		CreatedBy:       *u,
 	})
 
 	if err != nil {
@@ -184,4 +184,56 @@ func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"room": roomRes,
 	})
+}
+
+func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request) {
+	roomID := r.PathValue("roomID")
+	id, err := strconv.Atoi(roomID)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	var req types.CreateRoomRequest // same payload for editing a room as well
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	ok, err := req.Validate()
+	if !ok {
+		badRequest(w, err)
+		return
+	}
+
+	u, ok := r.Context().Value("user").(*types.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+
+	room, err := app.repo.GetRoomForUser(context.Background(), id, u.ID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	room.Topic = req.Topic
+	room.MaxParticipants = req.MaxParticipants
+	room.Languages = req.Languages
+
+	err = app.repo.UpdateRoom(context.Background(), room)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	app.ss.broadcastEvent(&types.Event{
+		Name: "UPDATE_ROOM_BROADCAST",
+		Data: map[string]any{
+			"roomID": room.ID,
+		},
+	})
+
+	msgResponse(w, "Room updated successfully")
 }
