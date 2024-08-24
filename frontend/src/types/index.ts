@@ -1,13 +1,15 @@
 export type User = {
-  id: string
+  id: number
   username: string
   avatar: string
 }
 
 export type Room = {
   id: number
-  createdBy: User
   createdAt: string
+  host: User
+  coHosts?: number[]
+  welcomeMessage: string
 } & CreateRoom
 
 export type CreateRoom = {
@@ -17,3 +19,5 @@ export type CreateRoom = {
 }
 
 export type RoomRes = Room & { participants: User[] }
+
+export type RoomRole = "host" | "coHost" | "guest"

@@ -120,7 +120,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
 		Languages:       req.Languages,
-		CreatedBy:       *u,
+		Host:            *u,
 	})
 
 	if err != nil {

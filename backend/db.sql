@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(256) NOT NULL UNIQUE,
   avatar VARCHAR(256) NOT NULL,
   bio VARCHAR(256),
-  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -24,7 +24,11 @@ CREATE TABLE IF NOT EXISTS rooms (
   topic VARCHAR(128) NOT NULL,
   max_participants INTEGER NOT NULL,
   languages VARCHAR(64)[] NOT NULL,
+  welcome_message VARCHAR(256),
+  host INTEGER NOT NULL,
+  co_hosts INTEGER[],
   created_by INTEGER NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  FOREIGN KEY (created_by) REFERENCES users (id)
+  FOREIGN KEY (created_by) REFERENCES users (id),
+  FOREIGN KEY (host) REFERENCES users (id)
 );

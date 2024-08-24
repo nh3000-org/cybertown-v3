@@ -42,13 +42,13 @@ export function RoomCard(props: Props) {
             <Popover.Content side='bottom' align='end' sideOffset={12} className='focus:outline-none rounded-lg p-6 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border'>
               <div className="flex flex-col items-center justify-center gap-3 relative">
                 <p className="text-muted">Owner</p>
-                <img src={room.createdBy.avatar} className="w-12 h-12 rounded-full" />
+                <img src={room.host.avatar} className="w-12 h-12 rounded-full" />
                 <div className="text-center">
-                  <p className="font-semibold pb-1">{room.createdBy.username}</p>
+                  <p className="font-semibold pb-1">{room.host.username}</p>
                   <p className="text-muted text-sm">{formatRelative(new Date(room.createdAt), new Date())}</p>
                 </div>
               </div>
-              {user?.id === room.createdBy.id && (
+              {user?.id === room.host.id && (
                 <button className='absolute top-4 right-4 p-[2px] rounded-lg' onClick={() => {
                   setUpdateRoom(true, room)
                 }}>
@@ -62,7 +62,7 @@ export function RoomCard(props: Props) {
 
       <p className="text-muted">{room.languages.join(" + ")}</p>
 
-      <div className="min-h-[60px] mt-4 flex flex-wrap gap-4">
+      <div className="min-h-[60px] my-8 flex flex-wrap gap-4">
         {room.participants.map(p => {
           return <img key={p.id} src={p.avatar} referrerPolicy="no-referrer" style={style} className="rounded-full" />
         })}
@@ -71,7 +71,7 @@ export function RoomCard(props: Props) {
         })}
       </div>
 
-      <button className="mt-12 bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center" onClick={() => {
+      <button className="bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto" onClick={() => {
         joinRoom(room.id)
       }}>Join Room</button>
     </div>

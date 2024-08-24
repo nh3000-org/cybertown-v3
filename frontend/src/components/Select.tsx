@@ -12,12 +12,14 @@ type Props = {
   value: SingleValue<Option> | MultiValue<Option> | undefined
   setValue: (value: SingleValue<Option> | MultiValue<Option> | null) => void
   multiCount?: number
+  id: string
 }
 
 export function Select(props: Props) {
   const { isMulti = false, multiCount = 1 } = props
   return (
     <RSelect
+      inputId={props.id}
       isClearable={false}
       placeholder={props.placeholder}
       onBlur={(event) => {

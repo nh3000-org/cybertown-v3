@@ -142,15 +142,15 @@ export function CreateRoom() {
 
           <div className="flex flex-col gap-3 flex-1 mb-8">
             <Label htmlFor="maxParticipants">Max Participants</Label>
-            <Select placeholder="Select participants" value={room.maxParticipants} setValue={(participants) => {
+            <Select id="maxParticipants" placeholder="Select participants" value={room.maxParticipants} setValue={(participants) => {
               onChange('maxParticipants', participants ?? undefined)
             }} options={constants.maxParticipants} />
             {errors.maxParticipants ? <span className="text-danger text-sm">{errors.maxParticipants}</span> : null}
           </div>
 
           <div className="flex flex-col gap-3 flex-1">
-            <Label htmlFor="language">Language</Label>
-            <Select multiCount={2} value={room.languages} setValue={(language) => {
+            <Label htmlFor="languages">Language</Label>
+            <Select id="languages" multiCount={2} value={room.languages} setValue={(language) => {
               onChange('languages', language ?? [])
             }} isMulti placeholder="Select language" options={constants.languages} />
             {errors.languages ? <span className="text-danger text-sm">{errors.languages}</span> : null}

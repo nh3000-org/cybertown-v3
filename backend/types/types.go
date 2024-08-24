@@ -16,7 +16,9 @@ type Room struct {
 	Topic           string    `json:"topic"`
 	Languages       []string  `json:"languages"`
 	MaxParticipants int       `json:"maxParticipants"`
-	CreatedBy       User      `json:"createdBy"`
+	WelcomeMessage  *string   `json:"welcomeMessage,omitempty"`
+	Host            User      `json:"host"`
+	CoHosts         []int     `json:"coHosts,omitempty"`
 	CreatedAt       time.Time `json:"createdAt"`
 }
 
@@ -48,3 +50,11 @@ type RoomsResponse struct {
 	*Room
 	Participants []*User `json:"participants"`
 }
+
+type RoomRole string
+
+const (
+	RoomRoleHost   RoomRole = "host"
+	RoomRoleCoHost RoomRole = "coHost"
+	RoomRoleGuest  RoomRole = "guest"
+)

@@ -3,6 +3,7 @@ import { ClientEvent } from "@/types/client-event";
 import { BroadcastEvent } from "@/types/broadcast";
 import { queryClient } from "./utils";
 import { useAppStore } from "@/stores/appStore";
+import { RoomRole } from "@/types";
 
 class WS {
   private socket: WebSocket
@@ -37,6 +38,7 @@ class WS {
           case "LEFT_ROOM_BROADCAST":
           case "NEW_ROOM_BROADCAST":
           case "UPDATE_ROOM_BROADCAST":
+          case "ASSIGN_ROLE_BROADCAST":
             queryClient.invalidateQueries({
               queryKey: ['rooms']
             })
@@ -64,6 +66,12 @@ class WS {
               return
             }
             useAppStore.getState().reactionToMsg(event)
+            break;
+          case "CLEAR_CHAT_BROADCAST":
+            if (event.data.roomID !== this.roomID) {
+              return
+            }
+            useAppStore.getState().clearChat(event)
             break;
         }
       } catch (err) {
@@ -94,45 +102,81 @@ class WS {
     })
   }
 
-  editMsg(id: string, content: string) {
+  editMsg(id: string, content: string, participantID?: number) {
     this.sendClientEvent({
       name: "EDIT_MESSAGE",
       data: {
         id,
         content,
+        participantID,
         roomID: this.roomID!,
       }
     })
   }
 
-  deleteMsg(id: string) {
+  deleteMsg(id: string, participantID?: number) {
     this.sendClientEvent({
       name: "DELETE_MESSAGE",
       data: {
         id,
+        participantID,
         roomID: this.roomID!,
       }
     })
   }
 
-  reactionToMsg(id: string, reaction: string) {
+  reactionToMsg(id: string, reaction: string, participantID?: number) {
     this.sendClientEvent({
       name: 'REACTION_TO_MESSAGE',
       data: {
         id,
         reaction,
+        participantID,
         roomID: this.roomID!,
       }
     })
   }
 
-  newMessage(content: string, replyTo?: string) {
+  newMessage(content: string, replyTo?: string, participantID?: number) {
     this.sendClientEvent({
       name: "NEW_MESSAGE",
       data: {
         content,
         replyTo,
+        participantID,
         roomID: this.roomID!,
+      }
+    })
+  }
+
+  clearChat(participantID: number) {
+    this.sendClientEvent({
+      name: "CLEAR_CHAT",
+      data: {
+        roomID: this.roomID!,
+        participantID,
+      }
+    })
+  }
+
+  transferRoom(participantID: number) {
+    this.sendClientEvent({
+      name: "ASSIGN_ROLE",
+      data: {
+        roomID: this.roomID!,
+        participantID,
+        role: "host"
+      }
+    })
+  }
+
+  assignRole(role: Exclude<RoomRole, "host">, participantID: number) {
+    this.sendClientEvent({
+      name: "ASSIGN_ROLE",
+      data: {
+        roomID: this.roomID!,
+        participantID,
+        role
       }
     })
   }

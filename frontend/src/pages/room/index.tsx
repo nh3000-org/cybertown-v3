@@ -35,5 +35,5 @@ export function RoomPage() {
     return <Onboarding user={user} setIsOnboarding={setIsOnBoarding} />
   }
 
-  return <Room />
+  return <Room roomID={roomID!} />
 }

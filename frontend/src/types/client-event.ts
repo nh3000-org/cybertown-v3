@@ -1,10 +1,14 @@
+import { RoomRole } from "."
+
 export type ClientEvent =
   JoinRoomEvent |
   NewMsgEvent |
   EditMsgEvent |
   DeleteMsgEvent |
   LeaveRoomEvent |
-  ReactionToMsgEvent
+  ReactionToMsgEvent |
+  ClearChatEvent |
+  AssignRoleEvent
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
@@ -26,6 +30,7 @@ export type NewMsgEvent = {
     content: string
     roomID: number
     replyTo?: string
+    participantID?: number
   }
 }
 
@@ -35,6 +40,7 @@ export type EditMsgEvent = {
     id: string
     content: string
     roomID: number
+    participantID?: number
   }
 }
 
@@ -43,6 +49,7 @@ export type DeleteMsgEvent = {
   data: {
     id: string
     roomID: number
+    participantID?: number
   }
 }
 
@@ -51,6 +58,24 @@ export type ReactionToMsgEvent = {
   data: {
     id: string
     reaction: string
+    roomID: number
+    participantID?: number
+  }
+}
+
+export type ClearChatEvent = {
+  name: "CLEAR_CHAT"
+  data: {
+    participantID: number
+    roomID: number
+  }
+}
+
+export type AssignRoleEvent = {
+  name: "ASSIGN_ROLE"
+  data: {
+    role: RoomRole
+    participantID: number
     roomID: number
   }
 }

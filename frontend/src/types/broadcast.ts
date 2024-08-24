@@ -1,4 +1,4 @@
-import { User } from '@/types'
+import { RoomRole, User } from '@/types'
 
 export type BroadcastEvent =
   JoinedRoomBroadcastEvent |
@@ -8,7 +8,9 @@ export type BroadcastEvent =
   NewMsgBroadcastEvent |
   EditMsgBroadcastEvent |
   DeleteMsgBroadcastEvent |
-  ReactionToMsgBroadcastEvent
+  ReactionToMsgBroadcastEvent |
+  ClearChatBroadcastEvent |
+  AssignRoleBroadcastEvent
 
 export type JoinedRoomBroadcastEvent = {
   name: "JOINED_ROOM_BROADCAST"
@@ -58,6 +60,16 @@ export type ReactionToMsgBroadcastEvent = {
   data: ReactionToMessage
 }
 
+export type ClearChatBroadcastEvent = {
+  name: "CLEAR_CHAT_BROADCAST"
+  data: RoomAction
+}
+
+export type AssignRoleBroadcastEvent = {
+  name: "ASSIGN_ROLE_BROADCAST"
+  data: RoomAction & { role: RoomRole }
+}
+
 export type Message = {
   id: string
   content: string
@@ -68,6 +80,7 @@ export type Message = {
   isEdited?: boolean
   isDeleted?: boolean
   replyTo?: string
+  participant?: User
 }
 
 export type EditMessage = {
@@ -88,4 +101,10 @@ export type ReactionToMessage = {
   roomID: number
   from: User
   reaction: string
+}
+
+type RoomAction = {
+  roomID: number
+  by: User
+  participant: User
 }

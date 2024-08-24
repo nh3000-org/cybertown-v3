@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/types"
+	"backend/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -83,6 +84,7 @@ func (s *Service) GetGoogleOAuthUserInfo(token *types.GoogleOAuthToken) (*types.
 	if err != nil {
 		return nil, err
 	}
+	u.Picture = utils.ReplaceAfter(u.Picture, "=", "")
 
 	return &u, nil
 }

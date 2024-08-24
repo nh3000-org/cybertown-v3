@@ -1,5 +1,5 @@
 import { Room, User } from '@/types'
-import { DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
+import { ClearChatBroadcastEvent, DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -36,6 +36,7 @@ type Actions = {
   editMsg: (event: EditMsgBroadcastEvent) => void
   deleteMsg: (event: DeleteMsgBroadcastEvent) => void
   reactionToMsg: (event: ReactionToMsgBroadcastEvent) => void
+  clearChat: (event: ClearChatBroadcastEvent) => void
 }
 
 export const useAppStore = create<State & Actions>()(
@@ -121,6 +122,14 @@ export const useAppStore = create<State & Actions>()(
       } else {
         reactions[reaction][from.id] = from
       }
+    }),
+
+    clearChat: (event) => set((state) => {
+      state.messages.forEach(msg => {
+        if (msg.from.id === event.data.participant.id && !msg.participant) {
+          msg.isDeleted = true
+        }
+      })
     }),
   })),
 )

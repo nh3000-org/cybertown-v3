@@ -7,12 +7,15 @@ import { useAppStore } from '@/stores/appStore'
 import { EmojiPicker } from '@/components/EmojiPicker'
 import * as HoverCard from '@radix-ui/react-hover-card';
 import { Message as TMessage } from '@/types/broadcast'
+import { User } from '@/types'
 
 type Props = {
   message: TMessage
   textareaRef: React.RefObject<HTMLTextAreaElement>
-  setEditMsgID: (messageID: string | null) => void
-  setReplyTo: (messageID: string | null) => void
+  setEditMsgID: (messageID: string | undefined) => void
+  setReplyTo: (messageID: string | undefined) => void
+  editMsgID: string | undefined
+  setPM: (pm: User | null) => void
 }
 
 type MessageOptionsProps = Props & {
@@ -39,7 +42,8 @@ function MessageOptions(props: MessageOptionsProps) {
           {isMyMessage && (
             <>
               <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-                props.setReplyTo(null)
+                props.setReplyTo(undefined)
+                props.setPM(null)
                 props.setEditMsgID(props.message.id)
                 // if you remove the `setTimeout`, it won't work
                 setTimeout(() => {
@@ -53,7 +57,7 @@ function MessageOptions(props: MessageOptionsProps) {
                 <span>Edit</span>
               </Dropdown.Item>
               <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-                ws.deleteMsg(props.message.id)
+                ws.deleteMsg(props.message.id, props.message.participant?.id)
               }}>
                 <TrashIcon size={20} className="text-muted" />
                 <span>Delete</span>
@@ -61,7 +65,7 @@ function MessageOptions(props: MessageOptionsProps) {
             </>
           )}
           <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-            props.setEditMsgID(null)
+            props.setEditMsgID(undefined)
             props.setReplyTo(props.message.id)
             // if you remove the `setTimeout`, it won't work
             setTimeout(() => {
@@ -86,16 +90,23 @@ function MessageOptions(props: MessageOptionsProps) {
 export function Message(props: Props) {
   const { message } = props
   const messages = useAppStore().messages
+  const user = useAppStore().user
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
   const [emojiOpen, setEmojiOpen] = useState(false)
 
   return (
-    <div className="px-4 py-2 flex gap-3 items-start group" id={`message-${message.id}`}>
+    <div className={cn("px-4 py-2 flex gap-3 items-start group", {
+      "bg-accent/10": props.editMsgID === message.id,
+      "bg-danger/5 hover:bg-transparent": message.participant?.id,
+    })} id={`message-${message.id}`}>
       <img className="w-8 h-8 rounded-md" src={message.from.avatar} referrerPolicy="no-referrer" />
       <div className="flex-1">
         <div className="flex items-center justify-between text-muted text-sm mb-1">
           <div className="flex items-center gap-3">
-            <p>{message.from.username}</p>
+            {(message.participant && message.from?.id === user?.id) ? <div className="flex gap-2 items-center">
+              <img className="w-6 h-6 rounded-md" src={message.participant.avatar} referrerPolicy='no-referrer' />
+              <p>{message.participant.username}</p>
+            </div> : <p>{message.from.username}</p>}
             <MessageOptions {...props} setEmojiOpen={setEmojiOpen} />
           </div>
           <div className="flex gap-2 items-center">
@@ -106,7 +117,7 @@ export function Message(props: Props) {
               open={emojiOpen}
               setOpen={setEmojiOpen}
               onSelect={id => {
-                ws.reactionToMsg(props.message.id, id)
+                ws.reactionToMsg(props.message.id, id, props.message.participant?.id)
                 setEmojiOpen(false)
               }}
               trigger={null}
@@ -131,7 +142,7 @@ export function Message(props: Props) {
               return (
                 <HoverCard.Root key={reaction}>
                   <HoverCard.Trigger asChild>
-                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.reactionToMsg(props.message.id, reaction)}>
+                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.reactionToMsg(props.message.id, reaction, props.message.participant?.id)}>
                       <em-emoji id={reaction}></em-emoji>
                       <span className='font-semibold'>{Object.keys(userMap).length}</span>
                     </button>
