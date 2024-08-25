@@ -10,7 +10,8 @@ export type BroadcastEvent =
   DeleteMsgBroadcastEvent |
   ReactionToMsgBroadcastEvent |
   ClearChatBroadcastEvent |
-  AssignRoleBroadcastEvent
+  AssignRoleBroadcastEvent |
+  UpdateWelcomeMsgBroadcastEvent
 
 export type JoinedRoomBroadcastEvent = {
   name: "JOINED_ROOM_BROADCAST"
@@ -68,6 +69,14 @@ export type ClearChatBroadcastEvent = {
 export type AssignRoleBroadcastEvent = {
   name: "ASSIGN_ROLE_BROADCAST"
   data: RoomAction & { role: RoomRole }
+}
+
+export type UpdateWelcomeMsgBroadcastEvent = {
+  name: "UPDATE_WELCOME_MESSAGE_BROADCAST"
+  data: {
+    welcomeMessage: string
+    roomID: number
+  }
 }
 
 export type Message = {

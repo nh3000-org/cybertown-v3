@@ -16,6 +16,7 @@ import (
 const (
 	minMsgContentLen = 1
 	maxMsgContentLen = 1024
+	maxWelcomeMsgLen = 512
 )
 
 func WriteEvent(conn *websocket.Conn, event *types.Event) {
@@ -29,6 +30,12 @@ func ValidateContent(content *string) (bool, error) {
 	vd := v.NewValidator().
 		Count("content", content, "min", minMsgContentLen).
 		Count("content", content, "max", maxMsgContentLen)
+	return vd.IsValid(), vd
+}
+
+func ValidateWelcomeMsg(welcomeMsg *string) (bool, error) {
+	vd := v.NewValidator().
+		Count("welcomeMessage", welcomeMsg, "max", maxWelcomeMsgLen)
 	return vd.IsValid(), vd
 }
 

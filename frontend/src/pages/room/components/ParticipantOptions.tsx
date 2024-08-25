@@ -8,6 +8,7 @@ type Props = {
   participant: User
   room: RoomRes
   setPM: (pm: User | null) => void
+  setTab: (tab: string) => void
 }
 
 export function ParticipantOptions(props: Props) {
@@ -29,6 +30,7 @@ export function ParticipantOptions(props: Props) {
       <Dropdown.Portal>
         <Dropdown.Content className="min-w-[100px] rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border" side='top' sideOffset={10} onCloseAutoFocus={e => e.preventDefault()}>
           <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
+            props.setTab("messages")
             props.setPM(props.participant)
             setTimeout(() => {
               const el = document.getElementById("messages-textarea")

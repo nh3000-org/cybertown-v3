@@ -6,6 +6,7 @@ import (
 	"backend/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -182,6 +183,8 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 
 	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
 	if !ok {
+		log.Printf("participants not in room???")
+		fmt.Println(data.RoomID, user.ID, *data.ParticipantID)
 		return
 	}
 
@@ -390,6 +393,51 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 	})
 }
 
+func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.UpdateWelcomeMessage
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal UPDATE_WELCOME_MESSAGE data: %v", err)
+		return
+	}
+
+	if !s.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ok, err := utils.ValidateWelcomeMsg(&data.WelcomeMessage)
+	if !ok {
+		log.Printf("welcome message validation failed: %v", err)
+		return
+	}
+
+	r, err := s.repo.GetRoom(context.Background(), data.RoomID)
+	if err != nil {
+		log.Printf("update welcome message event: failed to get room: %v", err)
+		return
+	}
+
+	if r.Host.ID != user.ID && !utils.Includes(r.CoHosts, user.ID) {
+		log.Printf("update welcome message event: permission denied")
+		return
+	}
+
+	r.WelcomeMessage = &data.WelcomeMessage
+	err = s.repo.UpdateRoom(context.Background(), r)
+	if err != nil {
+		log.Printf("clear chat event: failed to update room: %v", err)
+	}
+
+	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+		Name: "UPDATE_WELCOME_MESSAGE_BROADCAST",
+		Data: map[string]any{
+			"by":             user,
+			"welcomeMessage": data.WelcomeMessage,
+			"roomID":         data.RoomID,
+		},
+	})
+}
+
 func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
 	var data t.DeleteMessage
 	err := json.Unmarshal(b, &data)
@@ -478,6 +526,8 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			app.ss.clearChatHandler(conn, b, user)
 		case "ASSIGN_ROLE":
 			app.ss.assignRoleHandler(conn, b, user)
+		case "UPDATE_WELCOME_MESSAGE":
+			app.ss.updateWelcomeMsgHandler(conn, b, user)
 		}
 	}
 }

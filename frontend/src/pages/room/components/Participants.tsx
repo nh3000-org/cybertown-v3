@@ -5,6 +5,7 @@ import { useAppStore } from "@/stores/appStore"
 type Props = {
   room: RoomRes
   setPM: (pm: User | null) => void
+  setTab: (tab: string) => void
 }
 
 export function Participants(props: Props) {
@@ -26,7 +27,7 @@ export function Participants(props: Props) {
             )}
             <p className="invisible group-hover:visible">{p.username}</p>
             {user?.id !== p.id && (
-              <ParticipantOptions participant={p} room={room} setPM={props.setPM} />
+              <ParticipantOptions participant={p} room={room} setPM={props.setPM} setTab={props.setTab} />
             )}
           </div>
         )

@@ -50,3 +50,8 @@ type AssignRole struct {
 	ParticipantID int      `json:"participantId"`
 	RoomID        int      `json:"roomID"`
 }
+
+type UpdateWelcomeMessage struct {
+	RoomID         int    `json:"roomID"`
+	WelcomeMessage string `json:"welcomeMessage"`
+}

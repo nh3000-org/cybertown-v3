@@ -1,7 +1,7 @@
 import { ChevronDown as ChevronDownIcon, SquarePen as PencilIcon, Trash as TrashIcon, ReplyAll as ReplyIcon, SmilePlus as EmojiIcon } from 'lucide-react'
 import * as Dropdown from '@radix-ui/react-dropdown-menu'
 import { useState } from 'react'
-import { cn, scrollToMessage, toHHMM } from '@/lib/utils'
+import { cn, getParticipantID, scrollToMessage, toHHMM } from '@/lib/utils'
 import { ws } from '@/lib/ws'
 import { useAppStore } from '@/stores/appStore'
 import { EmojiPicker } from '@/components/EmojiPicker'
@@ -97,13 +97,13 @@ export function Message(props: Props) {
   return (
     <div className={cn("px-4 py-2 flex gap-3 items-start group", {
       "bg-accent/10": props.editMsgID === message.id,
-      "bg-danger/5 hover:bg-transparent": message.participant?.id,
+      "bg-danger/5": message.participant?.id,
     })} id={`message-${message.id}`}>
       <img className="w-8 h-8 rounded-md" src={message.from.avatar} referrerPolicy="no-referrer" />
       <div className="flex-1">
         <div className="flex items-center justify-between text-muted text-sm mb-1">
           <div className="flex items-center gap-3">
-            {(message.participant && message.from?.id === user?.id) ? <div className="flex gap-2 items-center">
+            {(message.participant && message.from?.id === user?.id) ? <div className="flex gap-2 items-center mb-1">
               <img className="w-6 h-6 rounded-md" src={message.participant.avatar} referrerPolicy='no-referrer' />
               <p>{message.participant.username}</p>
             </div> : <p>{message.from.username}</p>}
@@ -117,7 +117,7 @@ export function Message(props: Props) {
               open={emojiOpen}
               setOpen={setEmojiOpen}
               onSelect={id => {
-                ws.reactionToMsg(props.message.id, id, props.message.participant?.id)
+                ws.reactionToMsg(props.message.id, id, getParticipantID(props.message, user!))
                 setEmojiOpen(false)
               }}
               trigger={null}
@@ -142,7 +142,9 @@ export function Message(props: Props) {
               return (
                 <HoverCard.Root key={reaction}>
                   <HoverCard.Trigger asChild>
-                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => ws.reactionToMsg(props.message.id, reaction, props.message.participant?.id)}>
+                    <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => {
+                      ws.reactionToMsg(props.message.id, reaction, getParticipantID(props.message, user!))
+                    }}>
                       <em-emoji id={reaction}></em-emoji>
                       <span className='font-semibold'>{Object.keys(userMap).length}</span>
                     </button>

@@ -2,6 +2,9 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { QueryClient } from 'react-query'
 import { config } from "@/config"
+import { ZodError } from "zod"
+import { Message } from '@/types/broadcast'
+import { User } from "@/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -55,4 +58,29 @@ export function scrollToMessage(id: string) {
   setTimeout(() => {
     el.classList.remove("blink-bg")
   }, 1500)
+}
+
+export function flattenError(error: ZodError) {
+  const fieldErrors = error.flatten().fieldErrors
+  const errors: Record<string, string> = Object.entries(fieldErrors).reduce((acc, curr) => {
+    const [key, value] = curr
+    if (Array.isArray(value)) {
+      return {
+        ...acc,
+        [key]: value[0],
+      }
+    }
+    return acc
+  }, {})
+  return errors
+}
+
+export function getParticipantID(message: Message | undefined, me: User) {
+  if (!message?.participant) {
+    return undefined
+  }
+  if (message.participant.id === me.id) {
+    return message.from.id
+  }
+  return message.participant.id
 }

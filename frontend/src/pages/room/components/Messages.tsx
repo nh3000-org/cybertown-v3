@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { CircleX as CloseIcon, SmilePlus as EmojiIcon } from 'lucide-react'
-import { cn, scrollToMessage } from "@/lib/utils"
+import { cn, getParticipantID, scrollToMessage } from "@/lib/utils"
 import { EmojiPicker } from "@/components/EmojiPicker"
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { VerticalScrollbar } from "@/components/VerticalScrollbar"
@@ -8,14 +8,16 @@ import { useAppStore } from '@/stores/appStore';
 import { ws } from '@/lib/ws';
 import { Message } from './Message';
 import { User } from '@/types';
+import React from 'react';
 
 type Props = {
   pm: User | null
   setPM: (pm: User | null) => void
 }
 
-export function Messages(props: Props) {
+export const Messages = React.forwardRef((props: Props, _ref) => {
   const messages = useAppStore().messages
+  const user = useAppStore().user
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [editMsgID, setEditMsgID] = useState<string | undefined>(undefined)
@@ -43,7 +45,8 @@ export function Messages(props: Props) {
       if (editMsgID) {
         ws.editMsg(editMsgID, value.trim(), editMsg?.participant?.id)
       } else {
-        ws.newMessage(value.trim(), replyTo, props.pm?.id ?? replyToMsg?.participant?.id)
+        const participantID = props.pm?.id || getParticipantID(replyToMsg, user!)
+        ws.newMessage(value.trim(), replyTo, participantID)
       }
 
       setEditMsgID(undefined)
@@ -69,7 +72,7 @@ export function Messages(props: Props) {
   }, [props.pm])
 
   return (
-    <div className="flex flex-col bg-bg rounded-md border border-border overflow-hidden">
+    <div className="flex-1 flex flex-col bg-bg rounded-md overflow-hidden">
       <ScrollArea.Root className="overflow-hidden flex-1">
         <ScrollArea.Viewport className={cn("w-full h-full flex gap-2 flex-col pt-2", {
           "pb-14": replyTo || props.pm,
@@ -87,7 +90,8 @@ export function Messages(props: Props) {
       <div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
         <div className="flex gap-1 self-end mr-1.5">
           <EmojiPicker trigger={<button><EmojiIcon strokeWidth={1.5} size={20} className="text-muted" /></button>} open={emojiOpen} setOpen={setEmojiOpen} onSelect={(_, emoji) => {
-            ws.newMessage(emoji, replyTo, props.pm?.id)
+            const participantID = props.pm?.id || getParticipantID(replyToMsg, user!)
+            ws.newMessage(emoji, replyTo, participantID)
             setReplyTo(undefined)
             setEmojiOpen(false)
           }} />
@@ -167,4 +171,4 @@ export function Messages(props: Props) {
       </div>
     </div>
   )
-}
+})

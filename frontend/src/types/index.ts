@@ -9,7 +9,7 @@ export type Room = {
   createdAt: string
   host: User
   coHosts?: number[]
-  welcomeMessage: string
+  welcomeMessage?: string
 } & CreateRoom
 
 export type CreateRoom = {

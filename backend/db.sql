@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   topic VARCHAR(128) NOT NULL,
   max_participants INTEGER NOT NULL,
   languages VARCHAR(64)[] NOT NULL,
-  welcome_message VARCHAR(256),
+  welcome_message varchar(512),
   host INTEGER NOT NULL,
   co_hosts INTEGER[],
   created_by INTEGER NOT NULL,

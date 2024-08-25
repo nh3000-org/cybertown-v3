@@ -39,8 +39,9 @@ class WS {
           case "NEW_ROOM_BROADCAST":
           case "UPDATE_ROOM_BROADCAST":
           case "ASSIGN_ROLE_BROADCAST":
+          case "UPDATE_WELCOME_MESSAGE_BROADCAST":
             queryClient.invalidateQueries({
-              queryKey: ['rooms']
+              queryKey: ['rooms'],
             })
             break;
           case "NEW_MESSAGE_BROADCAST":
@@ -177,6 +178,16 @@ class WS {
         roomID: this.roomID!,
         participantID,
         role
+      }
+    })
+  }
+
+  updateWelcomeMsg(welcomeMessage: string) {
+    this.sendClientEvent({
+      name: "UPDATE_WELCOME_MESSAGE",
+      data: {
+        roomID: this.roomID!,
+        welcomeMessage,
       }
     })
   }

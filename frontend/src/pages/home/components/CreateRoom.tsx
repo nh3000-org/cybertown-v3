@@ -9,6 +9,7 @@ import { useAppStore } from '@/stores/appStore';
 import { MultiValue, SingleValue } from 'react-select'
 import * as constants from '@/constants'
 import { useUpdateRoom } from '@/hooks/mutations/useUpdateRoom';
+import { flattenError } from '@/lib/utils';
 
 const createRoomSchema = z.object({
   topic: z.string().min(3, { message: 'Should be minimum of 3 characters' }).max(128, { message: 'Exceeded maximum of 128 characters' }),
@@ -76,21 +77,9 @@ export function CreateRoom() {
       return
     }
 
-    const fieldErrors = result.error.flatten().fieldErrors
-    const errors: Record<string, string> = Object.entries(fieldErrors).reduce((acc, curr) => {
-      const [key, value] = curr
-      if (Array.isArray(value)) {
-        return {
-          ...acc,
-          [key]: value[0],
-        }
-      }
-      return acc
-    }, {})
-
     setErrors(prev => ({
       ...prev,
-      ...errors,
+      ...flattenError(result.error),
     }))
   }
 
