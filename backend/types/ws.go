@@ -55,3 +55,8 @@ type UpdateWelcomeMessage struct {
 	RoomID         int    `json:"roomID"`
 	WelcomeMessage string `json:"welcomeMessage"`
 }
+
+type SetStatus struct {
+	RoomID int    `json:"roomID"`
+	Status string `json:"status"`
+}

@@ -17,10 +17,10 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-type connUserMap map[*websocket.Conn]*t.User
+type connParticipantMap map[*websocket.Conn]*t.Participant
 
 type socketServer struct {
-	conns  connUserMap
+	conns  connParticipantMap
 	rooms  map[int]map[*websocket.Conn]struct{}
 	repo   *db.Repo
 	emojis map[string]struct{}
@@ -28,7 +28,7 @@ type socketServer struct {
 
 func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
-		conns:  make(connUserMap),
+		conns:  make(connParticipantMap),
 		rooms:  make(map[int]map[*websocket.Conn]struct{}),
 		emojis: emojis,
 		repo:   repo,
@@ -36,7 +36,10 @@ func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
 }
 
 func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
-	s.conns[conn] = user
+	s.conns[conn] = &t.Participant{
+		User:   *user,
+		Status: "None",
+	}
 }
 
 func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
@@ -55,8 +58,8 @@ func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
 	return false
 }
 
-func (s *socketServer) getParticipantsFromIDs(roomID int, participantIDs []int) (map[int]*t.User, bool) {
-	participants := make(map[int]*t.User)
+func (s *socketServer) getParticipantsFromIDs(roomID int, participantIDs []int) (map[int]*t.Participant, bool) {
+	participants := make(map[int]*t.Participant)
 	if _, ok := s.rooms[roomID]; ok {
 		for conn := range s.rooms[roomID] {
 			participant := s.conns[conn]
@@ -115,12 +118,12 @@ func (s *socketServer) broadcastRoomEvent(roomID int, participantIDs []int, even
 	}
 }
 
-func (s *socketServer) getParticipantsInRoom(roomID int) []*t.User {
-	participants := make([]*t.User, 0)
+func (s *socketServer) getParticipantsInRoom(roomID int) []*t.Participant {
+	participants := make([]*t.Participant, 0)
 	if _, ok := s.rooms[roomID]; ok {
 		for conn := range s.rooms[roomID] {
-			if u, ok := s.conns[conn]; ok {
-				participants = append(participants, u)
+			if p, ok := s.conns[conn]; ok {
+				participants = append(participants, p)
 			}
 		}
 	}
@@ -211,8 +214,8 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 	})
 }
 
-func (s *socketServer) participantsInRoom(roomID, userID int, conn *websocket.Conn, participantID *int) (map[int]*t.User, bool) {
-	var participants map[int]*t.User
+func (s *socketServer) participantsInRoom(roomID, userID int, conn *websocket.Conn, participantID *int) (map[int]*t.Participant, bool) {
+	var participants map[int]*t.Participant
 	if participantID != nil {
 		p, ok := s.getParticipantsFromIDs(roomID, []int{userID, *participantID})
 		if !ok {
@@ -358,7 +361,9 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		}
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 		r.CoHosts = append(r.CoHosts, r.Host.ID)
-		r.Host = *p[data.ParticipantID]
+		r.Host = t.User{
+			ID: p[*&data.ParticipantID].ID,
+		}
 		welcomeMessage := ""
 		r.WelcomeMessage = &welcomeMessage
 		r.Topic = ""
@@ -434,6 +439,35 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 			"by":             user,
 			"welcomeMessage": data.WelcomeMessage,
 			"roomID":         data.RoomID,
+		},
+	})
+}
+
+func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.SetStatus
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal SET_STATUS data: %v", err)
+		return
+	}
+
+	if !s.isInRoom(conn, data.RoomID) {
+		return
+	}
+
+	ok, err := utils.ValidateStatus(&data.Status)
+	if !ok {
+		log.Printf("set status event: validation failed: %v", err)
+		return
+	}
+	s.conns[conn].Status = data.Status
+
+	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+		Name: "SET_STATUS_BROADCAST",
+		Data: map[string]any{
+			"roomID": data.RoomID,
+			"status": data.Status,
+			"by":     user,
 		},
 	})
 }
@@ -528,6 +562,8 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			app.ss.assignRoleHandler(conn, b, user)
 		case "UPDATE_WELCOME_MESSAGE":
 			app.ss.updateWelcomeMsgHandler(conn, b, user)
+		case "SET_STATUS":
+			app.ss.setStatusHandler(conn, b, user)
 		}
 	}
 }

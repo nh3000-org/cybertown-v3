@@ -11,7 +11,8 @@ export type BroadcastEvent =
   ReactionToMsgBroadcastEvent |
   ClearChatBroadcastEvent |
   AssignRoleBroadcastEvent |
-  UpdateWelcomeMsgBroadcastEvent
+  UpdateWelcomeMsgBroadcastEvent |
+  SetStatusBroadcastEvent
 
 export type JoinedRoomBroadcastEvent = {
   name: "JOINED_ROOM_BROADCAST"
@@ -75,6 +76,14 @@ export type UpdateWelcomeMsgBroadcastEvent = {
   name: "UPDATE_WELCOME_MESSAGE_BROADCAST"
   data: {
     welcomeMessage: string
+    roomID: number
+  }
+}
+
+export type SetStatusBroadcastEvent = {
+  name: "SET_STATUS_BROADCAST"
+  data: {
+    status: string
     roomID: number
   }
 }

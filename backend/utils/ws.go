@@ -19,6 +19,10 @@ const (
 	maxWelcomeMsgLen = 512
 )
 
+var (
+	allowedStatus = []string{"None", "AFK", "BRB", "Busy", ".zZ"}
+)
+
 func WriteEvent(conn *websocket.Conn, event *types.Event) {
 	err := wsjson.Write(context.Background(), conn, event)
 	if err != nil {
@@ -36,6 +40,12 @@ func ValidateContent(content *string) (bool, error) {
 func ValidateWelcomeMsg(welcomeMsg *string) (bool, error) {
 	vd := v.NewValidator().
 		Count("welcomeMessage", welcomeMsg, "max", maxWelcomeMsgLen)
+	return vd.IsValid(), vd
+}
+
+func ValidateStatus(status *string) (bool, error) {
+	vd := v.NewValidator().
+		IsInStr("status", status, allowedStatus)
 	return vd.IsValid(), vd
 }
 

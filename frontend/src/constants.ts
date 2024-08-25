@@ -19,3 +19,11 @@ export const languages = [
   { value: 'vietnamese', label: 'Vietnamese' },
   { value: 'indonesian', label: 'Indonesian' },
 ]
+
+export const status = [
+  'None',
+  'AFK',
+  'BRB',
+  'Busy',
+  '.zZ',
+]

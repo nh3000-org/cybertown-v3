@@ -18,6 +18,6 @@ export type CreateRoom = {
   languages: string[]
 }
 
-export type RoomRes = Room & { participants: User[] }
+export type RoomRes = Room & { participants: (User & { status: string })[] }
 
 export type RoomRole = "host" | "coHost" | "guest"

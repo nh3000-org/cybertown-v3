@@ -40,6 +40,7 @@ class WS {
           case "UPDATE_ROOM_BROADCAST":
           case "ASSIGN_ROLE_BROADCAST":
           case "UPDATE_WELCOME_MESSAGE_BROADCAST":
+          case "SET_STATUS_BROADCAST":
             queryClient.invalidateQueries({
               queryKey: ['rooms'],
             })
@@ -188,6 +189,16 @@ class WS {
       data: {
         roomID: this.roomID!,
         welcomeMessage,
+      }
+    })
+  }
+
+  setStatus(status: string) {
+    this.sendClientEvent({
+      name: "SET_STATUS",
+      data: {
+        roomID: this.roomID!,
+        status,
       }
     })
   }

@@ -11,6 +11,11 @@ type User struct {
 	FriendsCount   int    `json:"-"`
 }
 
+type Participant struct {
+	User
+	Status string `json:"status,omitempty"`
+}
+
 type Room struct {
 	ID              int       `json:"id"`
 	Topic           string    `json:"topic"`
@@ -48,7 +53,7 @@ type Config struct {
 
 type RoomsResponse struct {
 	*Room
-	Participants []*User `json:"participants"`
+	Participants []*Participant `json:"participants"`
 }
 
 type RoomRole string

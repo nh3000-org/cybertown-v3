@@ -9,7 +9,8 @@ export type ClientEvent =
   ReactionToMsgEvent |
   ClearChatEvent |
   AssignRoleEvent |
-  UpdateWelcomeMsgEvent
+  UpdateWelcomeMsgEvent |
+  SetStatusEvent
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
@@ -85,6 +86,14 @@ export type UpdateWelcomeMsgEvent = {
   name: "UPDATE_WELCOME_MESSAGE"
   data: {
     welcomeMessage: string
+    roomID: number
+  }
+}
+
+export type SetStatusEvent = {
+  name: "SET_STATUS"
+  data: {
+    status: string
     roomID: number
   }
 }

@@ -7,6 +7,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { Settings as SettingsIcon, Mail as MessagesIcon } from 'lucide-react';
 import { WelcomeMessage } from "./WelcomeMessage";
 import { useAppStore } from "@/stores/appStore";
+import { Status } from "./Status";
 
 type Props = {
   roomID: number
@@ -26,7 +27,7 @@ export function Room(props: Props) {
         </div>
         <div className="flex-1 border-y border-border flex items-center justify-center">
           {room?.welcomeMessage && (
-            <p className="text-yellow-500 max-w-[500px]">
+            <p className="text-yellow-500 max-w-[500px] px-4">
               {room.welcomeMessage.replace('{username}', user?.username ?? '')}
             </p>
           )}
@@ -51,8 +52,9 @@ export function Room(props: Props) {
             <Messages pm={pm} setPM={setPM} />
           </Tabs.Content>
           <Tabs.Content asChild value="settings">
-            <div className="p-4 focus:outline-none">
-              {room && <WelcomeMessage room={room} />}
+            <div className="p-4 focus:outline-none flex flex-col gap-6">
+              <WelcomeMessage room={room} />
+              <Status room={room} />
             </div>
           </Tabs.Content>
         </Tabs.Root>
