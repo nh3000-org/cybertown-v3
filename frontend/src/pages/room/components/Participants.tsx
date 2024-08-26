@@ -15,8 +15,8 @@ export function Participants(props: Props) {
   return (
     <div className="flex gap-4 justify-center">
       {room.participants.map(p => {
-        const isHost = room?.host.id === p.id
-        const isCoHost = room?.coHosts?.includes(p.id)
+        const isHost = room.settings.host.id === p.id
+        const isCoHost = room.settings.coHosts?.includes(p.id)
         return (
           <div key={p.id} className="bg-cover group participant h-[96px] w-[96px] rounded-sm shadow-sm text-center place-content-center text-sm relative" style={{
             backgroundImage: `url(${p.avatar})`

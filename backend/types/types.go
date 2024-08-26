@@ -3,12 +3,9 @@ package types
 import "time"
 
 type User struct {
-	ID             int    `json:"id"`
-	Username       string `json:"username"`
-	Avatar         string `json:"avatar"`
-	FollowersCount int    `json:"-"`
-	FollowingCount int    `json:"-"`
-	FriendsCount   int    `json:"-"`
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
 }
 
 type Participant struct {
@@ -17,14 +14,20 @@ type Participant struct {
 }
 
 type Room struct {
-	ID              int       `json:"id"`
-	Topic           string    `json:"topic"`
-	Languages       []string  `json:"languages"`
-	MaxParticipants int       `json:"maxParticipants"`
-	WelcomeMessage  *string   `json:"welcomeMessage,omitempty"`
-	Host            User      `json:"host"`
-	CoHosts         []int     `json:"coHosts,omitempty"`
-	CreatedAt       time.Time `json:"createdAt"`
+	ID              int          `json:"id"`
+	Topic           string       `json:"topic"`
+	Languages       []string     `json:"languages"`
+	MaxParticipants int          `json:"maxParticipants"`
+	CreatedAt       time.Time    `json:"createdAt"`
+	CreatedBy       int          `json:"-"`
+	Settings        RoomSettings `json:"settings"`
+}
+
+type RoomSettings struct {
+	RoomID         int     `json:"-"`
+	WelcomeMessage *string `json:"welcomeMessage,omitempty"`
+	Host           User    `json:"host"`
+	CoHosts        []int   `json:"coHosts,omitempty"`
 }
 
 type GoogleOAuthToken struct {

@@ -24,11 +24,15 @@ CREATE TABLE IF NOT EXISTS rooms (
   topic VARCHAR(128) NOT NULL,
   max_participants INTEGER NOT NULL,
   languages VARCHAR(64)[] NOT NULL,
-  welcome_message varchar(512),
-  host INTEGER NOT NULL,
-  co_hosts INTEGER[],
   created_by INTEGER NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-  FOREIGN KEY (created_by) REFERENCES users (id),
-  FOREIGN KEY (host) REFERENCES users (id)
+  FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS room_settings (
+  room_id INTEGER NOT NULL,
+  host INTEGER NOT NULL,
+  co_hosts INTEGER[],
+  welcome_message varchar(512),
+  FOREIGN KEY (room_id) REFERENCES rooms (id)
 );

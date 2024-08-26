@@ -12,12 +12,12 @@ type Props = {
 }
 
 export function ParticipantOptions(props: Props) {
-  const { room } = props
+  const { settings } = props.room
   const user = useAppStore().user
-  const isHost = room.host.id === user?.id
-  const isCoHost = room.coHosts?.includes(user?.id as unknown as number)
-  const isParticipantCoHost = room.coHosts?.includes(props.participant.id)
-  const isParticipantHost = props.participant.id === room.host.id
+  const isHost = settings.host.id === user?.id
+  const isCoHost = settings.coHosts?.includes(user?.id as unknown as number)
+  const isParticipantCoHost = settings.coHosts?.includes(props.participant.id)
+  const isParticipantHost = props.participant.id === settings.host.id
   const hasPermissions = (isHost || isCoHost) && !isParticipantHost
 
   return (

@@ -41,14 +41,14 @@ export function RoomCard(props: Props) {
           <Popover.Portal>
             <Popover.Content side='bottom' align='end' sideOffset={12} className='focus:outline-none rounded-lg p-6 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border'>
               <div className="flex flex-col items-center justify-center gap-3 relative">
-                <p className="text-muted">Owner</p>
-                <img src={room.host.avatar} className="w-12 h-12 rounded-full" />
+                <p className="text-muted">Host</p>
+                <img src={room.settings.host.avatar} className="w-12 h-12 rounded-full" />
                 <div className="text-center">
-                  <p className="font-semibold pb-1">{room.host.username}</p>
+                  <p className="font-semibold pb-1">{room.settings.host.username}</p>
                   <p className="text-muted text-sm">{formatRelative(new Date(room.createdAt), new Date())}</p>
                 </div>
               </div>
-              {user?.id === room.host.id && (
+              {user?.id === room.settings.host.id && (
                 <button className='absolute top-4 right-4 p-[2px] rounded-lg' onClick={() => {
                   setUpdateRoom(true, room)
                 }}>

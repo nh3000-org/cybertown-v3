@@ -6,7 +6,6 @@ import { CircleX as CloseIcon, SquarePen as PencilIcon } from 'lucide-react'
 import { z } from 'zod';
 import { useAppStore } from '@/stores/appStore';
 import { RoomRes } from '@/types';
-import { text } from 'stream/consumers';
 
 const updateWelcomeMsgSchema = z.object({
   welcomeMessage: z.string().max(512, { message: 'Should be maximum of 512 characters' }),
@@ -22,8 +21,8 @@ export function WelcomeMessage(props: Props) {
   const [error, setError] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [mode, setMode] = useState<"edit" | "view">("view")
-  const isHost = room?.host.id === user?.id
-  const isCoHost = room?.coHosts?.includes(user?.id as unknown as number)
+  const isHost = room.settings.host.id === user?.id
+  const isCoHost = room.settings.coHosts?.includes(user?.id as unknown as number)
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -59,9 +58,9 @@ export function WelcomeMessage(props: Props) {
 
   useEffect(() => {
     if (room && textareaRef.current) {
-      textareaRef.current.value = room.welcomeMessage ?? ''
+      textareaRef.current.value = room.settings.welcomeMessage ?? ''
     }
-  }, [room.welcomeMessage])
+  }, [room.settings.welcomeMessage])
 
   if (!isHost && !isCoHost) {
     return null
@@ -84,7 +83,7 @@ export function WelcomeMessage(props: Props) {
               </button>
             )}
           </Label>
-          <textarea disabled={mode === "view"} ref={textareaRef} defaultValue={room.welcomeMessage ?? ''
+          <textarea disabled={mode === "view"} ref={textareaRef} defaultValue={room.settings.welcomeMessage ?? ''
           } rows={3} onChange={() => setError("")} name="welcomeMessage" id="welcomeMessage" className="scroller mt-2 w-full border border-border bg-transparent rounded-md p-2 px-3 disabled:opacity-80 disabled:pointer-events-none" placeholder="You can mention username by {username}" />
           {error ? <span className="text-danger text-sm">{error}</span> : null}
         </div>

@@ -301,7 +301,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 		return
 	}
 
-	r, err := s.repo.GetRoom(context.Background(), data.RoomID)
+	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if err != nil {
 		log.Printf("clear chat event: failed to get room: %v", err)
 		return
@@ -338,7 +338,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		return
 	}
 
-	r, err := s.repo.GetRoom(context.Background(), data.RoomID)
+	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if !ok {
 		log.Printf("assign role event: failed to get room: %v", err)
 		return
@@ -366,7 +366,6 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		}
 		welcomeMessage := ""
 		r.WelcomeMessage = &welcomeMessage
-		r.Topic = ""
 	case t.RoomRoleGuest:
 		if !utils.Includes(r.CoHosts, data.ParticipantID) {
 			log.Printf("assign role event: should be 'co-host' to assign role 'guest'")
@@ -381,9 +380,9 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		r.CoHosts = append(r.CoHosts, data.ParticipantID)
 	}
 
-	err = s.repo.UpdateRoom(context.Background(), r)
+	err = s.repo.UpdateRoomSettings(context.Background(), r)
 	if err != nil {
-		log.Printf("assign role event: failed to update room: %v", err)
+		log.Printf("assign role event: failed to update room settings: %v", err)
 		return
 	}
 
@@ -416,7 +415,7 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 		return
 	}
 
-	r, err := s.repo.GetRoom(context.Background(), data.RoomID)
+	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if err != nil {
 		log.Printf("update welcome message event: failed to get room: %v", err)
 		return
@@ -428,9 +427,9 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 	}
 
 	r.WelcomeMessage = &data.WelcomeMessage
-	err = s.repo.UpdateRoom(context.Background(), r)
+	err = s.repo.UpdateRoomSettings(context.Background(), r)
 	if err != nil {
-		log.Printf("clear chat event: failed to update room: %v", err)
+		log.Printf("clear chat event: failed to update room settings: %v", err)
 	}
 
 	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{

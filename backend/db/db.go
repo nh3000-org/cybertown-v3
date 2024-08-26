@@ -92,22 +92,48 @@ func (r *Repo) DeleteSessionForUser(ctx context.Context, sessionID string, userI
 }
 
 func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
 	query := `
-		INSERT INTO rooms(topic, max_participants, languages, created_by, host)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO rooms(topic, max_participants, languages, created_by)
+		VALUES ($1, $2, $3, $4)
 	  RETURNING id;
 	`
+
 	var roomID int
-	err := r.pool.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.Host.ID, room.Host.ID).Scan(&roomID)
-	return roomID, err
+	err = tx.QueryRow(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.CreatedBy).Scan(&roomID)
+	if err != nil {
+		return 0, err
+	}
+
+	query = `
+	 INSERT INTO room_settings(room_id, host)
+	 VALUES ($1, $2);
+  `
+	_, err = tx.Exec(ctx, query, roomID, room.CreatedBy)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return roomID, nil
 }
 
 func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	query := `
-	  SELECT r.id, r.topic, r.max_participants, r.languages, r.welcome_message, r.co_hosts, r.created_at,
-	  u.id, u.username, u.avatar
+	  SELECT r.id, r.topic, r.max_participants, r.languages, r.created_at,
+	  u.id, u.username, u.avatar, s.co_hosts, s.welcome_message
 	  FROM rooms r 
-	  INNER JOIN users u ON u.id = r.host
+	  INNER JOIN room_settings s ON s.room_id = r.id
+	  INNER JOIN users u ON u.id = s.host
 	  ORDER BY r.created_at DESC;
 	`
 
@@ -119,7 +145,18 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	var rooms []*types.Room
 	for rows.Next() {
 		var room types.Room
-		err := rows.Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.WelcomeMessage, &room.CoHosts, &room.CreatedAt, &room.Host.ID, &room.Host.Username, &room.Host.Avatar)
+		err := rows.Scan(
+			&room.ID,
+			&room.Topic,
+			&room.MaxParticipants,
+			&room.Languages,
+			&room.CreatedAt,
+			&room.Settings.Host.ID,
+			&room.Settings.Host.Username,
+			&room.Settings.Host.Avatar,
+			&room.Settings.CoHosts,
+			&room.Settings.WelcomeMessage,
+		)
 		if err != nil {
 			log.Printf("failed to scan room: %v", err)
 			continue
@@ -146,22 +183,58 @@ func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*types.R
 func (r *Repo) UpdateRoom(ctx context.Context, room *types.Room) error {
 	query := `
 	  UPDATE rooms 
-	  SET topic = $1, max_participants = $2, languages = $3, welcome_message = $4, host = $5,
-	      co_hosts = $6
-	  WHERE id = $7;
+	  SET topic = $1, max_participants = $2, languages = $3
+	  WHERE id = $4;
 	`
-	_, err := r.pool.Exec(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.WelcomeMessage, room.Host.ID, room.CoHosts, room.ID)
+	_, err := r.pool.Exec(ctx, query, room.Topic, room.MaxParticipants, room.Languages, room.ID)
 	return err
+}
+
+func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*types.RoomSettings, error) {
+	query := `
+	  SELECT s.room_id, u.id, u.username, u.avatar, s.co_hosts, s.welcome_message
+	  FROM room_settings s INNER JOIN users u on u.id = s.host
+	  WHERE room_id = $1;
+	`
+
+	var s types.RoomSettings
+	err := r.pool.QueryRow(ctx, query, roomID).Scan(
+		&s.RoomID,
+		&s.Host.ID,
+		&s.Host.Username,
+		&s.Host.Avatar,
+		&s.CoHosts,
+		&s.WelcomeMessage,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &s, nil
+}
+
+func (r *Repo) UpdateRoomSettings(ctx context.Context, s *types.RoomSettings) error {
+	query := `
+	  UPDATE room_settings
+	  SET host = $1, co_hosts = $2, welcome_message = $3
+	  WHERE room_id = $4;
+	`
+	_, err := r.pool.Exec(ctx, query, s.Host.ID, s.CoHosts, s.WelcomeMessage, s.RoomID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, error) {
 	var values []any
 
 	query := `
-	  SELECT r.id, r.topic, r.max_participants, r.languages, r.welcome_message, r.co_hosts, r.created_at,
-	  u.id, u.username, u.avatar
+	  SELECT r.id, r.topic, r.max_participants, r.languages, r.created_at,
+	  u.id, u.username, u.avatar, s.co_hosts, s.welcome_message
 	  FROM rooms r 
-	  INNER JOIN users u ON u.id = r.host
+	  INNER JOIN room_settings s ON s.room_id = r.id
+	  INNER JOIN users u ON u.id = s.host
 	  WHERE 1=1
 	`
 
@@ -172,11 +245,22 @@ func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, err
 
 	if filter.UserID != nil {
 		values = append(values, filter.UserID)
-		query += fmt.Sprintf(" AND r.host = $%d", len(values))
+		query += fmt.Sprintf(" AND u.id = $%d", len(values))
 	}
 
 	var room types.Room
-	err := r.pool.QueryRow(ctx, query, values...).Scan(&room.ID, &room.Topic, &room.MaxParticipants, &room.Languages, &room.WelcomeMessage, &room.CoHosts, &room.CreatedAt, &room.Host.ID, &room.Host.Username, &room.Host.Avatar)
+	err := r.pool.QueryRow(ctx, query, values...).Scan(
+		&room.ID,
+		&room.Topic,
+		&room.MaxParticipants,
+		&room.Languages,
+		&room.CreatedAt,
+		&room.Settings.Host.ID,
+		&room.Settings.Host.Username,
+		&room.Settings.Host.Avatar,
+		&room.Settings.CoHosts,
+		&room.Settings.WelcomeMessage,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -7,10 +7,14 @@ export type User = {
 export type Room = {
   id: number
   createdAt: string
+  settings: RoomSettings
+} & CreateRoom
+
+export type RoomSettings = {
   host: User
   coHosts?: number[]
   welcomeMessage?: string
-} & CreateRoom
+}
 
 export type CreateRoom = {
   topic: string
