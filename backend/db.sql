@@ -36,3 +36,14 @@ CREATE TABLE IF NOT EXISTS room_settings (
   welcome_message varchar(512),
   FOREIGN KEY (room_id) REFERENCES rooms (id)
 );
+
+CREATE TABLE IF NOT EXISTS room_kicks (
+  room_id INTEGER NOT NULL,
+  kicked INTEGER NOT NULL,
+  kicker INTEGER NOT NULL,
+  duration INTEGER NOT NULL,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  FOREIGN KEY (room_id) REFERENCES rooms (id),
+  FOREIGN KEY (kicked) REFERENCES users (id),
+  FOREIGN KEY (kicker) REFERENCES users (id)
+);

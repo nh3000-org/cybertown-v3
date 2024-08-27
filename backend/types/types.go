@@ -43,6 +43,14 @@ type GoogleUserInfo struct {
 	Picture       string `json:"picture"`
 }
 
+type Kick struct {
+	RoomID    int
+	Kicker    int
+	Kicked    int
+	Duration  int
+	CreatedAt time.Time
+}
+
 type Config struct {
 	CookieExpiration time.Duration `env:"COOKIE_EXPIRATION"`
 	GoogleOAuth      struct {

@@ -75,6 +75,12 @@ class WS {
             }
             useAppStore.getState().clearChat(event)
             break;
+          case "KICK_PARTICIPANT_BROADCAST":
+            if (event.data.roomID !== this.roomID) {
+              return
+            }
+            useAppStore.getState().kickParticipant(event)
+            break;
         }
       } catch (err) {
         console.error("failed to parse broadcast event 'data' field", err)
@@ -199,6 +205,18 @@ class WS {
       data: {
         roomID: this.roomID!,
         status,
+      }
+    })
+  }
+
+  kickParticipant(participantID: number) {
+    this.sendClientEvent({
+      name: "KICK_PARTICIPANT",
+      data: {
+        participantID,
+        roomID: this.roomID!,
+        duration: '30m',
+        clearChat: true,
       }
     })
   }

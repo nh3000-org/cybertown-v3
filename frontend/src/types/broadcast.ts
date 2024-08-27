@@ -12,7 +12,8 @@ export type BroadcastEvent =
   ClearChatBroadcastEvent |
   AssignRoleBroadcastEvent |
   UpdateWelcomeMsgBroadcastEvent |
-  SetStatusBroadcastEvent
+  SetStatusBroadcastEvent |
+  KickParticipantBroadcastEvent
 
 export type JoinedRoomBroadcastEvent = {
   name: "JOINED_ROOM_BROADCAST"
@@ -85,6 +86,17 @@ export type SetStatusBroadcastEvent = {
   data: {
     status: string
     roomID: number
+  }
+}
+
+export type KickParticipantBroadcastEvent = {
+  name: "KICK_PARTICIPANT_BROADCAST"
+  data: {
+    by: User
+    participant: User
+    roomID: number
+    kickedAt: string
+    duration: number
   }
 }
 

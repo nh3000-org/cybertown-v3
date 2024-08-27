@@ -60,3 +60,10 @@ type SetStatus struct {
 	RoomID int    `json:"roomID"`
 	Status string `json:"status"`
 }
+
+type KickParticipant struct {
+	RoomID        int    `json:"roomID"`
+	ParticipantID int    `json:"participantID"`
+	Duration      string `json:"duration"`
+	ClearChat     bool   `json:"clearChat"`
+}

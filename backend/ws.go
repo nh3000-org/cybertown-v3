@@ -36,10 +36,12 @@ func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
 }
 
 func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
-	s.conns[conn] = &t.Participant{
-		User:   *user,
-		Status: "None",
+	p := &t.Participant{}
+	if user != nil {
+		p.Status = "None"
+		p.User = *user
 	}
+	s.conns[conn] = p
 }
 
 func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
@@ -303,13 +305,14 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 
 	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if err != nil {
-		log.Printf("clear chat event: failed to get room: %v", err)
+		log.Printf("clear chat event: failed to get room settings: %v", err)
 		return
 	}
 
-	// the user should be either 'host' | 'co-host'
-	// the participant shouldn't be 'host'
-	if (r.Host.ID != user.ID && !utils.Includes(r.CoHosts, user.ID)) || r.Host.ID == data.ParticipantID {
+	isHost := r.Host.ID == user.ID
+	isCoHost := utils.Includes(r.CoHosts, user.ID)
+	isParticipantHost := r.Host.ID == data.ParticipantID
+	if (!isHost && !isCoHost) || isParticipantHost {
 		log.Printf("clear chat event: permission denied")
 		return
 	}
@@ -318,7 +321,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 		Name: "CLEAR_CHAT_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
-			"participant": p[data.ParticipantID],
+			"participant": p[data.ParticipantID].User,
 			"by":          user,
 		},
 	})
@@ -340,11 +343,14 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 
 	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if !ok {
-		log.Printf("assign role event: failed to get room: %v", err)
+		log.Printf("assign role event: failed to get room settings: %v", err)
 		return
 	}
+	isHost := r.Host.ID == user.ID
+	isCoHost := utils.Includes(r.CoHosts, user.ID)
+	isParticipantHost := r.Host.ID == data.ParticipantID
 
-	if r.Host.ID != user.ID {
+	if !isHost || isParticipantHost {
 		log.Printf("assign role event: permission denied")
 		return
 	}
@@ -367,13 +373,13 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		welcomeMessage := ""
 		r.WelcomeMessage = &welcomeMessage
 	case t.RoomRoleGuest:
-		if !utils.Includes(r.CoHosts, data.ParticipantID) {
+		if !isCoHost {
 			log.Printf("assign role event: should be 'co-host' to assign role 'guest'")
 			return
 		}
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 	case t.RoomRoleCoHost:
-		if utils.Includes(r.CoHosts, data.ParticipantID) {
+		if isCoHost {
 			log.Printf("assign role event: should be 'guest' to assign role 'co-host'")
 			return
 		}
@@ -392,7 +398,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 			"roomID":      data.RoomID,
 			"by":          user,
 			"role":        data.Role,
-			"participant": p[data.ParticipantID],
+			"participant": p[data.ParticipantID].User,
 		},
 	})
 }
@@ -417,11 +423,13 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 
 	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
 	if err != nil {
-		log.Printf("update welcome message event: failed to get room: %v", err)
+		log.Printf("update welcome message event: failed to get room settings: %v", err)
 		return
 	}
 
-	if r.Host.ID != user.ID && !utils.Includes(r.CoHosts, user.ID) {
+	isHost := r.Host.ID == user.ID
+	isCoHost := utils.Includes(r.CoHosts, user.ID)
+	if !isHost && !isCoHost {
 		log.Printf("update welcome message event: permission denied")
 		return
 	}
@@ -469,6 +477,84 @@ func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte, user *t.
 			"by":     user,
 		},
 	})
+}
+
+func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, user *t.User) {
+	var data t.KickParticipant
+	err := json.Unmarshal(b, &data)
+	if err != nil {
+		log.Printf("failed to unmarshal KICK_PARTICIPANT data: %v", err)
+		return
+	}
+
+	duration, err := time.ParseDuration(data.Duration)
+	if err != nil {
+		log.Printf("kick participant event: invalid duration: %v", err)
+		return
+	}
+
+	_, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
+	if !ok {
+		log.Printf("kick participant event: participants not in room")
+		return
+	}
+
+	r, err := s.repo.GetRoomSettings(context.Background(), data.RoomID)
+	if err != nil {
+		log.Printf("kick participant event: failed to get room settings: %v", err)
+		return
+	}
+
+	isHost := r.Host.ID == user.ID
+	isCoHost := utils.Includes(r.CoHosts, user.ID)
+	isParticipantHost := r.Host.ID == data.ParticipantID
+	if (!isHost && !isCoHost) || isParticipantHost {
+		log.Print("kick participant event: permission denied")
+		return
+	}
+
+	_, err = s.repo.GetKick(context.Background(), data.RoomID, data.ParticipantID)
+	if nil == err {
+		log.Print("kick participant event: participant is kicked already")
+		return
+	}
+
+	k := t.Kick{
+		RoomID:   data.RoomID,
+		Kicker:   user.ID,
+		Kicked:   data.ParticipantID,
+		Duration: int(duration.Seconds()),
+	}
+	err = s.repo.KickParticipant(context.Background(), &k)
+	if err != nil {
+		log.Print("kick participant event: failed to update in room_kicks: %v", err)
+		return
+	}
+
+	// TODO: same user joining the room from different devices?
+	for conn, participant := range s.conns {
+		if participant.ID == data.ParticipantID {
+			d := map[string]any{
+				"by":          user,
+				"participant": participant.User,
+				"roomID":      data.RoomID,
+			}
+			if data.ClearChat {
+				s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+					Name: "CLEAR_CHAT_BROADCAST",
+					Data: d,
+				})
+			}
+			d["duration"] = k.Duration
+			d["kickedAt"] = time.Now().UTC()
+			s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+				Name: "KICK_PARTICIPANT_BROADCAST",
+				Data: d,
+			})
+			s.leaveRoom(conn, data.RoomID, &participant.User)
+			break
+		}
+	}
 }
 
 func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
@@ -563,6 +649,8 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			app.ss.updateWelcomeMsgHandler(conn, b, user)
 		case "SET_STATUS":
 			app.ss.setStatusHandler(conn, b, user)
+		case "KICK_PARTICIPANT":
+			app.ss.kickParticipantHandler(conn, b, user)
 		}
 	}
 }

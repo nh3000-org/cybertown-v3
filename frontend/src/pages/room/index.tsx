@@ -1,17 +1,19 @@
-import { useRoom } from "@/hooks/queries/useRoom"
+import { useJoinRoom } from "@/hooks/queries/useJoinRoom"
 import { ws } from "@/lib/ws"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Onboarding } from "@/pages/room/components/Onboarding"
-import { RoomError, UserError } from "@/pages/room/components/Error"
+import { RoomError } from "@/pages/room/components/RoomError"
 import { Room } from "@/pages/room/components/Room"
 import { useAppStore } from "@/stores/appStore"
+import { APIError } from "@/lib/utils"
 
 export function RoomPage() {
   const [isOnboarding, setIsOnBoarding] = useState(true)
   const roomID = Number(useParams().roomID)
   const user = useAppStore().user
-  const { data: room, isLoading: isRoomLoading, error: roomError } = useRoom(roomID!, user !== null)
+  const isKicked = useAppStore().isKicked
+  const { data: room, isLoading, error } = useJoinRoom(roomID!, user !== null)
 
   useEffect(() => {
     if (room) {
@@ -19,16 +21,12 @@ export function RoomPage() {
     }
   }, [room, roomID])
 
-  if (isRoomLoading) {
+  if (isLoading) {
     return null
   }
 
-  if (!user) {
-    return <UserError />
-  }
-
-  if (roomError) {
-    return <RoomError />
+  if (!user || error || isKicked) {
+    return <RoomError error={error as APIError} user={user} isKicked={isKicked} />
   }
 
   if (isOnboarding && user) {

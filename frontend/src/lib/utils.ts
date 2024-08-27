@@ -84,3 +84,15 @@ export function getParticipantID(message: Message | undefined, me: User) {
   }
   return message.participant.id
 }
+
+export class APIError extends Error {
+  status: number
+  errors: Record<string, any>
+
+  constructor(message: string, status: number, errors: Record<string, any>) {
+    super(message)
+    this.name = 'APIError'
+    this.status = status
+    this.errors = errors
+  }
+}

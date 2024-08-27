@@ -10,7 +10,8 @@ export type ClientEvent =
   ClearChatEvent |
   AssignRoleEvent |
   UpdateWelcomeMsgEvent |
-  SetStatusEvent
+  SetStatusEvent |
+  KickPartcipantEvent
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
@@ -95,5 +96,15 @@ export type SetStatusEvent = {
   data: {
     status: string
     roomID: number
+  }
+}
+
+export type KickPartcipantEvent = {
+  name: "KICK_PARTICIPANT"
+  data: {
+    participantID: number
+    roomID: number
+    duration: string
+    clearChat: boolean
   }
 }

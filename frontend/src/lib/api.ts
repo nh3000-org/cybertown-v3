@@ -41,8 +41,8 @@ export const api = {
     return data.rooms
   },
 
-  async getRoom(roomID: number) {
-    const url = config.apiURL + `/rooms/${roomID}`
+  async joinRoom(roomID: number) {
+    const url = config.apiURL + `/rooms/${roomID}/join`
     const data = await fetchWrapper<"room", Room>(url)
     return data.room
   },

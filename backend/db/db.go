@@ -180,6 +180,17 @@ func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*types.R
 	})
 }
 
+func (r *Repo) GetKick(ctx context.Context, roomID, userID int) (*types.Kick, error) {
+	query := `
+	  SELECT duration, created_at FROM room_kicks
+	  WHERE room_id = $1 AND kicked = $2 
+		AND created_at + (duration || 'seconds')::INTERVAL > NOW();
+	`
+	var k types.Kick
+	err := r.pool.QueryRow(ctx, query, roomID, userID).Scan(&k.Duration, &k.CreatedAt)
+	return &k, err
+}
+
 func (r *Repo) UpdateRoom(ctx context.Context, room *types.Room) error {
 	query := `
 	  UPDATE rooms 
@@ -211,6 +222,15 @@ func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*types.RoomSett
 	}
 
 	return &s, nil
+}
+
+func (r *Repo) KickParticipant(ctx context.Context, k *types.Kick) error {
+	query := `
+	  INSERT INTO room_kicks(room_id, kicked, kicker, duration)
+		VALUES ($1, $2, $3, $4);
+	`
+	_, err := r.pool.Exec(ctx, query, k.RoomID, k.Kicked, k.Kicker, k.Duration)
+	return err
 }
 
 func (r *Repo) UpdateRoomSettings(ctx context.Context, s *types.RoomSettings) error {

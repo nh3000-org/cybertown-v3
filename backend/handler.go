@@ -4,8 +4,11 @@ import (
 	"backend/types"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -161,24 +164,48 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 	})
 }
 
-func (app *application) getRoomHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) {
 	roomID := r.PathValue("roomID")
-
 	id, err := strconv.Atoi(roomID)
 	if err != nil {
-		badRequest(w, err)
+		notFoundError(w, err)
+		return
+	}
+
+	u, ok := r.Context().Value("user").(*types.User)
+	if !ok {
+		unauthRequest(w, nil)
 		return
 	}
 
 	room, err := app.repo.GetRoom(context.Background(), id)
 	if err != nil {
-		serverError(w, err)
+		if errors.Is(pgx.ErrNoRows, err) {
+			notFoundError(w, err)
+		} else {
+			serverError(w, err)
+		}
+		return
+	}
+
+	participants := app.ss.getParticipantsInRoom(room.ID)
+	if len(participants) >= room.MaxParticipants {
+		badRequest(w, err)
+		return
+	}
+
+	k, err := app.repo.GetKick(context.Background(), room.ID, u.ID)
+	if nil == err {
+		errorsResponse(w, http.StatusForbidden, map[string]any{
+			"duration": k.Duration,
+			"kickedAt": k.CreatedAt,
+		})
 		return
 	}
 
 	roomRes := types.RoomsResponse{
 		Room:         room,
-		Participants: app.ss.getParticipantsInRoom(room.ID),
+		Participants: participants,
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]any{

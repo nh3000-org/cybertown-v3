@@ -13,7 +13,7 @@ func (app *application) router() http.Handler {
 	router.Handle("POST /rooms", ensureAuthed(http.HandlerFunc(app.createRoomHandler)))
 	router.Handle("PUT /rooms/{roomID}", ensureAuthed(http.HandlerFunc(app.updateRoomHandler)))
 	router.HandleFunc("GET /rooms", app.getRoomsHandler)
-	router.HandleFunc("GET /rooms/{roomID}", app.getRoomHandler)
+	router.Handle("GET /rooms/{roomID}/join", ensureAuthed(http.HandlerFunc(app.joinRoomHandler)))
 
 	v1 := http.NewServeMux()
 	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))

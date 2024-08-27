@@ -59,7 +59,9 @@ export function ParticipantOptions(props: Props) {
             </Dropdown.Item>
           )}
           {hasPermissions && (
-            <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md">
+            <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
+              ws.kickParticipant(props.participant.id)
+            }}>
               <KickIcon size={18} className="text-muted" />
               <p>Kick</p>
             </Dropdown.Item>

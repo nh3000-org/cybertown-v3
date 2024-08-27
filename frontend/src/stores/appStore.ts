@@ -1,9 +1,13 @@
 import { Room, User } from '@/types'
-import { ClearChatBroadcastEvent, DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
+import { ClearChatBroadcastEvent, DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, KickParticipantBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 type State = {
+  isKicked: {
+    kickedAt: string
+    duration: number
+  } | null
   user: User | null
   messages: Message[]
   alerts: {
@@ -37,10 +41,12 @@ type Actions = {
   deleteMsg: (event: DeleteMsgBroadcastEvent) => void
   reactionToMsg: (event: ReactionToMsgBroadcastEvent) => void
   clearChat: (event: ClearChatBroadcastEvent) => void
+  kickParticipant: (event: KickParticipantBroadcastEvent) => void
 }
 
 export const useAppStore = create<State & Actions>()(
   immer((set) => ({
+    isKicked: false,
     user: null,
     messages: [],
     alerts: {
@@ -130,6 +136,15 @@ export const useAppStore = create<State & Actions>()(
           msg.isDeleted = true
         }
       })
+    }),
+
+    kickParticipant: (event) => set((state) => {
+      if (event.data.participant.id === state.user?.id) {
+        state.isKicked = {
+          kickedAt: event.data.kickedAt,
+          duration: event.data.duration,
+        }
+      }
     }),
   })),
 )
