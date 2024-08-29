@@ -1,5 +1,5 @@
 .react-select__control {
-  @apply bg-transparent border-border rounded-md text-muted !important;
+  @apply py-[2px] bg-transparent border-border rounded-md text-muted !important;
 }
 
 .react-select__input:focus {

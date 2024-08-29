@@ -90,6 +90,9 @@ class WS {
   }
 
   joinRoom(roomID: number) {
+    if (this.roomID) {
+      return
+    }
     this.roomID = roomID
     this.sendClientEvent({
       name: "JOIN_ROOM",
@@ -209,14 +212,14 @@ class WS {
     })
   }
 
-  kickParticipant(participantID: number) {
+  kickParticipant(participantID: number, duration: string, clearChat: boolean) {
     this.sendClientEvent({
       name: "KICK_PARTICIPANT",
       data: {
         participantID,
         roomID: this.roomID!,
-        duration: '30m',
-        clearChat: true,
+        duration,
+        clearChat,
       }
     })
   }

@@ -115,8 +115,8 @@ export function CreateRoom() {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
-        <Dialog.Overlay className="bg-overlay/30 inset-0 fixed" />
-        <Dialog.Content className="fixed bg-bg-2 text-fg-2 rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none">
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content">
           <Dialog.Title className="text-lg font-semibold mb-8">
             {editRoom ? 'Edit' : 'Create'} Room
           </Dialog.Title>

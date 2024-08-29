@@ -27,3 +27,8 @@ export const status = [
   'Busy',
   '.zZ',
 ]
+
+export const durationUnits = [
+  { value: 'm', label: 'Minutes' },
+  { value: 'h', label: 'Hours' },
+]

@@ -184,7 +184,8 @@ func (r *Repo) GetKick(ctx context.Context, roomID, userID int) (*types.Kick, er
 	query := `
 	  SELECT duration, created_at FROM room_kicks
 	  WHERE room_id = $1 AND kicked = $2 
-		AND created_at + (duration || 'seconds')::INTERVAL > NOW();
+		AND (duration = -1 OR created_at + (duration || 'seconds')::INTERVAL > NOW())
+	  ORDER BY created_at DESC LIMIT 1;
 	`
 	var k types.Kick
 	err := r.pool.QueryRow(ctx, query, roomID, userID).Scan(&k.Duration, &k.CreatedAt)

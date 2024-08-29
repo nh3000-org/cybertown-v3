@@ -347,7 +347,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		return
 	}
 	isHost := r.Host.ID == user.ID
-	isCoHost := utils.Includes(r.CoHosts, user.ID)
+	isParticipantCoHost := utils.Includes(r.CoHosts, data.ParticipantID)
 	isParticipantHost := r.Host.ID == data.ParticipantID
 
 	if !isHost || isParticipantHost {
@@ -361,10 +361,6 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 
 	switch data.Role {
 	case t.RoomRoleHost:
-		if r.Host.ID == data.ParticipantID {
-			log.Printf("assign role event: invalid payload")
-			return
-		}
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 		r.CoHosts = append(r.CoHosts, r.Host.ID)
 		r.Host = t.User{
@@ -373,13 +369,13 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		welcomeMessage := ""
 		r.WelcomeMessage = &welcomeMessage
 	case t.RoomRoleGuest:
-		if !isCoHost {
+		if !isParticipantCoHost {
 			log.Printf("assign role event: should be 'co-host' to assign role 'guest'")
 			return
 		}
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 	case t.RoomRoleCoHost:
-		if isCoHost {
+		if isParticipantCoHost {
 			log.Printf("assign role event: should be 'guest' to assign role 'co-host'")
 			return
 		}
@@ -487,10 +483,17 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
-	duration, err := time.ParseDuration(data.Duration)
-	if err != nil {
-		log.Printf("kick participant event: invalid duration: %v", err)
-		return
+	var duration time.Duration
+	if data.Duration != "-1" {
+		duration, err = time.ParseDuration(data.Duration)
+		if err != nil {
+			log.Printf("kick participant event: invalid duration: %v", err)
+			return
+		}
+		if duration.Seconds() <= 0 {
+			log.Printf("kick participant event: negative duration")
+			return
+		}
 	}
 
 	_, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
@@ -519,16 +522,24 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
+	ds := int(duration.Seconds())
+	if data.Duration == "-1" {
+		ds = -1
+	}
+
 	k := t.Kick{
 		RoomID:   data.RoomID,
 		Kicker:   user.ID,
 		Kicked:   data.ParticipantID,
-		Duration: int(duration.Seconds()),
+		Duration: ds,
 	}
-	err = s.repo.KickParticipant(context.Background(), &k)
-	if err != nil {
-		log.Print("kick participant event: failed to update in room_kicks: %v", err)
-		return
+
+	if !utils.Includes(r.CoHosts, data.ParticipantID) {
+		err = s.repo.KickParticipant(context.Background(), &k)
+		if err != nil {
+			log.Print("kick participant event: failed to update in room_kicks: %v", err)
+			return
+		}
 	}
 
 	// TODO: same user joining the room from different devices?

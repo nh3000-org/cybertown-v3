@@ -19,7 +19,7 @@ export function RoomPage() {
     if (room) {
       ws.joinRoom(roomID!)
     }
-  }, [room, roomID])
+  }, [room])
 
   if (isLoading) {
     return null

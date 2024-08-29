@@ -5,6 +5,8 @@ export function useJoinRoom(roomID: number, hasUser: boolean) {
   return useQuery({
     queryKey: ['room', roomID],
     queryFn: () => api.joinRoom(roomID),
-    enabled: hasUser
+    enabled: hasUser,
+    staleTime: Infinity,
+    cacheTime: Infinity,
   })
 }

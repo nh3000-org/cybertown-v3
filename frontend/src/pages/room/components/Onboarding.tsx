@@ -19,7 +19,7 @@ export function Onboarding(props: Props) {
 
   return (
     <main className="h-full w-full flex items-center justify-center">
-      <div className="flex flex-col gap-6 items-center">
+      <div role="button" className="flex flex-col gap-6 items-center">
         <p>Hi, {props.user.username}</p>
         <img className="w-40 h-40 rounded-full" src={props.user.avatar} referrerPolicy="no-referrer" />
         <p>Tap anywhere and let the fun begin!</p>
