@@ -4,7 +4,7 @@ import { Participants } from "./Participants";
 import { useState } from "react";
 import { User } from "@/types";
 import * as Tabs from '@radix-ui/react-tabs';
-import { Settings as SettingsIcon, Mail as MessagesIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Mail as MessagesIcon, SquarePen as PencilIcon } from 'lucide-react';
 import { WelcomeMessage } from "./WelcomeMessage";
 import { useAppStore } from "@/stores/appStore";
 import { Status } from "./Status";
@@ -19,6 +19,8 @@ export function Room(props: Props) {
   const [pm, setPM] = useState<User | null>(null)
   const user = useAppStore().user
   const [tab, setTab] = useState("messages")
+  const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
+  const isHost = room?.settings.host.id === user?.id
 
   if (!room) {
     return
@@ -56,9 +58,16 @@ export function Room(props: Props) {
             <Messages pm={pm} setPM={setPM} />
           </Tabs.Content>
           <Tabs.Content asChild value="settings">
-            <div className="p-4 focus:outline-none flex flex-col gap-6">
+            <div className="flex-1 p-4 focus:outline-none flex flex-col gap-6">
               <WelcomeMessage room={room} />
               <Status room={room} />
+              {isHost && (
+                <button onClick={() => {
+                  setUpdateRoom(true, room)
+                }} className="mt-auto p-2 rounded-full border border-border self-end shadow">
+                  <PencilIcon size={20} className="text-muted" />
+                </button>
+              )}
             </div>
           </Tabs.Content>
         </Tabs.Root>

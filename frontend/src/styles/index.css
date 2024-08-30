@@ -44,7 +44,7 @@
     height: 100%;
   }
 
-  button:focus, input:focus, textarea:focus {
+  button:focus, input:focus, textarea:focus, a {
     @apply outline-none ring-accent ring-1;
   }
 

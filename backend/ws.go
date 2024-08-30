@@ -6,6 +6,7 @@ import (
 	"backend/utils"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -139,9 +140,13 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.U
 		return 0, nil
 	}
 
-	_, err = s.repo.GetRoom(context.Background(), data.RoomID)
+	r, err := s.repo.GetRoom(context.Background(), data.RoomID)
 	if err != nil {
 		return 0, err
+	}
+
+	if len(s.rooms[data.RoomID]) >= r.MaxParticipants {
+		return 0, errors.New("max participants limit reached")
 	}
 
 	// can the same user join the room from different

@@ -26,6 +26,7 @@ export function getGoogleOAuthURL() {
     access_type: "offline",
     response_type: "code",
     prompt: "consent",
+    state: JSON.stringify({ redirectURL: window.location.href }),
     scope: [
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email",
@@ -95,4 +96,11 @@ export class APIError extends Error {
     this.status = status
     this.errors = errors
   }
+}
+
+export function secondsToHHMMSS(seconds: number) {
+  let hours = Math.floor(seconds / 3600);
+  let minutes = Math.floor((seconds % 3600) / 60);
+  let sec = Math.floor(seconds % 60);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 }

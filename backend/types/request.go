@@ -2,6 +2,7 @@ package types
 
 import (
 	v "backend/validator"
+	"net/url"
 )
 
 const (
@@ -28,4 +29,20 @@ func (r *CreateRoomRequest) Validate() (bool, error) {
 		IsInSlice("language", r.Languages, allowedLanguages).
 		IsInInt("maxParticipants", r.MaxParticipants, allowedMaxParticipants)
 	return vd.IsValid(), vd
+}
+
+type OAuthState struct {
+	RedirectURL string `json:"redirectURL"`
+}
+
+func (s *OAuthState) Validate(config *Config) bool {
+	a, err := url.Parse(s.RedirectURL)
+	if err != nil {
+		return false
+	}
+	b, err := url.Parse(config.RedirectURL)
+	if err != nil {
+		return false
+	}
+	return a.Host == b.Host
 }

@@ -13,13 +13,13 @@ export function RoomPage() {
   const roomID = Number(useParams().roomID)
   const user = useAppStore().user
   const isKicked = useAppStore().isKicked
-  const { data: room, isLoading, error } = useJoinRoom(roomID!, user !== null)
+  const { isLoading, error } = useJoinRoom(roomID!, user !== null)
 
   useEffect(() => {
-    if (room) {
+    if (!isOnboarding && user) {
       ws.joinRoom(roomID!)
     }
-  }, [room])
+  }, [isOnboarding, user])
 
   if (isLoading) {
     return null

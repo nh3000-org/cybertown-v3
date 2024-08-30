@@ -12,7 +12,16 @@ import (
 )
 
 func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
+	q := r.URL.Query()
+	code := q.Get("code")
+	s := q.Get("state")
+
+	var state types.OAuthState
+	err := json.Unmarshal([]byte(s), &state)
+	if err != nil || !state.Validate(app.conf) {
+		badRequest(w, err)
+		return
+	}
 
 	t, err := app.svc.GetGoogleOAuthTokens(code)
 	if err != nil {
@@ -49,7 +58,7 @@ func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, app.conf.RedirectURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, state.RedirectURL, http.StatusTemporaryRedirect)
 }
 
 func (app *application) meHandler(w http.ResponseWriter, r *http.Request) {
