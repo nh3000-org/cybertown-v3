@@ -44,12 +44,16 @@
     height: 100%;
   }
 
-  button:focus, input:focus, textarea:focus, a {
+  button:focus, input:focus, textarea:focus, a:focus {
     @apply outline-none ring-accent ring-1;
   }
 
-  input::placeholder, textarea::placeholder {
-    @apply text-muted;
+  input[type=number]::-webkit-inner-spin-button, 
+  input[type=number]::-webkit-outer-spin-button { 
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   appearance: none;
+   margin: 0; 
   }
 }
 
@@ -103,17 +107,13 @@ em-emoji-picker {
 }
 
 .dialog-overlay {
-  @apply bg-overlay/30 inset-0 fixed
+  @apply bg-overlay/30 inset-0 fixed;
 }
 
 .dialog-content {
-  @apply fixed bg-bg-2 text-fg-2 rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none
+  @apply fixed bg-bg-2 text-fg-2 rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none;
 }
 
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
- -webkit-appearance: none;
- -moz-appearance: none;
- appearance: none;
- margin: 0; 
+#messages-textarea::placeholder {
+  @apply text-muted text-[15px];
 }

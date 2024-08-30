@@ -8,6 +8,7 @@ import { EmojiPicker } from '@/components/EmojiPicker'
 import * as HoverCard from '@radix-ui/react-hover-card';
 import { Message as TMessage } from '@/types/broadcast'
 import { User } from '@/types'
+import { MessageContent } from './MessageContent'
 
 type Props = {
   message: TMessage
@@ -129,13 +130,11 @@ export function Message(props: Props) {
             <img className="w-6 h-6 rounded-md" src={replyToMsg.from.avatar} referrerPolicy="no-referrer" />
             <div className="flex-1 flex flex-col gap-1 text-sm">
               <p className="text-muted">{replyToMsg.from.username}</p>
-              <p className="ellipsis w-[269px]">{replyToMsg.content}</p>
+              <MessageContent classNames="ellipsis w-[269px]" message={replyToMsg} />
             </div>
           </div>
         )}
-        <p className={cn({
-          'italic text-muted': message.isDeleted
-        })}>{message.isDeleted ? 'This message has been deleted' : message.content}</p>
+        <MessageContent message={message} />
         {!message.isDeleted && (
           <div className="flex gap-2 mt-1 text-sm items-center flex-wrap">
             {Object.entries(message.reactions).map(([reaction, userMap]) => {

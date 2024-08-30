@@ -9,6 +9,7 @@ import { ws } from '@/lib/ws';
 import { Message } from './Message';
 import { User } from '@/types';
 import React from 'react';
+import { MessageContent } from './MessageContent';
 
 type Props = {
   pm: User | null
@@ -29,7 +30,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
   const editMsg = messages.find(msg => editMsgID && msg.id === editMsgID)
 
   function handleNewMessage(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
 
       const value = e.currentTarget.value
@@ -110,26 +111,6 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
         {replyToMsg && (
           <div role="button" onClick={() => {
             scrollToMessage(replyToMsg.id)
-          }} className='flex gap-3 items-start bg-sidebar p-2 absolute top-0 left-0 -translate-y-full w-full'>
-            <img className="w-6 h-6 rounded-md" src={replyToMsg.from.avatar} referrerPolicy="no-referrer" />
-            <div className="flex-1 flex flex-col gap-1 text-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-muted">{replyToMsg.from.username}</p>
-                <button onClick={(e) => {
-                  setReplyTo(undefined)
-                  e.stopPropagation()
-                }}>
-                  <CloseIcon size={20} className="text-muted" />
-                </button>
-              </div>
-              <p className="ellipsis w-[300px]">{replyToMsg.content}</p>
-            </div>
-          </div>
-        )}
-
-        {replyToMsg && (
-          <div role="button" onClick={() => {
-            scrollToMessage(replyToMsg.id)
           }} className={cn("flex gap-3 items-start bg-sidebar p-2 absolute top-0 left-0 -translate-y-full w-full", {
             '-top-[60px]': props.pm
           })}>
@@ -166,7 +147,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
           </div>
         )}
 
-        <textarea id="messages-textarea" onChange={() => setError('')} ref={textareaRef} onKeyDown={handleNewMessage} placeholder="Enter your message" className="bg-bg-2 text-fg-2 p-4 rounded-md border border-border" />
+        <textarea id="messages-textarea" onChange={() => setError('')} ref={textareaRef} onKeyDown={handleNewMessage} placeholder="You can use @ to mention someone" rows={3} className="resize-none bg-bg-2 text-fg-2 p-2 rounded-md border border-border scroller" />
         {error ? <span className="text-danger text-sm">{error}</span> : null}
       </div>
     </div>

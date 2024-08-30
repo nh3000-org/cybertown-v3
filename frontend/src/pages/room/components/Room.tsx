@@ -33,7 +33,7 @@ export function Room(props: Props) {
         </div>
         <div className="flex-1 border-y border-border flex items-center justify-center">
           {room.settings.welcomeMessage && (
-            <p className="text-yellow-500 max-w-[500px] px-4">
+            <p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">
               {room.settings.welcomeMessage.replace('{username}', user?.username ?? '')}
             </p>
           )}

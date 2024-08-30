@@ -5,6 +5,9 @@ import { config } from "@/config"
 import { ZodError } from "zod"
 import { Message } from '@/types/broadcast'
 import { User } from "@/types"
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
+import { renderer } from "./md-renderer"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -103,4 +106,10 @@ export function secondsToHHMMSS(seconds: number) {
   let minutes = Math.floor((seconds % 3600) / 60);
   let sec = Math.floor(seconds % 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+export function toHTML(md: string): string {
+  const clean = DOMPurify.sanitize(md, { USE_PROFILES: { html: true } });
+  // dunno its returning Promise<string>
+  return marked.parse(clean, { renderer }) as string
 }

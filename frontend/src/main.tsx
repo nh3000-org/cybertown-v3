@@ -14,6 +14,7 @@ import * as Toast from '@radix-ui/react-toast';
 
 import '@/styles/index.css'
 import '@/styles/react-select.css'
+import '@/styles/prose.css'
 
 const router = createBrowserRouter([
   {
