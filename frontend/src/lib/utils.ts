@@ -8,6 +8,7 @@ import { User } from "@/types"
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 import { renderer } from "./md-renderer"
+import { useAppStore } from "@/stores/appStore"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -110,6 +111,17 @@ export function secondsToHHMMSS(seconds: number) {
 
 export function toHTML(md: string): string {
   const clean = DOMPurify.sanitize(md, { USE_PROFILES: { html: true } });
-  // dunno its returning Promise<string>
-  return marked.parse(clean, { renderer }) as string
+
+  // akshually it returns Promise<string>
+  let html = marked.parse(clean, { renderer }) as string
+
+  const username = useAppStore.getState().user?.username
+  if (username) {
+    html = html.replace(
+      `<code>@${username}</code>`,
+      `<code class="user-mention">@${username}</code>`
+    )
+  }
+
+  return html
 }

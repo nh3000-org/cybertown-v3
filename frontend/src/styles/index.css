@@ -117,3 +117,7 @@ em-emoji-picker {
 #messages-textarea::placeholder {
   @apply text-muted text-[15px];
 }
+
+.user-mention {
+  @apply text-yellow-500;
+}

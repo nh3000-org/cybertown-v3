@@ -55,7 +55,7 @@ export function Room(props: Props) {
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content asChild value="messages">
-            <Messages pm={pm} setPM={setPM} />
+            {room && <Messages pm={pm} setPM={setPM} room={room} />}
           </Tabs.Content>
           <Tabs.Content asChild value="settings">
             <div className="flex-1 p-4 focus:outline-none flex flex-col gap-6">
