@@ -111,10 +111,8 @@ export function secondsToHHMMSS(seconds: number) {
 
 export function toHTML(md: string): string {
   const clean = DOMPurify.sanitize(md, { USE_PROFILES: { html: true } });
-
   // akshually it returns Promise<string>
   let html = marked.parse(clean, { renderer }) as string
-
   const username = useAppStore.getState().user?.username
   if (username) {
     html = html.replace(
@@ -122,6 +120,5 @@ export function toHTML(md: string): string {
       `<code class="user-mention">@${username}</code>`
     )
   }
-
   return html
 }

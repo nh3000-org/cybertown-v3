@@ -1,4 +1,4 @@
-import { Messages } from "./Messages";
+import { Messages } from "./messages";
 import { useRooms } from "@/hooks/queries/useRooms";
 import { Participants } from "./Participants";
 import { useState } from "react";

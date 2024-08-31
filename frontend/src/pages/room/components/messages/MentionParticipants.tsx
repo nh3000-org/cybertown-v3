@@ -1,10 +1,10 @@
 import { RoomRes, User } from '@/types'
 import * as Popover from '@radix-ui/react-popover'
-import { MentionSearch } from '../../hooks/useMention'
+import { TextareaSearch } from '../../hooks/useMention'
 
 type Props = {
-  search: MentionSearch
-  setSearch: React.Dispatch<React.SetStateAction<MentionSearch>>
+  search: TextareaSearch
+  setSearch: React.Dispatch<React.SetStateAction<TextareaSearch>>
   room: RoomRes
   textareaRef: React.RefObject<HTMLTextAreaElement>
   selectParticipant: (participant: User) => void

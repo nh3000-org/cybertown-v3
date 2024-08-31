@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { MentionSearch } from "../../hooks/useMention"
+import { TextareaSearch } from "../../hooks/useMention"
 import { User } from "@/types"
 import { getParticipantID } from "@/lib/utils"
 import { ws } from "@/lib/ws"
 import { useAppStore } from "@/stores/appStore"
+import { Emoji } from "../../hooks/useEmojiSearch"
 
 type Props = {
   content: string
@@ -11,11 +12,14 @@ type Props = {
 
   textareaRef: React.RefObject<HTMLTextAreaElement>
 
-  search: MentionSearch
-  setSearch: React.Dispatch<React.SetStateAction<MentionSearch>>
+  search: TextareaSearch
+  emojiSearch: TextareaSearch
 
   selectParticipant: (participant: User) => void
   mentionedParticipants: User[]
+
+  selectEmoji: (emoji: Emoji) => void
+  emojis: Emoji[]
 
   editMsgID: string | undefined
   setEditMsgID: (editMsgID: string | undefined) => void
@@ -43,6 +47,9 @@ export function SendMessage(props: Props) {
     setEditMsgID,
     replyTo,
     setReplyTo,
+    emojiSearch,
+    emojis,
+    selectEmoji,
   } = props
 
   const replyToMsg = messages.find(msg => replyTo && msg.id === replyTo)
@@ -52,6 +59,12 @@ export function SendMessage(props: Props) {
     if (e.key === "Enter" && search.show && mentionedParticipants.length) {
       e.preventDefault()
       selectParticipant(mentionedParticipants[0])
+      return
+    }
+
+    if (e.key === "Enter" && emojiSearch.show && emojis.length) {
+      e.preventDefault()
+      selectEmoji(emojis[0])
       return
     }
 

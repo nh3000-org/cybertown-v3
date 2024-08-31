@@ -6,14 +6,16 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { VerticalScrollbar } from "@/components/VerticalScrollbar"
 import { useAppStore } from '@/stores/appStore';
 import { ws } from '@/lib/ws';
-import { Message } from './Message';
+import { Message } from '@/pages/room/components/Message';
 import { RoomRes, User } from '@/types';
 import React from 'react';
-import { MentionParticipants } from './messages/MentionParticipants';
-import { ReplyTo } from './messages/ReplyTo';
-import { PM } from './messages/PM';
-import { useMention } from '../hooks/useMention';
-import { SendMessage } from './messages/SendMessage';
+import { MentionParticipants } from './MentionParticipants';
+import { ReplyTo } from './ReplyTo';
+import { PM } from './PM';
+import { useMention } from '@/pages/room/hooks/useMention';
+import { SendMessage } from './SendMessage';
+import { Emoji, useEmojiSearch } from '../../hooks/useEmojiSearch';
+import { EmojiSearch } from './EmojiSearch';
 
 type Props = {
   pm: User | null
@@ -31,10 +33,8 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
   const [replyTo, setReplyTo] = useState<string | undefined>(undefined)
   const replyToMsg = messages.find(msg => replyTo && msg.id === replyTo)
   const [content, setContent] = useState('')
-  const [search, setSearch] = useMention(content)
-  const mentionedParticipants = props.room.participants.
-    filter(el => el.id !== user?.id && el.username.toLowerCase().
-      includes(search.query))
+  const { search, setSearch, mentionedParticipants } = useMention(content, props.room)
+  const { search: emojiSearch, setSearch: setEmojiSearch, emojis } = useEmojiSearch(content)
 
   function selectParticipant(participant: User) {
     setSearch({
@@ -50,6 +50,19 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
       at = " `@"
     }
     const value = content.substring(0, index) + at + participant.username + "` "
+    setContent(value)
+  }
+
+  function selectEmoji(emoji: Emoji) {
+    setEmojiSearch({
+      query: '',
+      show: false,
+    })
+    const index = content.lastIndexOf(':')
+    if (index === -1) {
+      return
+    }
+    const value = content.substring(0, index) + " " + emoji.emoji + " "
     setContent(value)
   }
 
@@ -106,6 +119,14 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
             mentionedParticipants={mentionedParticipants}
           />
 
+          <EmojiSearch
+            setSearch={setEmojiSearch}
+            search={emojiSearch}
+            textareaRef={textareaRef}
+            emojis={emojis}
+            selectEmoji={selectEmoji}
+          />
+
           <div className="gap-1 ml-auto mr-1.5">
             <EmojiPicker
               trigger={
@@ -143,11 +164,13 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
           replyTo={replyTo}
           content={content}
           setContent={setContent}
-          setSearch={setSearch}
           search={search}
           setEditMsgID={setEditMsgID}
           editMsgID={editMsgID}
           selectParticipant={selectParticipant}
+          selectEmoji={selectEmoji}
+          emojis={emojis}
+          emojiSearch={emojiSearch}
           mentionedParticipants={mentionedParticipants}
           textareaRef={textareaRef}
           pm={props.pm}

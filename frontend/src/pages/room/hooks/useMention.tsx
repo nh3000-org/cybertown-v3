@@ -1,16 +1,22 @@
+import { useAppStore } from "@/stores/appStore"
+import { RoomRes } from "@/types"
 import { useEffect, useState } from "react"
 
-
-export type MentionSearch = {
+export type TextareaSearch = {
   query: string
   show: boolean
 }
 
-export function useMention(content: string) {
-  const [search, setSearch] = useState<MentionSearch>({
+export function useMention(content: string, room: RoomRes) {
+  const user = useAppStore().user
+  const [search, setSearch] = useState<TextareaSearch>({
     query: '',
     show: false,
   })
+
+  const mentionedParticipants = room.participants.
+    filter(el => el.id !== user?.id && el.username.toLowerCase().
+      includes(search.query.toLowerCase()))
 
   useEffect(() => {
     const words = content.split(" ")
@@ -40,5 +46,9 @@ export function useMention(content: string) {
     })
   }, [content])
 
-  return [search, setSearch] as const
+  return {
+    search,
+    setSearch,
+    mentionedParticipants
+  }
 }
