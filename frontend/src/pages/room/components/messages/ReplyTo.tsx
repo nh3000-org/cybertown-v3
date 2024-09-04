@@ -1,5 +1,4 @@
 import { cn, scrollToMessage } from "@/lib/utils"
-import { Message } from "@/types/broadcast"
 import { User } from "@/types"
 import { CircleX as CloseIcon } from 'lucide-react'
 import { useAppStore } from "@/stores/appStore"

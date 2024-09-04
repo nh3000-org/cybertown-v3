@@ -45,10 +45,8 @@ type GoogleUserInfo struct {
 
 type Kick struct {
 	RoomID    int
-	Kicker    int
-	Kicked    int
-	Duration  int
-	CreatedAt time.Time
+	UserID    int
+	ExpiredAt time.Time
 }
 
 type Config struct {

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -41,7 +42,8 @@ func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	sessionID, err := app.repo.CreateSession(context.Background(), userID)
+	expiredAt := time.Now().UTC().Add(app.conf.CookieExpiration)
+	sessionID, err := app.repo.CreateSession(context.Background(), userID, expiredAt)
 	if err != nil {
 		serverError(w, err)
 		return
@@ -206,8 +208,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 	k, err := app.repo.GetKick(context.Background(), room.ID, u.ID)
 	if nil == err {
 		errorsResponse(w, http.StatusForbidden, map[string]any{
-			"duration": k.Duration,
-			"kickedAt": k.CreatedAt,
+			"expiredAt": k.ExpiredAt,
 		})
 		return
 	}

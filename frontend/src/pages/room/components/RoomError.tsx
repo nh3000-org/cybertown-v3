@@ -8,8 +8,7 @@ type Props = {
   error: APIError | undefined
   user: User | null
   isKicked: {
-    duration: number
-    kickedAt: string
+    expiredAt: string
   } | null
 }
 
@@ -31,8 +30,7 @@ export function RoomError(props: Props) {
   if (error?.status === 403 || isKicked) {
     const errors = error?.errors ?? {}
     return <Kicked
-      kickedAt={errors.kickedAt ?? isKicked?.kickedAt ?? ''}
-      duration={errors.duration ?? isKicked?.duration ?? 0}
+      expiredAt={errors.expiredAt ?? isKicked?.expiredAt ?? ''}
     />
   }
 
@@ -76,12 +74,11 @@ export function Error(props: { status: number }) {
 }
 
 export function Kicked(props: {
-  kickedAt: string
-  duration: number
+  expiredAt: string
 }) {
-  const { kickedAt, duration } = props
+  const { expiredAt } = props
   const [timeLeft, setTimeLeft] = useState(-1)
-  const endTime = new Date(kickedAt).getTime() + (duration * 1000)
+  const endTime = new Date(expiredAt).getTime()
 
   useEffect(() => {
     function updateTimer() {
@@ -98,14 +95,14 @@ export function Kicked(props: {
     return function() {
       clearInterval(interval)
     }
-  }, [kickedAt, duration])
+  }, [expiredAt])
 
   return (
     <main className="h-full w-full grid place-items-center">
       <div className="max-w-[600px] grid place-items-center text-center px-4">
         <BanIcon className="stroke-danger mb-2" />
         <h1 className="text-4xl font-bold mb-3">You got kicked from the room</h1>
-        {duration !== -1 && timeLeft !== -1 && (
+        {timeLeft !== -1 && (
           <p className="mb-3 font-bold text-2xl">{secondsToHHMMSS(timeLeft)}</p>
         )}
         <p className="text-muted mb-5">Return to home page and explore other rooms</p>

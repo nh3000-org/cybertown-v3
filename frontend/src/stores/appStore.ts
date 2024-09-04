@@ -5,8 +5,7 @@ import { immer } from 'zustand/middleware/immer'
 
 type State = {
   isKicked: {
-    kickedAt: string
-    duration: number
+    expiredAt: string
   } | null
   user: User | null
   messages: Message[]
@@ -46,7 +45,7 @@ type Actions = {
 
 export const useAppStore = create<State & Actions>()(
   immer((set) => ({
-    isKicked: false,
+    isKicked: null,
     user: null,
     messages: [],
     alerts: {
@@ -141,8 +140,7 @@ export const useAppStore = create<State & Actions>()(
     kickParticipant: (event) => set((state) => {
       if (event.data.participant.id === state.user?.id) {
         state.isKicked = {
-          kickedAt: event.data.kickedAt,
-          duration: event.data.duration,
+          expiredAt: event.data.expiredAt,
         }
       }
     }),

@@ -36,7 +36,7 @@ export function KickParticipant(props: Props) {
       return
     }
 
-    const du = value ? `${duration}${unit?.value}` : '-1'
+    const du = value ? `${duration}${unit?.value}` : '168h'
     ws.kickParticipant(props.participant?.id!, du, clearChat)
   }
 

@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -79,6 +78,13 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 		s.rooms[roomID] = make(map[*websocket.Conn]struct{})
 	}
 	s.rooms[roomID][conn] = struct{}{}
+	s.broadcastEvent(&t.Event{
+		Name: "JOINED_ROOM_BROADCAST",
+		Data: map[string]any{
+			"roomID": roomID,
+			"user":   s.conns[conn].User,
+		},
+	})
 }
 
 func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User) {
@@ -149,17 +155,7 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.U
 		return 0, errors.New("max participants limit reached")
 	}
 
-	// can the same user join the room from different
-	// socket connections?
 	s.joinRoom(conn, data.RoomID)
-
-	s.broadcastEvent(&t.Event{
-		Name: "JOINED_ROOM_BROADCAST",
-		Data: map[string]any{
-			"roomID": data.RoomID,
-			"user":   user,
-		},
-	})
 
 	return data.RoomID, nil
 }
@@ -193,8 +189,6 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 
 	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
 	if !ok {
-		log.Printf("participants not in room???")
-		fmt.Println(data.RoomID, user.ID, *data.ParticipantID)
 		return
 	}
 
@@ -488,17 +482,14 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
-	var duration time.Duration
-	if data.Duration != "-1" {
-		duration, err = time.ParseDuration(data.Duration)
-		if err != nil {
-			log.Printf("kick participant event: invalid duration: %v", err)
-			return
-		}
-		if duration.Seconds() <= 0 {
-			log.Printf("kick participant event: negative duration")
-			return
-		}
+	duration, err := time.ParseDuration(data.Duration)
+	if err != nil {
+		log.Printf("kick participant event: invalid duration: %v", err)
+		return
+	}
+	if duration.Seconds() <= 0 {
+		log.Printf("kick participant event: non-positive duration")
+		return
 	}
 
 	_, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
@@ -527,16 +518,10 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
-	ds := int(duration.Seconds())
-	if data.Duration == "-1" {
-		ds = -1
-	}
-
 	k := t.Kick{
-		RoomID:   data.RoomID,
-		Kicker:   user.ID,
-		Kicked:   data.ParticipantID,
-		Duration: ds,
+		RoomID:    data.RoomID,
+		UserID:    data.ParticipantID,
+		ExpiredAt: time.Now().UTC().Add(duration),
 	}
 
 	if !utils.Includes(r.CoHosts, data.ParticipantID) {
@@ -561,8 +546,7 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 					Data: d,
 				})
 			}
-			d["duration"] = k.Duration
-			d["kickedAt"] = time.Now().UTC()
+			d["expiredAt"] = k.ExpiredAt
 			s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
 				Name: "KICK_PARTICIPANT_BROADCAST",
 				Data: d,

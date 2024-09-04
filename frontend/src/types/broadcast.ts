@@ -92,11 +92,9 @@ export type SetStatusBroadcastEvent = {
 export type KickParticipantBroadcastEvent = {
   name: "KICK_PARTICIPANT_BROADCAST"
   data: {
-    by: User
     participant: User
     roomID: number
-    kickedAt: string
-    duration: number
+    expiredAt: string
   }
 }
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -58,25 +59,24 @@ func (r *Repo) CreateUser(ctx context.Context, u *types.GoogleUserInfo) (int, er
 	return userID, err
 }
 
-func (r *Repo) CreateSession(ctx context.Context, userID int) (string, error) {
+func (r *Repo) CreateSession(ctx context.Context, userID int, expiredAt time.Time) (string, error) {
 	query := `
-	  INSERT INTO sessions(user_id)
-		VALUES ($1)
+	  INSERT INTO sessions(user_id, expired_at)
+		VALUES ($1, $2)
 	  RETURNING id;
 	`
 	var sessionID string
-	err := r.pool.QueryRow(ctx, query, userID).Scan(&sessionID)
+	err := r.pool.QueryRow(ctx, query, userID, expiredAt).Scan(&sessionID)
 	return sessionID, err
 }
 
 func (r *Repo) GetUserFromSession(ctx context.Context, sessionID string) (*types.User, error) {
-	e := r.conf.CookieExpiration.Seconds()
-	query := fmt.Sprintf(`
+	query := `
 		SELECT u.id, u.username, u.avatar 
 		FROM users u 
 		LEFT JOIN sessions s ON s.user_id = u.id
-		WHERE s.id = $1 AND NOW() <= (s.created_at + interval '%d seconds');
-  `, int(e))
+		WHERE s.id = $1 AND s.expired_at > CURRENT_TIMESTAMP;
+	`
 	var u types.User
 	err := r.pool.QueryRow(ctx, query, sessionID).Scan(&u.ID, &u.Username, &u.Avatar)
 	return &u, err
@@ -182,13 +182,13 @@ func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*types.R
 
 func (r *Repo) GetKick(ctx context.Context, roomID, userID int) (*types.Kick, error) {
 	query := `
-	  SELECT duration, created_at FROM room_kicks
-	  WHERE room_id = $1 AND kicked = $2 
-		AND (duration = -1 OR created_at + (duration || 'seconds')::INTERVAL > NOW())
+	  SELECT expired_at FROM room_kicks
+	  WHERE room_id = $1 AND user_id = $2 
+	  AND expired_at > CURRENT_TIMESTAMP
 	  ORDER BY created_at DESC LIMIT 1;
 	`
 	var k types.Kick
-	err := r.pool.QueryRow(ctx, query, roomID, userID).Scan(&k.Duration, &k.CreatedAt)
+	err := r.pool.QueryRow(ctx, query, roomID, userID).Scan(&k.ExpiredAt)
 	return &k, err
 }
 
@@ -227,10 +227,10 @@ func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*types.RoomSett
 
 func (r *Repo) KickParticipant(ctx context.Context, k *types.Kick) error {
 	query := `
-	  INSERT INTO room_kicks(room_id, kicked, kicker, duration)
-		VALUES ($1, $2, $3, $4);
+	  INSERT INTO room_kicks(room_id, user_id, expired_at)
+		VALUES ($1, $2, $3);
 	`
-	_, err := r.pool.Exec(ctx, query, k.RoomID, k.Kicked, k.Kicker, k.Duration)
+	_, err := r.pool.Exec(ctx, query, k.RoomID, k.UserID, k.ExpiredAt)
 	return err
 }
 
