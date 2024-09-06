@@ -40,3 +40,31 @@ CREATE TABLE IF NOT EXISTS room_kicks (
   expired_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+CREATE TABLE follows (
+  follower_id INT REFERENCES users(id) ON DELETE CASCADE,
+  followee_id INT REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (follower_id, followee_id)
+);
+
+CREATE TABLE dms (
+  id SERIAL PRIMARY KEY
+); 
+
+CREATE TABLE dm_participants (
+  dm_id INT REFERENCES dms(id) ON DELETE CASCADE,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (dm_id, user_id)
+);
+
+CREATE TABLE messages (
+  dm_id INT REFERENCES dms(id) ON DELETE CASCADE,
+  id VARCHAR(64) NOT NULL UNIQUE,
+  "from" INT REFERENCES users(id) ON DELETE CASCADE,
+  content VARCHAR(1024) NOT NULL, 
+  is_deleted BOOLEAN DEFAULT FALSE,
+  is_edited BOOLEAN DEFAULT FALSE,
+  reply_to VARCHAR(64),
+  reactions JSONB,
+  created_at TIMESTAMP WITHOUT TIME ZONE
+);

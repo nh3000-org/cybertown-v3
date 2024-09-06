@@ -274,3 +274,98 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 
 	msgResponse(w, "Room updated successfully")
 }
+
+func (app *application) followHandler(isFollow bool) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			FolloweeID int `json:"followeeID"`
+		}
+
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			badRequest(w, err)
+			return
+		}
+
+		u, ok := r.Context().Value("user").(*types.User)
+		if !ok {
+			unauthRequest(w, nil)
+			return
+		}
+
+		if u.ID == req.FolloweeID {
+			badRequest(w, nil)
+			return
+		}
+
+		if isFollow {
+			err = app.repo.Follow(context.Background(), u.ID, req.FolloweeID)
+		} else {
+			err = app.repo.Unfollow(context.Background(), u.ID, req.FolloweeID)
+		}
+
+		if err != nil {
+			serverError(w, err)
+			return
+		}
+
+		msgResponse(w, "ok")
+	}
+}
+
+func (app *application) profileHandler(w http.ResponseWriter, r *http.Request) {
+	profileID := r.PathValue("profileID")
+	pID, err := strconv.Atoi(profileID)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	u, ok := r.Context().Value("user").(*types.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+
+	p, err := app.repo.GetProfile(context.Background(), u.ID, pID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"profile": p,
+	})
+}
+
+func (app *application) createDMHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ParticipantID int `json:"participantID"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	u, ok := r.Context().Value("user").(*types.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+
+	if u.ID == req.ParticipantID {
+		badRequest(w, nil)
+		return
+	}
+
+	dmID, err := app.svc.CreateDM(context.Background(), u.ID, req.ParticipantID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"dmID": dmID,
+	})
+}

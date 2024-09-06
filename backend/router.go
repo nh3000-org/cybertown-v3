@@ -15,6 +15,12 @@ func (app *application) router() http.Handler {
 	router.HandleFunc("GET /rooms", app.getRoomsHandler)
 	router.Handle("GET /rooms/{roomID}/join", ensureAuthed(http.HandlerFunc(app.joinRoomHandler)))
 
+	router.Handle("GET /profile/{profileID}", ensureAuthed(http.HandlerFunc(app.profileHandler)))
+	router.Handle("POST /follow", ensureAuthed(http.HandlerFunc(app.followHandler(true))))
+	router.Handle("DELETE /follow", ensureAuthed(http.HandlerFunc(app.followHandler(false))))
+
+	router.Handle("POST /dms", ensureAuthed(http.HandlerFunc(app.createDMHandler)))
+
 	v1 := http.NewServeMux()
 	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
 	v1.Handle("/ws", app.authMiddleware(http.HandlerFunc(app.wsHandler)))

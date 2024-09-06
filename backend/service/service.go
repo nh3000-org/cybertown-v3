@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/db"
 	"backend/types"
 	"backend/utils"
 	"encoding/json"
@@ -12,11 +13,13 @@ import (
 
 type Service struct {
 	conf *types.Config
+	repo *db.Repo
 }
 
-func NewService(conf *types.Config) *Service {
+func NewService(conf *types.Config, repo *db.Repo) *Service {
 	return &Service{
 		conf: conf,
+		repo: repo,
 	}
 }
 

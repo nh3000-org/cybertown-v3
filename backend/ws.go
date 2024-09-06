@@ -17,21 +17,21 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-type connParticipantMap map[*websocket.Conn]*t.Participant
-
 type socketServer struct {
-	conns  connParticipantMap
-	rooms  map[int]map[*websocket.Conn]struct{}
-	repo   *db.Repo
-	emojis map[string]struct{}
+	conns        map[*websocket.Conn]int
+	participants map[int]*t.Participant
+	rooms        map[int]map[*websocket.Conn]struct{}
+	repo         *db.Repo
+	emojis       map[string]struct{}
 }
 
 func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
-		conns:  make(connParticipantMap),
-		rooms:  make(map[int]map[*websocket.Conn]struct{}),
-		emojis: emojis,
-		repo:   repo,
+		conns:        make(map[*websocket.Conn]int),
+		rooms:        make(map[int]map[*websocket.Conn]struct{}),
+		participants: make(map[int]*t.Participant),
+		emojis:       emojis,
+		repo:         repo,
 	}
 }
 
@@ -41,7 +41,8 @@ func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
 		p.Status = "None"
 		p.User = *user
 	}
-	s.conns[conn] = p
+	s.participants[p.ID] = p
+	s.conns[conn] = p.ID
 }
 
 func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
@@ -49,7 +50,7 @@ func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
 	if !s.isInRoom(conn, roomID) {
 		return
 	}
-	s.leaveRoom(conn, roomID, user)
+	s.leaveRoom(conn, roomID)
 }
 
 func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
@@ -58,19 +59,6 @@ func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
 		return ok
 	}
 	return false
-}
-
-func (s *socketServer) getParticipantsFromIDs(roomID int, participantIDs []int) (map[int]*t.Participant, bool) {
-	participants := make(map[int]*t.Participant)
-	if _, ok := s.rooms[roomID]; ok {
-		for conn := range s.rooms[roomID] {
-			participant := s.conns[conn]
-			if utils.Includes(participantIDs, participant.ID) {
-				participants[participant.ID] = participant
-			}
-		}
-	}
-	return participants, len(participants) == len(participantIDs)
 }
 
 func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
@@ -82,18 +70,18 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 		Name: "JOINED_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
-			"user":   s.conns[conn].User,
+			"user":   s.participants[s.conns[conn]].User,
 		},
 	})
 }
 
-func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int, user *t.User) {
+func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int) {
 	delete(s.rooms[roomID], conn)
 	s.broadcastEvent(&t.Event{
 		Name: "LEFT_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
-			"user":   user,
+			"user":   s.participants[s.conns[conn]].User,
 		},
 	})
 }
@@ -104,22 +92,18 @@ func (s *socketServer) broadcastEvent(event *t.Event) {
 	}
 }
 
-func (s *socketServer) broadcastRoomEvent(roomID int, participantIDs []int, event *t.Event) {
+func (s *socketServer) broadcastRoomEvent(conn *websocket.Conn, roomID int, participantID *int, event *t.Event) {
 	conns, ok := s.rooms[roomID]
 	if !ok {
 		log.Printf("broadcast to room failed, room not found: %d", roomID)
 		return
 	}
-	var sendCount int
+
 	for conn := range conns {
-		if participantIDs != nil {
-			p := s.conns[conn]
-			if utils.Includes(participantIDs, p.ID) {
+		pID := s.conns[conn]
+		if participantID != nil {
+			if pID == s.conns[conn] || pID == *participantID {
 				utils.WriteEvent(conn, event)
-				sendCount++
-			}
-			if sendCount >= len(participantIDs) {
-				break
 			}
 		} else {
 			utils.WriteEvent(conn, event)
@@ -131,15 +115,15 @@ func (s *socketServer) getParticipantsInRoom(roomID int) []*t.Participant {
 	participants := make([]*t.Participant, 0)
 	if _, ok := s.rooms[roomID]; ok {
 		for conn := range s.rooms[roomID] {
-			if p, ok := s.conns[conn]; ok {
-				participants = append(participants, p)
+			if pID, ok := s.conns[conn]; ok {
+				participants = append(participants, s.participants[pID])
 			}
 		}
 	}
 	return participants
 }
 
-func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.User) (int, error) {
+func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte) (int, error) {
 	var data t.JoinRoom
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -160,7 +144,7 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte, user *t.U
 	return data.RoomID, nil
 }
 
-func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte) {
 	var data t.LeaveRoom
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -170,10 +154,10 @@ func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte, user *t.
 	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
-	s.leaveRoom(conn, data.RoomID, user)
+	s.leaveRoom(conn, data.RoomID)
 }
 
-func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 	var data t.NewMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -187,49 +171,56 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte, user *t
 		return
 	}
 
-	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
+	ok = s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
 	if !ok {
 		return
 	}
 
-	d := map[string]any{
-		"id":        shortuuid.New(),
-		"content":   data.Content,
-		"from":      user,
-		"createdAt": time.Now().UTC().Format(time.RFC3339),
-		"roomID":    data.RoomID,
-		"reactions": make(map[string]any),
+	reactions := make(map[string]any)
+	msg := t.Message{
+		ID:        shortuuid.New(),
+		Content:   data.Content,
+		From:      s.participants[s.conns[conn]].User,
+		CreatedAt: time.Now().UTC(),
+		RoomID:    &data.RoomID,
+		Reactions: &reactions,
 	}
 
 	if data.ReplyTo != nil {
-		d["replyTo"] = *data.ReplyTo
+		msg.ReplyTo = data.ReplyTo
 	}
 
 	if data.ParticipantID != nil {
-		d["participant"] = p[*data.ParticipantID]
+		msg.Participant = &s.participants[*data.ParticipantID].User
 	}
 
-	s.broadcastRoomEvent(data.RoomID, utils.KeyOf(p), &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
 		Name: "NEW_MESSAGE_BROADCAST",
-		Data: d,
+		Data: msg,
 	})
 }
 
-func (s *socketServer) participantsInRoom(roomID, userID int, conn *websocket.Conn, participantID *int) (map[int]*t.Participant, bool) {
-	var participants map[int]*t.Participant
-	if participantID != nil {
-		p, ok := s.getParticipantsFromIDs(roomID, []int{userID, *participantID})
-		if !ok {
-			return nil, false
-		}
-		participants = p
-	} else if !s.isInRoom(conn, roomID) {
-		return nil, false
+func (s *socketServer) participantsInRoom(conn *websocket.Conn, roomID int, participantID *int) bool {
+	if !s.isInRoom(conn, roomID) {
+		return false
 	}
-	return participants, true
+	if participantID == nil {
+		return true
+	}
+	room, ok := s.rooms[roomID]
+	if !ok {
+		return false
+	}
+	for conn := range room {
+		if s.conns[conn] == *participantID {
+			return true
+		}
+	}
+	return false
+
 }
 
-func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte) {
 	var data t.EditMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -243,23 +234,23 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte, user *
 		return
 	}
 
-	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
+	ok = s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
 	if !ok {
 		return
 	}
 
-	s.broadcastRoomEvent(data.RoomID, utils.KeyOf(p), &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
 		Name: "EDIT_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":      data.ID,
 			"roomID":  data.RoomID,
 			"content": data.Content,
-			"from":    user,
+			"from":    s.participants[s.conns[conn]].User,
 		},
 	})
 }
 
-func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 	var data t.ReactionToMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -267,7 +258,7 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte, user
 		return
 	}
 
-	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
+	ok := s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
 	if !ok {
 		return
 	}
@@ -277,18 +268,18 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte, user
 		return
 	}
 
-	s.broadcastRoomEvent(data.RoomID, utils.KeyOf(p), &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
 		Name: "REACTION_TO_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":       data.ID,
 			"roomID":   data.RoomID,
 			"reaction": data.Reaction,
-			"from":     user,
+			"from":     s.participants[s.conns[conn]].User,
 		},
 	})
 }
 
-func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {
 	var data t.ClearChat
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -296,7 +287,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 		return
 	}
 
-	p, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
+	ok := s.participantsInRoom(conn, data.RoomID, &data.ParticipantID)
 	if !ok {
 		log.Printf("clear chat event: participants not in room")
 		return
@@ -308,6 +299,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 		return
 	}
 
+	user := s.participants[s.conns[conn]].User
 	isHost := r.Host.ID == user.ID
 	isCoHost := utils.Includes(r.CoHosts, user.ID)
 	isParticipantHost := r.Host.ID == data.ParticipantID
@@ -316,17 +308,17 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte, user *t.
 		return
 	}
 
-	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
 		Name: "CLEAR_CHAT_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
-			"participant": p[data.ParticipantID].User,
+			"participant": s.participants[s.conns[conn]].User,
 			"by":          user,
 		},
 	})
 }
 
-func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte) {
 	var data t.AssignRole
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -334,7 +326,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		return
 	}
 
-	p, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
+	ok := s.participantsInRoom(conn, data.RoomID, &data.ParticipantID)
 	if !ok {
 		log.Printf("assign role event: participants not in room")
 		return
@@ -345,6 +337,8 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		log.Printf("assign role event: failed to get room settings: %v", err)
 		return
 	}
+
+	user := s.participants[s.conns[conn]].User
 	isHost := r.Host.ID == user.ID
 	isParticipantCoHost := utils.Includes(r.CoHosts, data.ParticipantID)
 	isParticipantHost := r.Host.ID == data.ParticipantID
@@ -363,7 +357,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 		r.CoHosts = append(r.CoHosts, r.Host.ID)
 		r.Host = t.User{
-			ID: p[*&data.ParticipantID].ID,
+			ID: data.ParticipantID,
 		}
 		welcomeMessage := ""
 		r.WelcomeMessage = &welcomeMessage
@@ -387,18 +381,18 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte, user *t
 		return
 	}
 
-	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
 		Name: "ASSIGN_ROLE_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
 			"by":          user,
 			"role":        data.Role,
-			"participant": p[data.ParticipantID].User,
+			"participant": s.participants[data.ParticipantID].User,
 		},
 	})
 }
 
-func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte) {
 	var data t.UpdateWelcomeMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -422,6 +416,7 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 		return
 	}
 
+	user := s.participants[s.conns[conn]]
 	isHost := r.Host.ID == user.ID
 	isCoHost := utils.Includes(r.CoHosts, user.ID)
 	if !isHost && !isCoHost {
@@ -435,7 +430,7 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 		log.Printf("clear chat event: failed to update room settings: %v", err)
 	}
 
-	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
 		Name: "UPDATE_WELCOME_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"by":             user,
@@ -445,7 +440,7 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte, u
 	})
 }
 
-func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte) {
 	var data t.SetStatus
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -462,19 +457,19 @@ func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte, user *t.
 		log.Printf("set status event: validation failed: %v", err)
 		return
 	}
-	s.conns[conn].Status = data.Status
+	s.participants[s.conns[conn]].Status = data.Status
 
-	s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
 		Name: "SET_STATUS_BROADCAST",
 		Data: map[string]any{
 			"roomID": data.RoomID,
 			"status": data.Status,
-			"by":     user,
+			"by":     s.participants[s.conns[conn]].User,
 		},
 	})
 }
 
-func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte) {
 	var data t.KickParticipant
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -492,7 +487,7 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
-	_, ok := s.getParticipantsFromIDs(data.RoomID, []int{user.ID, data.ParticipantID})
+	ok := s.participantsInRoom(conn, data.RoomID, &data.ParticipantID)
 	if !ok {
 		log.Printf("kick participant event: participants not in room")
 		return
@@ -504,6 +499,7 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		return
 	}
 
+	user := s.participants[s.conns[conn]].User
 	isHost := r.Host.ID == user.ID
 	isCoHost := utils.Includes(r.CoHosts, user.ID)
 	isParticipantHost := r.Host.ID == data.ParticipantID
@@ -532,32 +528,30 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte, us
 		}
 	}
 
-	// TODO: same user joining the room from different devices?
-	for conn, participant := range s.conns {
-		if participant.ID == data.ParticipantID {
-			d := map[string]any{
-				"by":          user,
-				"participant": participant.User,
-				"roomID":      data.RoomID,
-			}
-			if data.ClearChat {
-				s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
-					Name: "CLEAR_CHAT_BROADCAST",
-					Data: d,
-				})
-			}
-			d["expiredAt"] = k.ExpiredAt
-			s.broadcastRoomEvent(data.RoomID, nil, &t.Event{
-				Name: "KICK_PARTICIPANT_BROADCAST",
-				Data: d,
-			})
-			s.leaveRoom(conn, data.RoomID, &participant.User)
-			break
+	d := map[string]any{
+		"by":          user,
+		"participant": s.participants[data.ParticipantID].User,
+		"roomID":      data.RoomID,
+	}
+	if data.ClearChat {
+		s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+			Name: "CLEAR_CHAT_BROADCAST",
+			Data: d,
+		})
+	}
+	d["expiredAt"] = k.ExpiredAt
+	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+		Name: "KICK_PARTICIPANT_BROADCAST",
+		Data: d,
+	})
+	for conn, pID := range s.conns {
+		if pID == data.ParticipantID {
+			s.leaveRoom(conn, data.RoomID)
 		}
 	}
 }
 
-func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user *t.User) {
+func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte) {
 	var data t.DeleteMessage
 	err := json.Unmarshal(b, &data)
 	if err != nil {
@@ -565,17 +559,17 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte, user
 		return
 	}
 
-	p, ok := s.participantsInRoom(data.RoomID, user.ID, conn, data.ParticipantID)
+	ok := s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
 	if !ok {
 		return
 	}
 
-	s.broadcastRoomEvent(data.RoomID, utils.KeyOf(p), &t.Event{
+	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
 		Name: "DELETE_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"id":     data.ID,
 			"roomID": data.RoomID,
-			"from":   user,
+			"from":   s.participants[s.conns[conn]].User,
 		},
 	})
 }
@@ -627,30 +621,30 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 		switch event.Name {
 		case "JOIN_ROOM":
-			roomID, err = app.ss.joinRoomHandler(conn, b, user)
+			roomID, err = app.ss.joinRoomHandler(conn, b)
 			if err != nil {
 				log.Printf("failed to join room: %v", err)
 			}
 		case "LEAVE_ROOM":
-			app.ss.leaveRoomHandler(conn, b, user)
+			app.ss.leaveRoomHandler(conn, b)
 		case "NEW_MESSAGE":
-			app.ss.newMessageHandler(conn, b, user)
+			app.ss.newMessageHandler(conn, b)
 		case "EDIT_MESSAGE":
-			app.ss.editMessageHandler(conn, b, user)
+			app.ss.editMessageHandler(conn, b)
 		case "DELETE_MESSAGE":
-			app.ss.deleteMessageHandler(conn, b, user)
+			app.ss.deleteMessageHandler(conn, b)
 		case "REACTION_TO_MESSAGE":
-			app.ss.reactionToMsgHandler(conn, b, user)
+			app.ss.reactionToMsgHandler(conn, b)
 		case "CLEAR_CHAT":
-			app.ss.clearChatHandler(conn, b, user)
+			app.ss.clearChatHandler(conn, b)
 		case "ASSIGN_ROLE":
-			app.ss.assignRoleHandler(conn, b, user)
+			app.ss.assignRoleHandler(conn, b)
 		case "UPDATE_WELCOME_MESSAGE":
-			app.ss.updateWelcomeMsgHandler(conn, b, user)
+			app.ss.updateWelcomeMsgHandler(conn, b)
 		case "SET_STATUS":
-			app.ss.setStatusHandler(conn, b, user)
+			app.ss.setStatusHandler(conn, b)
 		case "KICK_PARTICIPANT":
-			app.ss.kickParticipantHandler(conn, b, user)
+			app.ss.kickParticipantHandler(conn, b)
 		}
 	}
 }

@@ -1,8 +1,8 @@
 package types
 
 type Event struct {
-	Name string         `json:"name"`
-	Data map[string]any `json:"data"`
+	Name string `json:"name"`
+	Data any    `json:"data"`
 }
 
 type JoinRoom struct {

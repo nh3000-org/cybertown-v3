@@ -234,6 +234,24 @@ func (r *Repo) KickParticipant(ctx context.Context, k *types.Kick) error {
 	return err
 }
 
+func (r *Repo) Follow(ctx context.Context, followerID, followeeID int) error {
+	query := `
+	  INSERT INTO follows(follower_id, followee_id)
+		VALUES ($1, $2);
+	`
+	_, err := r.pool.Exec(ctx, query, followerID, followeeID)
+	return err
+}
+
+func (r *Repo) Unfollow(ctx context.Context, followerID, followeeID int) error {
+	query := `
+	  DELETE FROM follows
+	  WHERE follower_id = $1 AND followee_id = $2;
+	`
+	_, err := r.pool.Exec(ctx, query, followerID, followeeID)
+	return err
+}
+
 func (r *Repo) UpdateRoomSettings(ctx context.Context, s *types.RoomSettings) error {
 	query := `
 	  UPDATE room_settings
@@ -287,4 +305,126 @@ func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, err
 	}
 
 	return &room, nil
+}
+
+func (r *Repo) GetProfile(ctx context.Context, userID, profileID int) (*types.Profile, error) {
+	query := `
+		WITH profile_user AS (
+			SELECT id, username, avatar
+			FROM users
+			WHERE id = $2
+		),
+		followers_count AS (
+			SELECT COUNT(*) AS count
+			FROM follows
+			WHERE followee_id = $2
+		),
+		following_count AS (
+			SELECT COUNT(*) AS count
+			FROM follows
+			WHERE follower_id = $2
+		),
+		friends_count AS (
+			SELECT COUNT(*) AS count
+			FROM follows f1
+			JOIN follows f2 ON f1.follower_id = f2.followee_id AND f1.followee_id = f2.follower_id
+			WHERE f1.follower_id = $2
+		)
+		SELECT 
+			pu.id,
+			pu.username,
+			pu.avatar,
+			CASE WHEN $1 = $2 THEN TRUE ELSE FALSE END AS is_me,
+			CASE WHEN EXISTS (
+				SELECT 1 
+				FROM follows 
+				WHERE follower_id = $1 AND followee_id = $2
+			) THEN TRUE ELSE FALSE END AS is_following,
+			fc.count AS followers_count,
+			fng.count AS following_count,
+			fr.count AS friends_count
+		FROM profile_user pu
+		CROSS JOIN followers_count fc
+		CROSS JOIN following_count fng
+		CROSS JOIN friends_count fr;
+	`
+
+	var profile types.Profile
+	err := r.pool.QueryRow(ctx, query, userID, profileID).Scan(
+		&profile.ID,
+		&profile.Username,
+		&profile.Avatar,
+		&profile.IsMe,
+		&profile.IsFollowing,
+		&profile.FollowersCount,
+		&profile.FollowingCount,
+		&profile.FriendsCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile, nil
+}
+
+func (r *Repo) GetDM(ctx context.Context, userID, participantID int) (int, error) {
+	query := `
+		SELECT dp1.dm_id
+		FROM dm_participants dp1
+		JOIN dm_participants dp2 ON dp1.dm_id = dp2.dm_id
+		WHERE dp1.user_id = $1 AND dp2.user_id = $2;
+	`
+	var dmID int
+	err := r.pool.QueryRow(ctx, query, userID, participantID).Scan(&dmID)
+	return dmID, err
+}
+
+func (r *Repo) CreateDM(ctx context.Context, userID, participantID int) (int, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	query := `
+		INSERT INTO dms DEFAULT VALUES RETURNING id;
+	`
+
+	var dmID int
+	err = r.pool.QueryRow(ctx, query).Scan(&dmID)
+	if err != nil {
+		return 0, err
+	}
+
+	query = `
+		INSERT INTO dm_participants (dm_id, user_id) 
+	  VALUES
+	   ($1, $2), 
+	   ($1, $3);
+	`
+
+	_, err = r.pool.Exec(ctx, query, dmID, userID, participantID)
+	if err != nil {
+		return 0, err
+	}
+	tx.Commit(ctx)
+
+	return dmID, nil
+}
+
+func (r *Repo) IsFriends(ctx context.Context, userID, participantID int) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM follows f1
+			JOIN follows f2 ON f1.follower_id = f2.followee_id
+			WHERE f1.follower_id = $1
+				AND f1.followee_id = $2
+				AND f2.follower_id = $2
+				AND f2.followee_id = $1
+		);
+	`
+	var isFriends bool
+	err := r.pool.QueryRow(ctx, query, userID, participantID).Scan(&isFriends)
+	return isFriends, err
 }

@@ -8,6 +8,15 @@ type User struct {
 	Avatar   string `json:"avatar"`
 }
 
+type Profile struct {
+	User
+	IsMe           bool `json:"isMe"`
+	IsFollowing    bool `json:"isFollowing"`
+	FriendsCount   int  `json:"friendsCount"`
+	FollowingCount int  `json:"followingCount"`
+	FollowersCount int  `json:"followersCount"`
+}
+
 type Participant struct {
 	User
 	Status string `json:"status,omitempty"`
@@ -72,3 +81,14 @@ const (
 	RoomRoleCoHost RoomRole = "coHost"
 	RoomRoleGuest  RoomRole = "guest"
 )
+
+type Message struct {
+	ID          string          `json:"id"`
+	Content     string          `json:"content"`
+	From        User            `json:"from"`
+	ReplyTo     *string         `json:"replyTo"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	RoomID      *int            `json:"roomID,omitempty"`
+	Reactions   *map[string]any `json:"reactions,omitempty"`
+	Participant *User           `json:"participant,omitempty"`
+}

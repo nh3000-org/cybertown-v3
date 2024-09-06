@@ -38,7 +38,7 @@ func main() {
 	repo := db.NewRepo(pool, &conf)
 	app := application{
 		repo: repo,
-		svc:  service.NewService(&conf),
+		svc:  service.NewService(&conf, repo),
 		conf: &conf,
 		ss:   newSocketServer(repo, emojis),
 	}
