@@ -321,13 +321,13 @@ func (app *application) profileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userID int
 	u, ok := r.Context().Value("user").(*types.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
+	if ok {
+		userID = u.ID
 	}
 
-	p, err := app.repo.GetProfile(context.Background(), u.ID, pID)
+	p, err := app.repo.GetProfile(context.Background(), userID, pID)
 	if err != nil {
 		serverError(w, err)
 		return

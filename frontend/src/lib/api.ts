@@ -1,6 +1,6 @@
 import { config } from "@/config"
 import { fetchWrapper } from "@/lib/fetchWrapper"
-import { CreateRoom, Room, RoomRes, User } from "@/types"
+import { CreateRoom, Room, RoomRes, User, Profile } from "@/types"
 
 export const api = {
   async me() {
@@ -45,6 +45,21 @@ export const api = {
     const url = config.apiURL + `/rooms/${roomID}/join`
     const data = await fetchWrapper<"room", Room>(url)
     return data.room
+  },
+
+  async getProfile(userID: number) {
+    const url = config.apiURL + `/profile/${userID}`
+    const data = await fetchWrapper<"profile", Profile>(url)
+    return data.profile
+  },
+
+  async follow(followeeID: number, isFollowing: boolean) {
+    const url = config.apiURL + '/follow'
+    const data = await fetchWrapper<"msg", string>(url, {
+      method: isFollowing ? 'DELETE' : 'POST',
+      body: JSON.stringify({ followeeID })
+    })
+    return data.msg
   },
 
   async emoji() {

@@ -15,7 +15,7 @@ func (app *application) router() http.Handler {
 	router.HandleFunc("GET /rooms", app.getRoomsHandler)
 	router.Handle("GET /rooms/{roomID}/join", ensureAuthed(http.HandlerFunc(app.joinRoomHandler)))
 
-	router.Handle("GET /profile/{profileID}", ensureAuthed(http.HandlerFunc(app.profileHandler)))
+	router.Handle("GET /profile/{profileID}", app.authMiddleware(http.HandlerFunc(app.profileHandler)))
 	router.Handle("POST /follow", ensureAuthed(http.HandlerFunc(app.followHandler(true))))
 	router.Handle("DELETE /follow", ensureAuthed(http.HandlerFunc(app.followHandler(false))))
 

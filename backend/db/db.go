@@ -307,7 +307,7 @@ func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, err
 	return &room, nil
 }
 
-func (r *Repo) GetProfile(ctx context.Context, userID, profileID int) (*types.Profile, error) {
+func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*types.Profile, error) {
 	query := `
 		WITH profile_user AS (
 			SELECT id, username, avatar

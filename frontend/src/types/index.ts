@@ -4,6 +4,14 @@ export type User = {
   avatar: string
 }
 
+export type Profile = {
+  isMe: boolean
+  isFollowing: boolean
+  friendsCount: number
+  followingCount: number
+  followersCount: number
+} & User
+
 export type Room = {
   id: number
   createdAt: string

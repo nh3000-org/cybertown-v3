@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/appStore'
 import * as Popover from '@radix-ui/react-popover';
 import { Info as InfoIcon, SquarePen as PencilIcon } from 'lucide-react'
 import { formatRelative } from 'date-fns'
+import { Profile } from '@/components/Profile';
 
 type Props = {
   room: RoomRes
@@ -64,7 +65,7 @@ export function RoomCard(props: Props) {
 
       <div className="min-h-[60px] my-8 flex flex-wrap gap-4">
         {room.participants.map(p => {
-          return <img key={p.id} src={p.avatar} referrerPolicy="no-referrer" style={style} className="rounded-full" />
+          return <Profile key={p.id} user={p} style={style} />
         })}
         {Array.from({ length: room.maxParticipants - room.participants.length }).map((_, i) => {
           return <div key={i} style={style} className="rounded-full border border-border border-dashed" />
