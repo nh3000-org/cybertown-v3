@@ -14,7 +14,7 @@ type LeaveRoom struct {
 }
 
 type NewMessage struct {
-	RoomID        int     `json:"roomID"`
+	RoomID        *int    `json:"roomID"`
 	Content       string  `json:"content"`
 	ReplyTo       *string `json:"replyTo"`
 	ParticipantID *int    `json:"participantID"`
@@ -23,13 +23,13 @@ type NewMessage struct {
 type EditMessage struct {
 	ID            string `json:"id"`
 	Content       string `json:"content"`
-	RoomID        int    `json:"roomID"`
+	RoomID        *int   `json:"roomID"`
 	ParticipantID *int   `json:"participantID"`
 }
 
 type DeleteMessage struct {
 	ID            string `json:"id"`
-	RoomID        int    `json:"roomID"`
+	RoomID        *int   `json:"roomID"`
 	ParticipantID *int   `json:"participantID"`
 }
 
@@ -37,7 +37,7 @@ type ReactionToMessage struct {
 	ID            string `json:"id"`
 	Reaction      string `json:"reaction"`
 	ParticipantID *int   `json:"participantID"`
-	RoomID        int    `json:"roomID"`
+	RoomID        *int   `json:"roomID"`
 }
 
 type ClearChat struct {

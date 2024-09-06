@@ -19,8 +19,6 @@ func (app *application) router() http.Handler {
 	router.Handle("POST /follow", ensureAuthed(http.HandlerFunc(app.followHandler(true))))
 	router.Handle("DELETE /follow", ensureAuthed(http.HandlerFunc(app.followHandler(false))))
 
-	router.Handle("POST /dms", ensureAuthed(http.HandlerFunc(app.createDMHandler)))
-
 	v1 := http.NewServeMux()
 	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
 	v1.Handle("/ws", app.authMiddleware(http.HandlerFunc(app.wsHandler)))

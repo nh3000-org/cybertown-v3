@@ -91,4 +91,15 @@ type Message struct {
 	RoomID      *int            `json:"roomID,omitempty"`
 	Reactions   *map[string]any `json:"reactions,omitempty"`
 	Participant *User           `json:"participant,omitempty"`
+	IsDeleted   bool            `json:"isDeleted"`
+	IsEdited    bool            `json:"isEdited"`
 }
+
+type MsgType int
+
+const (
+	UnknowMsg MsgType = iota
+	RoomMsg
+	PrivateRoomMsg
+	DMMsg
+)

@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"backend/types"
+	t "backend/types"
 	v "backend/validator"
 	"context"
 	"encoding/json"
@@ -23,7 +23,7 @@ var (
 	allowedStatus = []string{"None", "AFK", "BRB", "Busy", ".zZ"}
 )
 
-func WriteEvent(conn *websocket.Conn, event *types.Event) {
+func WriteEvent(conn *websocket.Conn, event *t.Event) {
 	err := wsjson.Write(context.Background(), conn, event)
 	if err != nil {
 		log.Printf("failed to send %q event: %v\n", event.Name, err)
@@ -80,4 +80,17 @@ func GetEmojis() (map[string]struct{}, error) {
 	}
 
 	return emojis, nil
+}
+
+func GetMsgType(roomID, participantID *int) t.MsgType {
+	if roomID != nil && participantID == nil {
+		return t.RoomMsg
+	}
+	if roomID != nil && participantID != nil {
+		return t.PrivateRoomMsg
+	}
+	if roomID == nil && participantID != nil {
+		return t.RoomMsg
+	}
+	return t.UnknowMsg
 }

@@ -337,35 +337,3 @@ func (app *application) profileHandler(w http.ResponseWriter, r *http.Request) {
 		"profile": p,
 	})
 }
-
-func (app *application) createDMHandler(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		ParticipantID int `json:"participantID"`
-	}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		badRequest(w, err)
-		return
-	}
-
-	u, ok := r.Context().Value("user").(*types.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
-	if u.ID == req.ParticipantID {
-		badRequest(w, nil)
-		return
-	}
-
-	dmID, err := app.svc.CreateDM(context.Background(), u.ID, req.ParticipantID)
-	if err != nil {
-		serverError(w, err)
-		return
-	}
-
-	jsonResponse(w, http.StatusOK, map[string]any{
-		"dmID": dmID,
-	})
-}

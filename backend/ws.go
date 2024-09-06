@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/db"
+	"backend/service"
 	t "backend/types"
 	"backend/utils"
 	"context"
@@ -23,15 +24,17 @@ type socketServer struct {
 	rooms        map[int]map[*websocket.Conn]struct{}
 	repo         *db.Repo
 	emojis       map[string]struct{}
+	svc          *service.Service
 }
 
-func newSocketServer(repo *db.Repo, emojis map[string]struct{}) *socketServer {
+func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
 		conns:        make(map[*websocket.Conn]int),
 		rooms:        make(map[int]map[*websocket.Conn]struct{}),
 		participants: make(map[int]*t.Participant),
 		emojis:       emojis,
 		repo:         repo,
+		svc:          svc,
 	}
 }
 
@@ -50,7 +53,7 @@ func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
 	if !s.isInRoom(conn, roomID) {
 		return
 	}
-	s.leaveRoom(conn, roomID)
+	s.leaveRoom(conn, user, roomID)
 }
 
 func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
@@ -75,13 +78,13 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 	})
 }
 
-func (s *socketServer) leaveRoom(conn *websocket.Conn, roomID int) {
+func (s *socketServer) leaveRoom(conn *websocket.Conn, user *t.User, roomID int) {
 	delete(s.rooms[roomID], conn)
 	s.broadcastEvent(&t.Event{
 		Name: "LEFT_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
-			"user":   s.participants[s.conns[conn]].User,
+			"user":   user,
 		},
 	})
 }
@@ -92,7 +95,15 @@ func (s *socketServer) broadcastEvent(event *t.Event) {
 	}
 }
 
-func (s *socketServer) broadcastRoomEvent(conn *websocket.Conn, roomID int, participantID *int, event *t.Event) {
+func (s *socketServer) broadcastMsgEvent(pIDs []int, event *t.Event) {
+	for conn, pID := range s.conns {
+		if utils.Includes(pIDs, pID) {
+			utils.WriteEvent(conn, event)
+		}
+	}
+}
+
+func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 	conns, ok := s.rooms[roomID]
 	if !ok {
 		log.Printf("broadcast to room failed, room not found: %d", roomID)
@@ -100,14 +111,7 @@ func (s *socketServer) broadcastRoomEvent(conn *websocket.Conn, roomID int, part
 	}
 
 	for conn := range conns {
-		pID := s.conns[conn]
-		if participantID != nil {
-			if pID == s.conns[conn] || pID == *participantID {
-				utils.WriteEvent(conn, event)
-			}
-		} else {
-			utils.WriteEvent(conn, event)
-		}
+		utils.WriteEvent(conn, event)
 	}
 }
 
@@ -154,7 +158,8 @@ func (s *socketServer) leaveRoomHandler(conn *websocket.Conn, b []byte) {
 	if !s.isInRoom(conn, data.RoomID) {
 		return
 	}
-	s.leaveRoom(conn, data.RoomID)
+	user := s.participants[s.conns[conn]].User
+	s.leaveRoom(conn, &user, data.RoomID)
 }
 
 func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
@@ -165,39 +170,70 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
+	msgType := utils.GetMsgType(data.RoomID, data.ParticipantID)
+	if msgType == t.UnknowMsg {
+		log.Printf("new message event: unknow msg type")
+		return
+	}
+
 	ok, err := utils.ValidateContent(&data.Content)
 	if !ok {
 		log.Printf("message content validation failed: %v", err)
 		return
 	}
 
-	ok = s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
-	if !ok {
-		return
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		ok = s.participantsInRoom(conn, *data.RoomID, data.ParticipantID)
+		if !ok {
+			return
+		}
 	}
 
-	reactions := make(map[string]any)
+	var (
+		user      = s.participants[s.conns[conn]].User
+		reactions = make(map[string]any)
+	)
+
 	msg := t.Message{
 		ID:        shortuuid.New(),
 		Content:   data.Content,
-		From:      s.participants[s.conns[conn]].User,
+		From:      user,
 		CreatedAt: time.Now().UTC(),
-		RoomID:    &data.RoomID,
 		Reactions: &reactions,
+		ReplyTo:   data.ReplyTo,
 	}
 
-	if data.ReplyTo != nil {
-		msg.ReplyTo = data.ReplyTo
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		msg.RoomID = data.RoomID
 	}
 
 	if data.ParticipantID != nil {
 		msg.Participant = &s.participants[*data.ParticipantID].User
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
+	if msgType == t.DMMsg {
+		dmID, err := s.svc.GetDM(context.Background(), user.ID, *data.ParticipantID)
+		if err != nil {
+			log.Printf("new message event: failed to get dm: %v", err)
+			return
+		}
+		err = s.repo.CreateMessage(context.Background(), dmID, &msg)
+		if err != nil {
+			log.Printf("new message event: failed to create message: %v", err)
+			return
+		}
+	}
+
+	event := &t.Event{
 		Name: "NEW_MESSAGE_BROADCAST",
 		Data: msg,
-	})
+	}
+	if msgType == t.RoomMsg {
+		s.broadcastRoomEvent(*data.RoomID, event)
+	} else {
+		pIDs := []int{user.ID, *data.ParticipantID}
+		s.broadcastMsgEvent(pIDs, event)
+	}
 }
 
 func (s *socketServer) participantsInRoom(conn *websocket.Conn, roomID int, participantID *int) bool {
@@ -228,26 +264,70 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
+	msgType := utils.GetMsgType(data.RoomID, data.ParticipantID)
+	if msgType == t.UnknowMsg {
+		log.Printf("edit message event: unknow msg type")
+		return
+	}
+
 	ok, err := utils.ValidateContent(&data.Content)
 	if !ok {
-		log.Printf("message content validation failed: %v", err)
+		log.Printf("edit message event: message content validation failed: %v", err)
 		return
 	}
 
-	ok = s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
-	if !ok {
-		return
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		ok = s.participantsInRoom(conn, *data.RoomID, data.ParticipantID)
+		if !ok {
+			return
+		}
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
+	user := s.participants[s.conns[conn]].User
+
+	if msgType == t.DMMsg {
+		ctx := context.Background()
+
+		dmID, err := s.svc.GetDM(ctx, user.ID, *data.ParticipantID)
+		if err != nil {
+			log.Printf("edit message event: failed to get dm: %v", err)
+			return
+		}
+
+		m, err := s.repo.GetMessage(ctx, dmID, data.ID, user.ID, false)
+		if err != nil {
+			log.Printf("edit message event: failed to get message: %v", err)
+			return
+		}
+
+		m.IsEdited = true
+		m.Content = data.Content
+
+		err = s.repo.UpdateMessage(ctx, dmID, m, false)
+		if err != nil {
+			log.Printf("edit message event: failed to get message: %v", err)
+			return
+		}
+	}
+
+	d := map[string]any{
+		"id":      data.ID,
+		"content": data.Content,
+		"from":    user,
+	}
+	event := t.Event{
 		Name: "EDIT_MESSAGE_BROADCAST",
-		Data: map[string]any{
-			"id":      data.ID,
-			"roomID":  data.RoomID,
-			"content": data.Content,
-			"from":    s.participants[s.conns[conn]].User,
-		},
-	})
+		Data: d,
+	}
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		d["roomID"] = *data.RoomID
+	}
+	if msgType == t.RoomMsg {
+		s.broadcastRoomEvent(*data.RoomID, &event)
+	} else {
+		pIDs := []int{user.ID, *data.ParticipantID}
+		s.broadcastMsgEvent(pIDs, &event)
+	}
 }
 
 func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
@@ -258,9 +338,17 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
-	ok := s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
-	if !ok {
+	msgType := utils.GetMsgType(data.RoomID, data.ParticipantID)
+	if msgType == t.UnknowMsg {
+		log.Printf("reaction msg event: unknown msg type")
 		return
+	}
+
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		ok := s.participantsInRoom(conn, *data.RoomID, data.ParticipantID)
+		if !ok {
+			return
+		}
 	}
 
 	if _, ok := s.emojis[data.Reaction]; !ok {
@@ -268,15 +356,24 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
+	d := map[string]any{
+		"id":       data.ID,
+		"roomID":   data.RoomID,
+		"reaction": data.Reaction,
+		"from":     s.participants[s.conns[conn]].User,
+	}
+	event := t.Event{
 		Name: "REACTION_TO_MESSAGE_BROADCAST",
-		Data: map[string]any{
-			"id":       data.ID,
-			"roomID":   data.RoomID,
-			"reaction": data.Reaction,
-			"from":     s.participants[s.conns[conn]].User,
-		},
-	})
+		Data: d,
+	}
+
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		d["roomID"] = data.RoomID
+	}
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		s.broadcastRoomEvent(*data.RoomID, &event)
+	}
+	// TODO: handle dms
 }
 
 func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {
@@ -308,7 +405,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "CLEAR_CHAT_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
@@ -381,7 +478,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "ASSIGN_ROLE_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
@@ -430,7 +527,7 @@ func (s *socketServer) updateWelcomeMsgHandler(conn *websocket.Conn, b []byte) {
 		log.Printf("clear chat event: failed to update room settings: %v", err)
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "UPDATE_WELCOME_MESSAGE_BROADCAST",
 		Data: map[string]any{
 			"by":             user,
@@ -459,7 +556,7 @@ func (s *socketServer) setStatusHandler(conn *websocket.Conn, b []byte) {
 	}
 	s.participants[s.conns[conn]].Status = data.Status
 
-	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "SET_STATUS_BROADCAST",
 		Data: map[string]any{
 			"roomID": data.RoomID,
@@ -534,19 +631,19 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte) {
 		"roomID":      data.RoomID,
 	}
 	if data.ClearChat {
-		s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+		s.broadcastRoomEvent(data.RoomID, &t.Event{
 			Name: "CLEAR_CHAT_BROADCAST",
 			Data: d,
 		})
 	}
 	d["expiredAt"] = k.ExpiredAt
-	s.broadcastRoomEvent(conn, data.RoomID, nil, &t.Event{
+	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "KICK_PARTICIPANT_BROADCAST",
 		Data: d,
 	})
 	for conn, pID := range s.conns {
 		if pID == data.ParticipantID {
-			s.leaveRoom(conn, data.RoomID)
+			s.leaveRoom(conn, &s.participants[pID].User, data.RoomID)
 		}
 	}
 }
@@ -559,19 +656,57 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
-	ok := s.participantsInRoom(conn, data.RoomID, data.ParticipantID)
-	if !ok {
+	msgType := utils.GetMsgType(data.RoomID, data.ParticipantID)
+	if msgType == t.UnknowMsg {
+		log.Printf("delete msg event: unknown msg type")
 		return
 	}
 
-	s.broadcastRoomEvent(conn, data.RoomID, data.ParticipantID, &t.Event{
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		ok := s.participantsInRoom(conn, *data.RoomID, data.ParticipantID)
+		if !ok {
+			return
+		}
+	}
+
+	u := s.participants[s.conns[conn]].User
+	if msgType == t.DMMsg {
+		ctx := context.Background()
+		dmID, err := s.repo.GetDM(ctx, u.ID, *data.ParticipantID)
+		if err != nil {
+			log.Printf("delete msg event: failed to get dm: %v", err)
+			return
+		}
+		m, err := s.repo.GetMessage(ctx, dmID, data.ID, u.ID, false)
+		if err != nil {
+			log.Printf("delete msg event: failed to get message: %v", err)
+			return
+		}
+		m.IsDeleted = true
+		err = s.repo.UpdateMessage(ctx, dmID, m, false)
+		if err != nil {
+			log.Printf("delete msg event: failed to update message: %v", err)
+			return
+		}
+	}
+
+	d := map[string]any{
+		"id":   data.ID,
+		"from": u,
+	}
+	event := t.Event{
 		Name: "DELETE_MESSAGE_BROADCAST",
-		Data: map[string]any{
-			"id":     data.ID,
-			"roomID": data.RoomID,
-			"from":   s.participants[s.conns[conn]].User,
-		},
-	})
+		Data: d,
+	}
+	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
+		d["roomID"] = *data.RoomID
+	}
+	if msgType == t.RoomMsg {
+		s.broadcastRoomEvent(*data.RoomID, &event)
+	} else {
+		pIDs := []int{u.ID, *data.ParticipantID}
+		s.broadcastMsgEvent(pIDs, &event)
+	}
 }
 
 func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
@@ -595,7 +730,6 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		app.ss.close(conn, roomID, user)
 		conn.CloseNow()
-		log.Printf("number of connections: %d", len(app.ss.conns))
 	}()
 
 	app.ss.accept(conn, user)

@@ -428,3 +428,58 @@ func (r *Repo) IsFriends(ctx context.Context, userID, participantID int) (bool, 
 	err := r.pool.QueryRow(ctx, query, userID, participantID).Scan(&isFriends)
 	return isFriends, err
 }
+
+func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *types.Message) error {
+	query := `
+	  INSERT INTO messages (dm_id, id, content, "from", reply_to, created_at) 
+	  VALUES($1, $2, $3, $4, $5);
+	`
+	_, err := r.pool.Exec(ctx, query, dmID, msg.ID, msg.Content, msg.From.ID, msg.ReplyTo, msg.CreatedAt)
+	return err
+}
+
+func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID int, isReaction bool) (*types.Message, error) {
+	query := `
+	 SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reactions,
+	        u.id, u.avatar, u.username
+	 FROm messages
+	 INNER JOIN users u on u.id = m."from"
+	 WHERE dm_id = $1 AND m.id = $2 AND (m."from" = $3 OR $4 == True)
+	`
+	var m types.Message
+	err := r.pool.QueryRow(ctx, query, dmID, userID, isReaction).Scan(
+		&m.ID,
+		&m.Content,
+		&m.IsEdited,
+		&m.IsDeleted,
+		&m.Reactions,
+		&m.From.ID,
+		&m.From.Avatar,
+		&m.From.Username,
+	)
+	return &m, err
+}
+
+func (r *Repo) UpdateMessage(ctx context.Context, dmID int, msg *types.Message, isReaction bool) error {
+	query := `
+	 UPDATE messages
+	 SET
+	   content = $5
+	   is_edited = $6
+	   is_deleted = $7
+	   reactions = $8
+	 WHERE dm_id = $1 AND id = $2 AND ("from" = $3 OR $4 = True)
+	`
+	_, err := r.pool.Exec(
+		ctx,
+		query,
+		dmID,
+		msg.ID,
+		isReaction,
+		msg.From.ID,
+		msg.Content,
+		msg.IsEdited,
+		msg.IsDeleted,
+	)
+	return err
+}

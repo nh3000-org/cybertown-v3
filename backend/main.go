@@ -36,11 +36,12 @@ func main() {
 	}
 
 	repo := db.NewRepo(pool, &conf)
+	svc := service.NewService(&conf, repo)
 	app := application{
 		repo: repo,
-		svc:  service.NewService(&conf, repo),
+		svc:  svc,
 		conf: &conf,
-		ss:   newSocketServer(repo, emojis),
+		ss:   newSocketServer(repo, svc, emojis),
 	}
 
 	server := http.Server{

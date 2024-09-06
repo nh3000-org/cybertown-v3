@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 func Includes[T string | int](input []T, value T) bool {
 	for _, v := range input {
