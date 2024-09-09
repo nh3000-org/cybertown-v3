@@ -1,4 +1,4 @@
-import { cn, toHTML } from '@/lib/utils'
+import { toHTML } from '@/lib/utils'
 import { Message } from '@/types/broadcast'
 
 type Props = {
@@ -7,7 +7,7 @@ type Props = {
 }
 
 export function MessageContent(props: Props) {
-  const { message, classNames = '' } = props
+  const { message } = props
 
   if (props.message.isDeleted) {
     return (
@@ -16,7 +16,7 @@ export function MessageContent(props: Props) {
   }
 
   return (
-    <article className={cn(classNames, "prose")} dangerouslySetInnerHTML={{
+    <article className="prose" dangerouslySetInnerHTML={{
       __html: toHTML(message.content)
     }} />
   )

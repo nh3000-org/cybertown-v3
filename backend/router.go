@@ -18,6 +18,9 @@ func (app *application) router() http.Handler {
 	router.Handle("GET /profile/{profileID}", app.authMiddleware(http.HandlerFunc(app.profileHandler)))
 	router.Handle("POST /follow", ensureAuthed(http.HandlerFunc(app.followHandler(true))))
 	router.Handle("DELETE /follow", ensureAuthed(http.HandlerFunc(app.followHandler(false))))
+	router.Handle("GET /relations", ensureAuthed(http.HandlerFunc(app.getRelationsHandler)))
+	router.Handle("GET /dms", ensureAuthed(http.HandlerFunc(app.getDMsHandler)))
+	router.Handle("GET /messages/{participantID}", ensureAuthed(http.HandlerFunc(app.getMessagesHandler)))
 
 	v1 := http.NewServeMux()
 	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))

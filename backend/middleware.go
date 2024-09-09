@@ -3,7 +3,6 @@ package main
 import (
 	"backend/types"
 	"context"
-	"errors"
 	"log"
 	"net/http"
 )
@@ -66,8 +65,7 @@ func (app *application) isAuthenticated(next http.Handler) http.Handler {
 		v := r.Context().Value("user")
 
 		if _, ok := v.(*types.User); !ok {
-			err := errors.New("failed to get user from context")
-			unauthRequest(w, err)
+			unauthRequest(w, nil)
 			return
 		}
 

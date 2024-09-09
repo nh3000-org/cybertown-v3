@@ -1,7 +1,7 @@
 package db
 
 import (
-	"backend/types"
+	t "backend/types"
 	"context"
 	"fmt"
 	"log"
@@ -12,7 +12,7 @@ import (
 
 type Repo struct {
 	pool *pgxpool.Pool
-	conf *types.Config
+	conf *t.Config
 }
 
 type RoomFilter struct {
@@ -20,7 +20,7 @@ type RoomFilter struct {
 	UserID *int
 }
 
-func NewRepo(pool *pgxpool.Pool, conf *types.Config) *Repo {
+func NewRepo(pool *pgxpool.Pool, conf *t.Config) *Repo {
 	return &Repo{
 		pool: pool,
 		conf: conf,
@@ -43,7 +43,7 @@ func NewPool(url string) *pgxpool.Pool {
 	return p
 }
 
-func (r *Repo) CreateUser(ctx context.Context, u *types.GoogleUserInfo) (int, error) {
+func (r *Repo) CreateUser(ctx context.Context, u *t.GoogleUserInfo) (int, error) {
 	query := `
 	  INSERT INTO users(oauth_id, username, email, avatar)
 		VALUES ($1, $2, $3, $4)
@@ -70,14 +70,14 @@ func (r *Repo) CreateSession(ctx context.Context, userID int, expiredAt time.Tim
 	return sessionID, err
 }
 
-func (r *Repo) GetUserFromSession(ctx context.Context, sessionID string) (*types.User, error) {
+func (r *Repo) GetUserFromSession(ctx context.Context, sessionID string) (*t.User, error) {
 	query := `
 		SELECT u.id, u.username, u.avatar 
 		FROM users u 
 		LEFT JOIN sessions s ON s.user_id = u.id
 		WHERE s.id = $1 AND s.expired_at > CURRENT_TIMESTAMP;
 	`
-	var u types.User
+	var u t.User
 	err := r.pool.QueryRow(ctx, query, sessionID).Scan(&u.ID, &u.Username, &u.Avatar)
 	return &u, err
 }
@@ -91,7 +91,7 @@ func (r *Repo) DeleteSessionForUser(ctx context.Context, sessionID string, userI
 	return err
 }
 
-func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
+func (r *Repo) CreateRoom(ctx context.Context, room *t.Room) (int, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return 0, err
@@ -127,7 +127,7 @@ func (r *Repo) CreateRoom(ctx context.Context, room *types.Room) (int, error) {
 	return roomID, nil
 }
 
-func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
+func (r *Repo) GetRooms(ctx context.Context) ([]*t.Room, error) {
 	query := `
 	  SELECT r.id, r.topic, r.max_participants, r.languages, r.created_at,
 	  u.id, u.username, u.avatar, s.co_hosts, s.welcome_message
@@ -142,9 +142,9 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 		return nil, err
 	}
 
-	var rooms []*types.Room
+	var rooms []*t.Room
 	for rows.Next() {
-		var room types.Room
+		var room t.Room
 		err := rows.Scan(
 			&room.ID,
 			&room.Topic,
@@ -167,32 +167,32 @@ func (r *Repo) GetRooms(ctx context.Context) ([]*types.Room, error) {
 	return rooms, nil
 }
 
-func (r *Repo) GetRoom(ctx context.Context, roomID int) (*types.Room, error) {
+func (r *Repo) GetRoom(ctx context.Context, roomID int) (*t.Room, error) {
 	return r.getRoom(ctx, RoomFilter{
 		RoomID: &roomID,
 	})
 }
 
-func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*types.Room, error) {
+func (r *Repo) GetRoomForUser(ctx context.Context, roomID, userID int) (*t.Room, error) {
 	return r.getRoom(ctx, RoomFilter{
 		RoomID: &roomID,
 		UserID: &userID,
 	})
 }
 
-func (r *Repo) GetKick(ctx context.Context, roomID, userID int) (*types.Kick, error) {
+func (r *Repo) GetKick(ctx context.Context, roomID, userID int) (*t.Kick, error) {
 	query := `
 	  SELECT expired_at FROM room_kicks
 	  WHERE room_id = $1 AND user_id = $2 
 	  AND expired_at > CURRENT_TIMESTAMP
 	  ORDER BY created_at DESC LIMIT 1;
 	`
-	var k types.Kick
+	var k t.Kick
 	err := r.pool.QueryRow(ctx, query, roomID, userID).Scan(&k.ExpiredAt)
 	return &k, err
 }
 
-func (r *Repo) UpdateRoom(ctx context.Context, room *types.Room) error {
+func (r *Repo) UpdateRoom(ctx context.Context, room *t.Room) error {
 	query := `
 	  UPDATE rooms 
 	  SET topic = $1, max_participants = $2, languages = $3
@@ -202,14 +202,14 @@ func (r *Repo) UpdateRoom(ctx context.Context, room *types.Room) error {
 	return err
 }
 
-func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*types.RoomSettings, error) {
+func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*t.RoomSettings, error) {
 	query := `
 	  SELECT s.room_id, u.id, u.username, u.avatar, s.co_hosts, s.welcome_message
 	  FROM room_settings s INNER JOIN users u on u.id = s.host
 	  WHERE room_id = $1;
 	`
 
-	var s types.RoomSettings
+	var s t.RoomSettings
 	err := r.pool.QueryRow(ctx, query, roomID).Scan(
 		&s.RoomID,
 		&s.Host.ID,
@@ -225,7 +225,7 @@ func (r *Repo) GetRoomSettings(ctx context.Context, roomID int) (*types.RoomSett
 	return &s, nil
 }
 
-func (r *Repo) KickParticipant(ctx context.Context, k *types.Kick) error {
+func (r *Repo) KickParticipant(ctx context.Context, k *t.Kick) error {
 	query := `
 	  INSERT INTO room_kicks(room_id, user_id, expired_at)
 		VALUES ($1, $2, $3);
@@ -252,7 +252,7 @@ func (r *Repo) Unfollow(ctx context.Context, followerID, followeeID int) error {
 	return err
 }
 
-func (r *Repo) UpdateRoomSettings(ctx context.Context, s *types.RoomSettings) error {
+func (r *Repo) UpdateRoomSettings(ctx context.Context, s *t.RoomSettings) error {
 	query := `
 	  UPDATE room_settings
 	  SET host = $1, co_hosts = $2, welcome_message = $3
@@ -265,7 +265,7 @@ func (r *Repo) UpdateRoomSettings(ctx context.Context, s *types.RoomSettings) er
 	return nil
 }
 
-func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, error) {
+func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*t.Room, error) {
 	var values []any
 
 	query := `
@@ -287,7 +287,7 @@ func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, err
 		query += fmt.Sprintf(" AND u.id = $%d", len(values))
 	}
 
-	var room types.Room
+	var room t.Room
 	err := r.pool.QueryRow(ctx, query, values...).Scan(
 		&room.ID,
 		&room.Topic,
@@ -307,49 +307,35 @@ func (r *Repo) getRoom(ctx context.Context, filter RoomFilter) (*types.Room, err
 	return &room, nil
 }
 
-func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*types.Profile, error) {
+func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*t.Profile, error) {
 	query := `
-		WITH profile_user AS (
-			SELECT id, username, avatar
-			FROM users
-			WHERE id = $2
-		),
-		followers_count AS (
-			SELECT COUNT(*) AS count
-			FROM follows
-			WHERE followee_id = $2
-		),
-		following_count AS (
-			SELECT COUNT(*) AS count
-			FROM follows
-			WHERE follower_id = $2
-		),
-		friends_count AS (
-			SELECT COUNT(*) AS count
-			FROM follows f1
-			JOIN follows f2 ON f1.follower_id = f2.followee_id AND f1.followee_id = f2.follower_id
-			WHERE f1.follower_id = $2
-		)
-		SELECT 
-			pu.id,
-			pu.username,
-			pu.avatar,
-			CASE WHEN $1 = $2 THEN TRUE ELSE FALSE END AS is_me,
-			CASE WHEN EXISTS (
-				SELECT 1 
-				FROM follows 
-				WHERE follower_id = $1 AND followee_id = $2
-			) THEN TRUE ELSE FALSE END AS is_following,
-			fc.count AS followers_count,
-			fng.count AS following_count,
-			fr.count AS friends_count
-		FROM profile_user pu
-		CROSS JOIN followers_count fc
-		CROSS JOIN following_count fng
-		CROSS JOIN friends_count fr;
+		select 
+		  id, 
+		  username, 
+	    avatar,
+		  id = $1 as is_me,
+		  EXISTS 
+			  (select 1 from follows f where f.follower_id = $1 AND f.followee_id = $2) as is_following,
+			(select count(*) from follows f where f.followee_id = $2) as followers_count,
+			(select count(*) from follows f where f.follower_id = $2) as following_count,
+		  exists (
+				select 1 from
+				follows f1 
+				join follows f2 
+				on f1.follower_id = f2.followee_id AND f1.followee_id = f2.follower_id
+				where f1.follower_id = $2 AND f1.followee_id = $1
+			) as is_friend,
+		  (
+				select count(*) from 
+				follows f1 
+				join follows f2 
+				on f1.follower_id = f2.followee_id AND f1.followee_id = f2.follower_id
+				where f1.follower_id = $2
+		  ) as friends_count
+		from users where id = $2;
 	`
 
-	var profile types.Profile
+	var profile t.Profile
 	err := r.pool.QueryRow(ctx, query, userID, profileID).Scan(
 		&profile.ID,
 		&profile.Username,
@@ -358,6 +344,7 @@ func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*type
 		&profile.IsFollowing,
 		&profile.FollowersCount,
 		&profile.FollowingCount,
+		&profile.IsFriend,
 		&profile.FriendsCount,
 	)
 	if err != nil {
@@ -429,25 +416,25 @@ func (r *Repo) IsFriends(ctx context.Context, userID, participantID int) (bool, 
 	return isFriends, err
 }
 
-func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *types.Message) error {
+func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *t.Message) error {
 	query := `
 	  INSERT INTO messages (dm_id, id, content, "from", reply_to, created_at) 
-	  VALUES($1, $2, $3, $4, $5);
+	  VALUES($1, $2, $3, $4, $5, $6);
 	`
 	_, err := r.pool.Exec(ctx, query, dmID, msg.ID, msg.Content, msg.From.ID, msg.ReplyTo, msg.CreatedAt)
 	return err
 }
 
-func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID int, isReaction bool) (*types.Message, error) {
+func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID int, isReaction bool) (*t.Message, error) {
 	query := `
 	 SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reactions,
 	        u.id, u.avatar, u.username
-	 FROm messages
+	 FROM messages m
 	 INNER JOIN users u on u.id = m."from"
-	 WHERE dm_id = $1 AND m.id = $2 AND (m."from" = $3 OR $4 == True)
+	 WHERE dm_id = $1 AND m.id = $2 AND (m."from" = $3 OR $4 = True)
 	`
-	var m types.Message
-	err := r.pool.QueryRow(ctx, query, dmID, userID, isReaction).Scan(
+	var m t.Message
+	err := r.pool.QueryRow(ctx, query, dmID, msgID, userID, isReaction).Scan(
 		&m.ID,
 		&m.Content,
 		&m.IsEdited,
@@ -460,13 +447,13 @@ func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID in
 	return &m, err
 }
 
-func (r *Repo) UpdateMessage(ctx context.Context, dmID int, msg *types.Message, isReaction bool) error {
+func (r *Repo) UpdateMessage(ctx context.Context, dmID int, msg *t.Message, isReaction bool) error {
 	query := `
 	 UPDATE messages
 	 SET
-	   content = $5
-	   is_edited = $6
-	   is_deleted = $7
+	   content = $5,
+	   is_edited = $6,
+	   is_deleted = $7,
 	   reactions = $8
 	 WHERE dm_id = $1 AND id = $2 AND ("from" = $3 OR $4 = True)
 	`
@@ -475,11 +462,157 @@ func (r *Repo) UpdateMessage(ctx context.Context, dmID int, msg *types.Message, 
 		query,
 		dmID,
 		msg.ID,
-		isReaction,
 		msg.From.ID,
+		isReaction,
 		msg.Content,
 		msg.IsEdited,
 		msg.IsDeleted,
+		msg.Reactions,
 	)
 	return err
+}
+
+func (r *Repo) GetRelations(ctx context.Context, userID int, relation t.Relation) ([]*t.RelationRes, error) {
+	var query string
+
+	switch relation {
+	case t.RelationFollowers:
+		query = `
+			SELECT u.id, u.username, u.avatar,
+			  EXISTS (
+			  	SELECT 1 
+			  	FROM follows f2 
+			  	WHERE f2.follower_id = $1 AND f2.followee_id = u.id
+			  ) AS is_friend
+			FROM users u
+			JOIN follows f ON u.id = f.follower_id
+			WHERE f.followee_id = $1;
+		`
+	case t.RelationFollowing:
+		query = `
+			SELECT u.id, u.username, u.avatar,
+			EXISTS (
+		    SELECT 1 
+		    FROM follows f2 
+		    WHERE f2.follower_id = u.id AND f2.followee_id = $1
+		  ) AS is_friend
+			FROM users u
+			JOIN follows f ON u.id = f.followee_id
+			WHERE f.follower_id = $1;
+		`
+	case t.RelationFriends:
+		query = `
+			SELECT u.id, u.username, u.avatar, True as is_friend
+			FROM users u
+			JOIN follows f1 ON u.id = f1.followee_id
+			JOIN follows f2 ON u.id = f2.follower_id
+			WHERE f1.follower_id = $1 AND f2.followee_id = $1;
+		`
+	}
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]*t.RelationRes, 0)
+	for rows.Next() {
+		var user t.RelationRes
+		err := rows.Scan(&user.ID, &user.Username, &user.Avatar, &user.IsFriend)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (r *Repo) GetDMs(ctx context.Context, userID int) ([]*t.DMResponse, error) {
+	query := `
+	SELECT * FROM (
+   SELECT dp1.dm_id, u.id, u.username, u.avatar, 
+	  	(SELECT json_build_object('content', m.content, 'isDeleted', m.is_deleted, 'createdAt', m.created_at,  'from', 
+	  		json_build_object('id', u.id, 'username', u.username, 'avatar', u.avatar)) 
+	  		FROM messages m JOIN users u ON u.id = m."from" 
+	  		WHERE m.dm_id = dp1.dm_id 
+	  		ORDER BY m.created_at DESC LIMIT 1
+	  	) AS last_message
+	  FROM dm_participants dp1 
+	  JOIN dm_participants dp2 ON dp2.dm_id = dp1.dm_id
+	  JOIN users u ON u.id = dp2.user_id
+	  JOIN follows f1 ON f1.follower_id = dp1.user_id AND f1.followee_id = dp2.user_id
+	  JOIN follows f2 ON f2.follower_id = dp2.user_id AND f2.followee_id = dp1.user_id
+	  WHERE dp1.user_id = $1 AND dp2.user_id != $1
+   ) AS sq ORDER BY (sq.last_message->>'createdAt')::timestamp DESC;
+	`
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	dms := make([]*t.DMResponse, 0)
+	for rows.Next() {
+		var dm t.DMResponse
+		err := rows.Scan(
+			&dm.DmID,
+			&dm.User.ID,
+			&dm.User.Username,
+			&dm.User.Avatar,
+			&dm.LastMessage,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// a better way might exists, but for now this is ok
+		lm, ok := dm.LastMessage["createdAt"].(string)
+		if ok {
+			dm.LastMessage["createdAt"] = lm + "Z"
+		}
+
+		dms = append(dms, &dm)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return dms, nil
+}
+
+func (r *Repo) GetMessages(ctx context.Context, userID, participantID int) ([]*t.Message, error) {
+	query := `
+	  SELECT * FROM (
+			SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reply_to, 
+				m.reactions, m.created_at, u.id, u.username, u.avatar
+			FROM messages m JOIN users u ON u.id = m."from"
+			WHERE dm_id = (
+				SELECT dp1.dm_id from dm_participants dp1 
+				JOIN dm_participants dp2 ON dp2.dm_id = dp1.dm_id
+				WHERE dp1.user_id = $1 AND dp2.user_id = $2
+			)  ORDER BY created_at DESC LIMIT 50
+	  ) ORDER BY created_at ASC;
+	`
+	rows, err := r.pool.Query(ctx, query, userID, participantID)
+	if err != nil {
+		return nil, err
+	}
+	var messages []*t.Message
+	for rows.Next() {
+		var msg t.Message
+		err := rows.Scan(&msg.ID, &msg.Content, &msg.IsEdited,
+			&msg.IsDeleted, &msg.ReplyTo, &msg.Reactions, &msg.CreatedAt,
+			&msg.From.ID, &msg.From.Username, &msg.From.Avatar)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, &msg)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return messages, nil
 }

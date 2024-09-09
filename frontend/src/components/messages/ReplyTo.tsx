@@ -1,16 +1,17 @@
 import { cn, scrollToMessage } from "@/lib/utils"
 import { User } from "@/types"
 import { CircleX as CloseIcon } from 'lucide-react'
-import { useAppStore } from "@/stores/appStore"
+import { Message } from "@/types/broadcast"
 
 type Props = {
   replyTo: string | undefined
   setReplyTo: (replyTo: string | undefined) => void
   pm: User | null
+  messages: Message[]
 }
 
 export function ReplyTo(props: Props) {
-  const messages = useAppStore().messages
+  const { messages } = props
   const replyToMsg = messages.find(msg => props.replyTo && msg.id === props.replyTo)
 
   if (!replyToMsg) {
@@ -24,7 +25,7 @@ export function ReplyTo(props: Props) {
       '-top-[60px]': props.pm
     })}>
       <img className="w-6 h-6 rounded-md" src={replyToMsg.from.avatar} referrerPolicy="no-referrer" />
-      <div className="flex-1 flex flex-col gap-1 text-sm">
+      <div className="flex-1 flex flex-col gap-1 text-sm overflow-x-hidden">
         <div className="flex items-center justify-between">
           <p className="text-muted">{replyToMsg.from.username}</p>
           <button onClick={(e) => {
@@ -34,7 +35,7 @@ export function ReplyTo(props: Props) {
             <CloseIcon size={20} className="text-muted" />
           </button>
         </div>
-        <p className="ellipsis w-[300px]">{replyToMsg.content}</p>
+        <p className="ellipsis">{replyToMsg.content}</p>
       </div>
     </div>
   )

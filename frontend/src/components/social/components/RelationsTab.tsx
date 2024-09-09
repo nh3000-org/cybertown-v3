@@ -1,0 +1,48 @@
+import { useRelation } from '@/hooks/queries/useRelation';
+import * as Tabs from '@radix-ui/react-tabs';
+import React, { useState } from 'react';
+import { RelationList } from './RelationList';
+import { User } from '@/types';
+
+const relations = [{
+  value: 'following',
+  label: 'Following',
+}, {
+  value: 'followers',
+  label: 'Followers'
+}, {
+  value: 'friends',
+  label: "Friends",
+}]
+
+type Props = {
+  setDM: (user: User | null) => void
+}
+
+export const RelationsTab = React.forwardRef((props: Props, _ref) => {
+  const [relation, setRelation] = useState('following')
+  const { data: users } = useRelation(relation)
+
+  return (
+    <Tabs.Root className="flex flex-col h-full" value={relation} onValueChange={setRelation}>
+      <Tabs.List className="flex justify-between border-b border-border p-1 gap-3">
+        {relations.map(r => {
+          return (
+            <Tabs.Trigger key={r.value} value={r.value} className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center">
+              <p>{r.label}</p>
+            </Tabs.Trigger>
+          )
+        })}
+      </Tabs.List>
+      <Tabs.Content value="following" className="flex-1 p-4 focus:outline-none">
+        <RelationList users={users ?? []} setDM={props.setDM} />
+      </Tabs.Content>
+      <Tabs.Content value="followers" className="flex-1 p-4 focus:outline-none">
+        <RelationList users={users ?? []} setDM={props.setDM} />
+      </Tabs.Content>
+      <Tabs.Content value="friends" className="flex-1 p-4 focus:outline-none">
+        <RelationList users={users ?? []} setDM={props.setDM} />
+      </Tabs.Content>
+    </Tabs.Root>
+  )
+})

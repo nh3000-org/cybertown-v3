@@ -90,7 +90,7 @@ func GetMsgType(roomID, participantID *int) t.MsgType {
 		return t.PrivateRoomMsg
 	}
 	if roomID == nil && participantID != nil {
-		return t.RoomMsg
+		return t.DMMsg
 	}
 	return t.UnknowMsg
 }

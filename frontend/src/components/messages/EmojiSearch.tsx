@@ -1,6 +1,6 @@
 import * as Popover from '@radix-ui/react-popover'
-import { TextareaSearch } from '../../hooks/useMention'
-import { Emoji } from '../../hooks/useEmojiSearch'
+import { TextareaSearch } from './hooks/useMention'
+import { Emoji } from './hooks/useEmojiSearch'
 
 type Props = {
   search: TextareaSearch

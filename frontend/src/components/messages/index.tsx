@@ -6,25 +6,28 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { VerticalScrollbar } from "@/components/VerticalScrollbar"
 import { useAppStore } from '@/stores/appStore';
 import { ws } from '@/lib/ws';
-import { Message } from '@/pages/room/components/Message';
+import { Message } from '@/components/messages/Message';
 import { RoomRes, User } from '@/types';
 import React from 'react';
 import { MentionParticipants } from './MentionParticipants';
 import { ReplyTo } from './ReplyTo';
 import { PM } from './PM';
-import { useMention } from '@/pages/room/hooks/useMention';
+import { useMention } from './hooks/useMention';
 import { SendMessage } from './SendMessage';
-import { Emoji, useEmojiSearch } from '../../hooks/useEmojiSearch';
+import { Emoji, useEmojiSearch } from './hooks/useEmojiSearch';
 import { EmojiSearch } from './EmojiSearch';
+import { Message as TMessage } from '@/types/broadcast';
 
 type Props = {
   pm: User | null
   setPM: (pm: User | null) => void
-  room: RoomRes
+  room: RoomRes | null
+  messages: TMessage[]
+  dm: User | null
 }
 
 export const Messages = React.forwardRef((props: Props, _ref) => {
-  const messages = useAppStore().messages
+  const { messages } = props
   const user = useAppStore().user
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -84,15 +87,15 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 
   return (
     <div className="flex-1 flex flex-col bg-bg rounded-md overflow-hidden">
-
       <ScrollArea.Root className="overflow-hidden flex-1">
-        <ScrollArea.Viewport className={cn("w-full h-full flex gap-2 flex-col pt-2", {
+        <ScrollArea.Viewport className={cn("w-full h-full pt-2", {
           "pb-14": replyTo || props.pm,
           "pb-32": replyTo && props.pm,
         })}>
           {messages.map(message => {
             return (
               <Message
+                messages={messages}
                 key={message.id}
                 message={message}
                 textareaRef={textareaRef}
@@ -100,6 +103,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
                 setEditMsgID={setEditMsgID}
                 setReplyTo={setReplyTo}
                 setPM={props.setPM}
+                dm={props.dm}
               />
             )
           })}
@@ -110,14 +114,16 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 
       <div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
         <div className="flex">
-          <MentionParticipants
-            setSearch={setSearch}
-            search={search}
-            selectParticipant={selectParticipant}
-            textareaRef={textareaRef}
-            room={props.room}
-            mentionedParticipants={mentionedParticipants}
-          />
+          {props.room && (
+            <MentionParticipants
+              setSearch={setSearch}
+              search={search}
+              selectParticipant={selectParticipant}
+              textareaRef={textareaRef}
+              room={props.room}
+              mentionedParticipants={mentionedParticipants}
+            />
+          )}
 
           <EmojiSearch
             setSearch={setEmojiSearch}
@@ -127,7 +133,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
             selectEmoji={selectEmoji}
           />
 
-          <div className="gap-1 ml-auto mr-1.5">
+          <div className="gap-1 ml-auto mr-1.5 flex">
             <EmojiPicker
               trigger={
                 <button>
@@ -137,8 +143,8 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
               open={emojiOpen}
               setOpen={setEmojiOpen}
               onSelect={(_, emoji) => {
-                const participantID = props.pm?.id || getParticipantID(replyToMsg, user!)
-                ws.newMessage(emoji, replyTo, participantID)
+                const participantID = props.pm?.id || getParticipantID(replyToMsg, user!) || props.dm?.id
+                ws.newMessage(emoji, replyTo, participantID, props.dm !== null)
                 setReplyTo(undefined)
                 setEmojiOpen(false)
               }}
@@ -146,9 +152,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
             {editMsgID && (
               <button className="ml-auto" onClick={() => {
                 setEditMsgID(undefined)
-                if (textareaRef.current) {
-                  textareaRef.current.value = ''
-                }
+                setContent('')
               }}>
                 <CloseIcon size={20} className="text-muted" />
               </button>
@@ -156,10 +160,11 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
           </div>
         </div>
 
-        <ReplyTo replyTo={replyTo} setReplyTo={setReplyTo} pm={props.pm} />
+        <ReplyTo replyTo={replyTo} setReplyTo={setReplyTo} pm={props.pm} messages={messages} />
         <PM pm={props.pm} setPM={props.setPM} />
 
         <SendMessage
+          messages={messages}
           setReplyTo={setReplyTo}
           replyTo={replyTo}
           content={content}
@@ -174,6 +179,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
           mentionedParticipants={mentionedParticipants}
           textareaRef={textareaRef}
           pm={props.pm}
+          dm={props.dm}
         />
       </div>
     </div >

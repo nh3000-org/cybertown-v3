@@ -1,7 +1,8 @@
 package main
 
 import (
-	"backend/types"
+	t "backend/types"
+	v "backend/validator"
 	"context"
 	"encoding/json"
 	"errors"
@@ -17,7 +18,7 @@ func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Reque
 	code := q.Get("code")
 	s := q.Get("state")
 
-	var state types.OAuthState
+	var state t.OAuthState
 	err := json.Unmarshal([]byte(s), &state)
 	if err != nil || !state.Validate(app.conf) {
 		badRequest(w, err)
@@ -64,7 +65,7 @@ func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) meHandler(w http.ResponseWriter, r *http.Request) {
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
@@ -78,7 +79,7 @@ func (app *application) meHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
@@ -111,7 +112,7 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request) {
-	var req types.CreateRoomRequest
+	var req t.CreateRoomRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		badRequest(w, err)
@@ -124,13 +125,13 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
 	}
 
-	roomID, err := app.repo.CreateRoom(context.Background(), &types.Room{
+	roomID, err := app.repo.CreateRoom(context.Background(), &t.Room{
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
 		Languages:       req.Languages,
@@ -142,7 +143,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.ss.broadcastEvent(&types.Event{
+	app.ss.broadcastEvent(&t.Event{
 		Name: "NEW_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": roomID,
@@ -161,9 +162,9 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 		return
 	}
 
-	var res []*types.RoomsResponse
+	var res []*t.RoomsResponse
 	for _, room := range rooms {
-		roomRes := types.RoomsResponse{
+		roomRes := t.RoomsResponse{
 			Room:         room,
 			Participants: app.ss.getParticipantsInRoom(room.ID),
 		}
@@ -183,7 +184,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
@@ -213,7 +214,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	roomRes := types.RoomsResponse{
+	roomRes := t.RoomsResponse{
 		Room:         room,
 		Participants: participants,
 	}
@@ -231,7 +232,7 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var req types.CreateRoomRequest // same payload for editing a room as well
+	var req t.CreateRoomRequest // same payload for editing a room as well
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		badRequest(w, err)
@@ -244,7 +245,7 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
@@ -265,7 +266,7 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.ss.broadcastEvent(&types.Event{
+	app.ss.broadcastEvent(&t.Event{
 		Name: "UPDATE_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": room.ID,
@@ -287,7 +288,7 @@ func (app *application) followHandler(isFollow bool) func(http.ResponseWriter, *
 			return
 		}
 
-		u, ok := r.Context().Value("user").(*types.User)
+		u, ok := r.Context().Value("user").(*t.User)
 		if !ok {
 			unauthRequest(w, nil)
 			return
@@ -322,7 +323,7 @@ func (app *application) profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userID int
-	u, ok := r.Context().Value("user").(*types.User)
+	u, ok := r.Context().Value("user").(*t.User)
 	if ok {
 		userID = u.ID
 	}
@@ -335,5 +336,72 @@ func (app *application) profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"profile": p,
+	})
+}
+
+func (app *application) getRelationsHandler(w http.ResponseWriter, r *http.Request) {
+	relation := r.URL.Query().Get("relation")
+
+	vd := v.NewValidator()
+	vd.IsInStr("relation", &relation, []string{"following", "friends", "followers"})
+	if !vd.IsValid() {
+		badRequest(w, nil)
+		return
+	}
+
+	u, ok := r.Context().Value("user").(*t.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+
+	users, err := app.repo.GetRelations(context.Background(), u.ID, t.Relation(relation))
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"users": users,
+	})
+}
+
+func (app *application) getDMsHandler(w http.ResponseWriter, r *http.Request) {
+	u, ok := r.Context().Value("user").(*t.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+
+	dms, err := app.repo.GetDMs(context.Background(), u.ID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"dms": dms,
+	})
+}
+
+func (app *application) getMessagesHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("participantID")
+	pID, err := strconv.Atoi(id)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+	u, ok := r.Context().Value("user").(*t.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+	messages, err := app.repo.GetMessages(context.Background(), u.ID, pID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"messages": messages,
 	})
 }

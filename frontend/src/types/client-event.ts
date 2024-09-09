@@ -31,7 +31,7 @@ export type NewMsgEvent = {
   name: "NEW_MESSAGE"
   data: {
     content: string
-    roomID: number
+    roomID?: number
     replyTo?: string
     participantID?: number
   }
@@ -42,7 +42,7 @@ export type EditMsgEvent = {
   data: {
     id: string
     content: string
-    roomID: number
+    roomID?: number
     participantID?: number
   }
 }
@@ -51,7 +51,7 @@ export type DeleteMsgEvent = {
   name: "DELETE_MESSAGE"
   data: {
     id: string
-    roomID: number
+    roomID?: number
     participantID?: number
   }
 }

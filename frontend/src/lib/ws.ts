@@ -46,21 +46,12 @@ class WS {
             })
             break;
           case "NEW_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.roomID) {
-              return
-            }
             useAppStore.getState().addMsg(event)
             break;
           case "EDIT_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.roomID) {
-              return
-            }
             useAppStore.getState().editMsg(event)
             break;
           case "DELETE_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.roomID) {
-              return
-            }
             useAppStore.getState().deleteMsg(event)
             break;
           case "REACTION_TO_MESSAGE_BROADCAST":
@@ -113,25 +104,25 @@ class WS {
     })
   }
 
-  editMsg(id: string, content: string, participantID?: number) {
+  editMsg(id: string, content: string, participantID?: number, isDM?: boolean) {
     this.sendClientEvent({
       name: "EDIT_MESSAGE",
       data: {
         id,
         content,
         participantID,
-        roomID: this.roomID!,
+        roomID: isDM ? undefined : this.roomID!,
       }
     })
   }
 
-  deleteMsg(id: string, participantID?: number) {
+  deleteMsg(id: string, participantID?: number, isDM?: boolean) {
     this.sendClientEvent({
       name: "DELETE_MESSAGE",
       data: {
         id,
         participantID,
-        roomID: this.roomID!,
+        roomID: isDM ? undefined : this.roomID!,
       }
     })
   }
@@ -148,14 +139,14 @@ class WS {
     })
   }
 
-  newMessage(content: string, replyTo?: string, participantID?: number) {
+  newMessage(content: string, replyTo?: string, participantID?: number, isDM?: boolean) {
     this.sendClientEvent({
       name: "NEW_MESSAGE",
       data: {
         content,
         replyTo,
         participantID,
-        roomID: this.roomID!,
+        roomID: isDM ? undefined : this.roomID!,
       }
     })
   }

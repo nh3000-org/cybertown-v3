@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { TextareaSearch } from "../../hooks/useMention"
+import { TextareaSearch } from "./hooks/useMention"
 import { User } from "@/types"
 import { getParticipantID } from "@/lib/utils"
 import { ws } from "@/lib/ws"
 import { useAppStore } from "@/stores/appStore"
-import { Emoji } from "../../hooks/useEmojiSearch"
+import { Emoji } from "./hooks/useEmojiSearch"
+import { Message } from "@/types/broadcast"
 
 type Props = {
   content: string
@@ -28,12 +29,14 @@ type Props = {
   setReplyTo: (replyTo: string | undefined) => void
 
   pm: User | null
+  dm: User | null
+
+  messages: Message[]
 }
 
 export function SendMessage(props: Props) {
+  const { messages } = props
   const user = useAppStore().user
-  const messages = useAppStore().messages
-
   const [error, setError] = useState("")
 
   const {
@@ -82,10 +85,10 @@ export function SendMessage(props: Props) {
       }
 
       if (editMsgID) {
-        ws.editMsg(editMsgID, value.trim(), editMsg?.participant?.id)
+        ws.editMsg(editMsgID, value.trim(), editMsg?.participant?.id || props.dm?.id, props.dm !== null)
       } else {
-        const participantID = props.pm?.id || getParticipantID(replyToMsg, user!)
-        ws.newMessage(value.trim(), replyTo, participantID)
+        const participantID = props.pm?.id || getParticipantID(replyToMsg, user!) || props.dm?.id
+        ws.newMessage(value.trim(), replyTo, participantID, props.dm !== null)
       }
 
       setEditMsgID(undefined)

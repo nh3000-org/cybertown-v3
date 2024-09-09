@@ -87,7 +87,6 @@ export function Kicked(props: {
         setTimeLeft(diff / 1000)
       } else {
         setTimeLeft(-1)
-        // NOTE: the SPA brain can't be happy with this
         window.location.reload()
       }
     }

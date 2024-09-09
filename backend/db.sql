@@ -66,5 +66,5 @@ CREATE TABLE messages (
   is_edited BOOLEAN DEFAULT FALSE,
   reply_to VARCHAR(64),
   reactions JSONB,
-  created_at TIMESTAMP WITHOUT TIME ZONE
+  created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );

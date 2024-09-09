@@ -2,6 +2,9 @@ import { useAppStore } from '@/stores/appStore'
 import { UserMenu } from './components/UserMenu'
 import { useRooms } from '@/hooks/queries/useRooms'
 import { RoomCard } from './components/RoomCard'
+import { Mail as MailIcon } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover'
+import { Social } from '@/components/social';
 
 export function HomePage() {
   const user = useAppStore().user
@@ -29,6 +32,19 @@ export function HomePage() {
         })}
       </div>
 
+      {user && (
+        <div className="fixed bottom-8 right-8">
+          <Popover.Root>
+            <Popover.Trigger className="bg-accent p-3 rounded-full">
+              <MailIcon size={22} />
+            </Popover.Trigger>
+            <Popover.Anchor />
+            <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[500px] w-[320px] bg-bg'>
+              <Social />
+            </Popover.Content>
+          </Popover.Root>
+        </div>
+      )}
     </main>
   )
 }

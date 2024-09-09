@@ -7,18 +7,22 @@ export type TextareaSearch = {
   show: boolean
 }
 
-export function useMention(content: string, room: RoomRes) {
+export function useMention(content: string, room: RoomRes | null) {
   const user = useAppStore().user
   const [search, setSearch] = useState<TextareaSearch>({
     query: '',
     show: false,
   })
 
-  const mentionedParticipants = room.participants.
+  const mentionedParticipants = room === null ? [] : room.participants.
     filter(el => el.id !== user?.id && el.username.toLowerCase().
       includes(search.query.toLowerCase()))
 
   useEffect(() => {
+    if (room === null) {
+      return
+    }
+
     const words = content.split(" ")
     const lastWord = words[words.length - 1]
     if (!lastWord) {

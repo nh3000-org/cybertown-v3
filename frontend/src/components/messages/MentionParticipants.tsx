@@ -1,6 +1,6 @@
 import { RoomRes, User } from '@/types'
 import * as Popover from '@radix-ui/react-popover'
-import { TextareaSearch } from '../../hooks/useMention'
+import { TextareaSearch } from './hooks/useMention'
 
 type Props = {
   search: TextareaSearch

@@ -1,6 +1,7 @@
 import { config } from "@/config"
 import { fetchWrapper } from "@/lib/fetchWrapper"
-import { CreateRoom, Room, RoomRes, User, Profile } from "@/types"
+import { CreateRoom, Room, RoomRes, User, Profile, RelationRes, DMsRes } from "@/types"
+import { Message } from "@/types/broadcast"
 
 export const api = {
   async me() {
@@ -60,6 +61,24 @@ export const api = {
       body: JSON.stringify({ followeeID })
     })
     return data.msg
+  },
+
+  async getRelations(relation: string) {
+    const url = config.apiURL + `/relations?relation=${relation}`
+    const data = await fetchWrapper<"users", RelationRes[]>(url)
+    return data.users
+  },
+
+  async getDMs() {
+    const url = config.apiURL + "/dms"
+    const data = await fetchWrapper<"dms", DMsRes[]>(url)
+    return data.dms
+  },
+
+  async getMessages(participantID: number) {
+    const url = config.apiURL + `/messages/${participantID}`
+    const data = await fetchWrapper<"messages", Message[]>(url)
+    return data.messages
   },
 
   async emoji() {

@@ -115,13 +115,15 @@ export type EditMessage = {
   id: string
   content: string
   from: User
-  roomID: number
+  roomID?: number
+  participant?: User
 }
 
 export type DeleteMessage = {
   id: string
   from: User
-  roomID: number
+  roomID?: number
+  participant?: User
 }
 
 export type ReactionToMessage = {

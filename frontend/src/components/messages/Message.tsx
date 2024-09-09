@@ -17,6 +17,8 @@ type Props = {
   setReplyTo: (messageID: string | undefined) => void
   editMsgID: string | undefined
   setPM: (pm: User | null) => void
+  messages: TMessage[]
+  dm: User | null
 }
 
 type MessageOptionsProps = Props & {
@@ -58,7 +60,7 @@ function MessageOptions(props: MessageOptionsProps) {
                 <span>Edit</span>
               </Dropdown.Item>
               <Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md" onClick={() => {
-                ws.deleteMsg(props.message.id, props.message.participant?.id)
+                ws.deleteMsg(props.message.id, props.message.participant?.id || props.dm?.id, props.dm !== null)
               }}>
                 <TrashIcon size={20} className="text-muted" />
                 <span>Delete</span>
@@ -89,22 +91,22 @@ function MessageOptions(props: MessageOptionsProps) {
 }
 
 export function Message(props: Props) {
-  const { message } = props
-  const messages = useAppStore().messages
+  const { message, messages } = props
   const user = useAppStore().user
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const isPrivateMessage = props.dm === null && message.participant?.id
 
   return (
-    <div className={cn("px-4 py-2 flex gap-3 items-start group", {
+    <div className={cn("px-4 py-1 py-2 flex gap-3 items-start group", {
       "bg-accent/10": props.editMsgID === message.id,
-      "bg-danger/5": message.participant?.id,
+      "bg-danger/5": isPrivateMessage,
     })} id={`message-${message.id}`}>
       <img className="w-8 h-8 rounded-md" src={message.from.avatar} referrerPolicy="no-referrer" />
       <div className="flex-1">
         <div className="flex items-center justify-between text-muted text-sm mb-1">
           <div className="flex items-center gap-3">
-            {(message.participant && message.from?.id === user?.id) ? <div className="flex gap-2 items-center mb-1">
+            {(props.dm === null && message.participant && message.from?.id === user?.id) ? <div className="flex gap-2 items-center mb-1">
               <img className="w-6 h-6 rounded-md" src={message.participant.avatar} referrerPolicy='no-referrer' />
               <p>{message.participant.username}</p>
             </div> : <p>{message.from.username}</p>}
@@ -130,14 +132,14 @@ export function Message(props: Props) {
             <img className="w-6 h-6 rounded-md" src={replyToMsg.from.avatar} referrerPolicy="no-referrer" />
             <div className="flex-1 flex flex-col gap-1 text-sm">
               <p className="text-muted">{replyToMsg.from.username}</p>
-              <MessageContent classNames="ellipsis w-[269px]" message={replyToMsg} />
+              <MessageContent message={replyToMsg} />
             </div>
           </div>
         )}
         <MessageContent message={message} />
         {!message.isDeleted && (
           <div className="flex gap-2 mt-1 text-sm items-center flex-wrap">
-            {Object.entries(message.reactions).map(([reaction, userMap]) => {
+            {Object.entries(message.reactions ?? {}).map(([reaction, userMap]) => {
               return (
                 <HoverCard.Root key={reaction}>
                   <HoverCard.Trigger asChild>

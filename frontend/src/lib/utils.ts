@@ -9,6 +9,7 @@ import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 import { renderer } from "./md-renderer"
 import { useAppStore } from "@/stores/appStore"
+import { isToday, isThisWeek, format } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -121,4 +122,18 @@ export function toHTML(md: string): string {
     )
   }
   return html
+}
+
+export function formatDate(date: string) {
+  if (isToday(date)) {
+    return format(date, 'hh:mm a');
+  } else if (isThisWeek(date, { weekStartsOn: 1 })) {
+    return format(date, 'EEEE');
+  } else {
+    return format(date, 'yyyy/MM/dd');
+  }
+}
+
+export function getDMParticipant(from: User, participant: User, currentUser: User) {
+  return from.id !== currentUser.id ? from.id : participant.id
 }

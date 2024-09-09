@@ -207,8 +207,14 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 		msg.RoomID = data.RoomID
 	}
 
-	if data.ParticipantID != nil {
+	if msgType == t.PrivateRoomMsg {
 		msg.Participant = &s.participants[*data.ParticipantID].User
+	}
+
+	if msgType == t.DMMsg {
+		msg.Participant = &t.User{
+			ID: *data.ParticipantID,
+		}
 	}
 
 	if msgType == t.DMMsg {
@@ -305,7 +311,7 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte) {
 
 		err = s.repo.UpdateMessage(ctx, dmID, m, false)
 		if err != nil {
-			log.Printf("edit message event: failed to get message: %v", err)
+			log.Printf("edit message event: failed to update message: %v", err)
 			return
 		}
 	}
@@ -321,6 +327,11 @@ func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte) {
 	}
 	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
 		d["roomID"] = *data.RoomID
+	}
+	if msgType == t.DMMsg {
+		d["participant"] = map[string]any{
+			"id": *data.ParticipantID,
+		}
 	}
 	if msgType == t.RoomMsg {
 		s.broadcastRoomEvent(*data.RoomID, &event)
@@ -683,6 +694,7 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte) {
 			return
 		}
 		m.IsDeleted = true
+		m.Content = ""
 		err = s.repo.UpdateMessage(ctx, dmID, m, false)
 		if err != nil {
 			log.Printf("delete msg event: failed to update message: %v", err)
@@ -700,6 +712,11 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte) {
 	}
 	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
 		d["roomID"] = *data.RoomID
+	}
+	if msgType == t.DMMsg {
+		d["participant"] = map[string]any{
+			"id": *data.ParticipantID,
+		}
 	}
 	if msgType == t.RoomMsg {
 		s.broadcastRoomEvent(*data.RoomID, &event)
@@ -738,7 +755,6 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 		var event t.Event
 		err := wsjson.Read(context.Background(), conn, &event)
 		if err != nil {
-			log.Printf("failed to read message: %v", err)
 			return
 		}
 

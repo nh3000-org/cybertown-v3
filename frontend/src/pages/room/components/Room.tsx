@@ -1,4 +1,4 @@
-import { Messages } from "./messages";
+import { Messages } from "@/components/messages";
 import { useRooms } from "@/hooks/queries/useRooms";
 import { Participants } from "./Participants";
 import { useState } from "react";
@@ -20,6 +20,7 @@ export function Room(props: Props) {
   const user = useAppStore().user
   const [tab, setTab] = useState("messages")
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
+  const messages = useAppStore().messages
   const isHost = room?.settings.host.id === user?.id
 
   if (!room) {
@@ -55,7 +56,7 @@ export function Room(props: Props) {
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content asChild value="messages">
-            {room && <Messages pm={pm} setPM={setPM} room={room} />}
+            {room && <Messages pm={pm} setPM={setPM} room={room} messages={messages} dm={null} />}
           </Tabs.Content>
           <Tabs.Content asChild value="settings">
             <div className="flex-1 p-4 focus:outline-none flex flex-col gap-6">

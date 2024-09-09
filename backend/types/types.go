@@ -12,6 +12,7 @@ type Profile struct {
 	User
 	IsMe           bool `json:"isMe"`
 	IsFollowing    bool `json:"isFollowing"`
+	IsFriend       bool `json:"isFriend"`
 	FriendsCount   int  `json:"friendsCount"`
 	FollowingCount int  `json:"followingCount"`
 	FollowersCount int  `json:"followersCount"`
@@ -86,7 +87,7 @@ type Message struct {
 	ID          string          `json:"id"`
 	Content     string          `json:"content"`
 	From        User            `json:"from"`
-	ReplyTo     *string         `json:"replyTo"`
+	ReplyTo     *string         `json:"replyTo,omitempty"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	RoomID      *int            `json:"roomID,omitempty"`
 	Reactions   *map[string]any `json:"reactions,omitempty"`
@@ -103,3 +104,22 @@ const (
 	PrivateRoomMsg
 	DMMsg
 )
+
+type Relation string
+
+const (
+	RelationFollowing Relation = "following"
+	RelationFriends   Relation = "friends"
+	RelationFollowers Relation = "followers"
+)
+
+type RelationRes struct {
+	User
+	IsFriend bool `json:"isFriend"`
+}
+
+type DMResponse struct {
+	DmID        int            `json:"dmID"`
+	User        User           `json:"user"`
+	LastMessage map[string]any `json:"lastMessage"`
+}

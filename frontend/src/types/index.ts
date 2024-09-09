@@ -7,6 +7,7 @@ export type User = {
 export type Profile = {
   isMe: boolean
   isFollowing: boolean
+  isFriend: boolean
   friendsCount: number
   followingCount: number
   followersCount: number
@@ -33,3 +34,16 @@ export type CreateRoom = {
 export type RoomRes = Room & { participants: (User & { status: string })[] }
 
 export type RoomRole = "host" | "coHost" | "guest"
+
+export type RelationRes = { isFriend: boolean } & User
+
+export type DMsRes = {
+  dmID: number
+  user: User
+  lastMessage: {
+    isDeleted: boolean
+    content: string
+    createdAt: string
+    from: User
+  } | null
+} 
