@@ -5,17 +5,17 @@ import { LoadingIcon } from "@/pages/home/components/LoadingIcon";
 import { useAppStore } from "@/stores/appStore";
 import { User } from "@/types"
 import * as Popover from '@radix-ui/react-popover';
-import * as Tooltip from '@radix-ui/react-tooltip';
-import { useState } from "react";
 
 type Props = {
   user: User
   style: Record<string, number>
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
 export function Profile(props: Props) {
-  const [open, setOpen] = useState(false)
-  const { data: profile } = useProfile(props.user.id, open)
+  console.log({ id: props.user.id, open: props.open })
+  const { data: profile } = useProfile(props.user.id, props.open === true)
   const { mutateAsync: followMutate, isLoading } = useFollow()
   const user = useAppStore().user
 
@@ -27,20 +27,14 @@ export function Profile(props: Props) {
       isFollowing: profile.isFollowing,
       followeeID: props.user.id
     })
-    const queryKeys = [
-      ['profile', props.user.id],
-      ['profile', user.id]
-    ]
-    queryKeys.forEach(queryKey => {
-      queryClient.invalidateQueries({
-        queryKey
-      })
+    queryClient.invalidateQueries({
+      queryKey: ['profile', props.user.id]
     })
   }
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild onClick={() => setOpen(true)}>
+    <Popover.Root open={props.open} onOpenChange={props.setOpen}>
+      <Popover.Trigger asChild>
         <img src={props.user.avatar} referrerPolicy="no-referrer" style={props.style} className="rounded-full" />
       </Popover.Trigger>
       <Popover.Content side="top" sideOffset={12} align="start" className="focus:outline-none rounded-lg p-4 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border">

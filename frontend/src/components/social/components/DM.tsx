@@ -29,7 +29,7 @@ export function DM(props: Props) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border flex gap-2 items-center">
-        <button onClick={() => props.setDM(null)}>
+        <button className="focus:ring-0" onClick={() => props.setDM(null)}>
           <LeftIcon size={22} className="text-muted" />
         </button>
         <img className="w-8 h-8 rounded-full mr-1" src={props.user.avatar} referrerPolicy="no-referrer" />

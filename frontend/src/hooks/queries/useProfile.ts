@@ -5,6 +5,7 @@ export function useProfile(userID: number, enabled: boolean) {
   return useQuery({
     queryKey: ['profile', userID],
     queryFn: () => api.getProfile(userID),
-    enabled
+    enabled,
+    staleTime: 0,
   })
 }

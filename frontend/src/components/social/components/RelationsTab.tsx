@@ -21,7 +21,6 @@ type Props = {
 
 export const RelationsTab = React.forwardRef((props: Props, _ref) => {
   const [relation, setRelation] = useState('following')
-  const { data: users } = useRelation(relation)
 
   return (
     <Tabs.Root className="flex flex-col h-full" value={relation} onValueChange={setRelation}>
@@ -35,13 +34,13 @@ export const RelationsTab = React.forwardRef((props: Props, _ref) => {
         })}
       </Tabs.List>
       <Tabs.Content value="following" className="flex-1 p-4 focus:outline-none">
-        <RelationList users={users ?? []} setDM={props.setDM} />
+        <RelationList setDM={props.setDM} relation="following" />
       </Tabs.Content>
       <Tabs.Content value="followers" className="flex-1 p-4 focus:outline-none">
-        <RelationList users={users ?? []} setDM={props.setDM} />
+        <RelationList setDM={props.setDM} relation="followers" />
       </Tabs.Content>
       <Tabs.Content value="friends" className="flex-1 p-4 focus:outline-none">
-        <RelationList users={users ?? []} setDM={props.setDM} />
+        <RelationList setDM={props.setDM} relation="friends" />
       </Tabs.Content>
     </Tabs.Root>
   )

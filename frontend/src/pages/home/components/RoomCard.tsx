@@ -2,9 +2,11 @@ import { RoomRes } from '@/types'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/appStore'
 import * as Popover from '@radix-ui/react-popover';
-import { Info as InfoIcon, SquarePen as PencilIcon } from 'lucide-react'
+import { Info as InfoIcon, SquarePen as PencilIcon, Ban as BanIcon } from 'lucide-react'
 import { formatRelative } from 'date-fns'
 import { Profile } from '@/components/Profile';
+import { useState } from 'react';
+import { cn, formatDate } from '@/lib/utils';
 
 type Props = {
   room: RoomRes
@@ -16,6 +18,8 @@ export function RoomCard(props: Props) {
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const { room } = props
   const navigate = useNavigate()
+  const [open, setOpen] = useState<Record<number, boolean>>({})
+  const isRoomFull = room.participants.length >= room.maxParticipants
 
   const style = {
     width: room.maxParticipants > 3 ? 58 : 96,
@@ -46,7 +50,7 @@ export function RoomCard(props: Props) {
                 <img src={room.settings.host.avatar} className="w-12 h-12 rounded-full" />
                 <div className="text-center">
                   <p className="font-semibold pb-1">{room.settings.host.username}</p>
-                  <p className="text-muted text-sm">{formatRelative(new Date(room.createdAt), new Date())}</p>
+                  <p className="text-muted text-sm">{formatDate(room.createdAt)}</p>
                 </div>
               </div>
               {user?.id === room.settings.host.id && (
@@ -65,16 +69,30 @@ export function RoomCard(props: Props) {
 
       <div className="min-h-[60px] my-8 flex flex-wrap gap-4">
         {room.participants.map(p => {
-          return <Profile key={p.id} user={p} style={style} />
+          return <Profile key={p.id} user={p} style={style} open={open[p.id]} setOpen={open => {
+            setOpen(prev => ({
+              ...prev,
+              [p.id]: open
+            }))
+          }} />
         })}
         {Array.from({ length: room.maxParticipants - room.participants.length }).map((_, i) => {
           return <div key={i} style={style} className="rounded-full border border-border border-dashed" />
         })}
       </div>
 
-      <button className="bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto" onClick={() => {
+      <button disabled={isRoomFull} className={cn("flex items-center gap-2 bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto", {
+        "border border-highlight bg-transparent text-muted border-dashed": isRoomFull
+      })} onClick={() => {
         joinRoom(room.id)
-      }}>Join Room</button>
+      }}>
+        {!isRoomFull ? <span>Join room</span> :
+          <>
+            <BanIcon size={16} className='text-muted' />
+            <span>Room is full</span>
+          </>
+        }
+      </button>
     </div>
   )
 }
