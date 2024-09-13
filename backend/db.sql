@@ -54,6 +54,7 @@ CREATE TABLE dms (
 CREATE TABLE dm_participants (
   dm_id INT REFERENCES dms(id) ON DELETE CASCADE,
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  last_read_at TIMESTAMP WITHOUT TIME ZONE,
   PRIMARY KEY (dm_id, user_id)
 );
 
