@@ -2,15 +2,20 @@ import { useAppStore } from '@/stores/appStore'
 import { UserMenu } from './components/UserMenu'
 import { useRooms } from '@/hooks/queries/useRooms'
 import { RoomCard } from './components/RoomCard'
-import { Mail as MailIcon } from 'lucide-react';
+import { Webhook as WebhookIcon } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover'
 import { Social } from '@/components/social';
+import { useDMs } from '@/hooks/queries/useDMs';
 
 export function HomePage() {
   const user = useAppStore().user
+  const dmUnread = useAppStore().dmUnread
   const setAlert = useAppStore().setAlert
   const setOpen = useAppStore().setCreateOrUpdateRoom
   const { data: rooms } = useRooms()
+
+  useDMs(user !== null)
+  const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
 
   return (
     <main className="max-w-7xl mx-auto p-4">
@@ -35,12 +40,15 @@ export function HomePage() {
       {user && (
         <div className="fixed bottom-8 right-8">
           <Popover.Root>
-            <Popover.Trigger className="bg-accent p-3 rounded-full">
-              <MailIcon size={22} />
+            <Popover.Trigger className="bg-accent p-3 rounded-full relative">
+              <WebhookIcon size={22} />
+              {hasUnread &&
+                <span className="w-3 h-3 rounded-full rounded-full block bg-danger absolute right-0 top-0" />
+              }
             </Popover.Trigger>
             <Popover.Anchor />
             <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[500px] w-[320px] bg-bg'>
-              <Social />
+              <Social hasUnread={hasUnread} />
             </Popover.Content>
           </Popover.Root>
         </div>

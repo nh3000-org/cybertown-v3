@@ -45,5 +45,6 @@ export type DMsRes = {
     content: string
     createdAt: string
     from: User
+    isUnread: boolean
   } | null
 } 

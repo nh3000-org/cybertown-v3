@@ -10,6 +10,7 @@ type State = {
     expiredAt: string
   } | null
   dm: Record<string, Message[]>
+  dmUnread: Record<string, boolean>
   user: User | null
   messages: Message[]
   alerts: {
@@ -38,6 +39,8 @@ type Actions = {
   setCreateOrUpdateRoom: (open: boolean, room?: Room) => void
   clearDM: (participantID: number) => void
   setDM: (participantID: number, messages: Message[]) => void
+  setDMUnread: (dmUnread: Record<string, boolean>) => void
+  setDMReadForParticipant: (participantID: number) => void
 
   // broadcast events
   addMsg: (event: NewMsgBroadcastEvent) => void
@@ -54,6 +57,8 @@ export const useAppStore = create<State & Actions>()(
     user: null,
     messages: [],
     dm: {},
+    dmUnread: {},
+    hasUnreadDM: false,
     alerts: {
       login: false,
       logout: false,
@@ -81,6 +86,14 @@ export const useAppStore = create<State & Actions>()(
       state.toast = { open, content }
     }),
 
+    setDMUnread: (dmUnread) => set((state) => {
+      state.dmUnread = dmUnread
+    }),
+
+    setDMReadForParticipant: (participantID: number) => set((state) => {
+      state.dmUnread[participantID] = false
+    }),
+
     setCreateOrUpdateRoom: (open, room) => set((state) => {
       if (open && !state.user) {
         state.alerts['login'] = true
@@ -101,6 +114,9 @@ export const useAppStore = create<State & Actions>()(
           state.dm[id] = []
         }
         state.dm[id].push(event.data)
+        if (event.data.from.id !== state.user?.id) {
+          state.dmUnread[id] = true
+        }
       }),
 
     editMsg: (event) => set((state) => {

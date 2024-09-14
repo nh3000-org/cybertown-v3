@@ -63,6 +63,14 @@ export const api = {
     return data.msg
   },
 
+  async updateDM(participantID: number) {
+    const url = config.apiURL + `/dms/${participantID}`
+    const data = await fetchWrapper<"msg", string>(url, {
+      method: 'PUT',
+    })
+    return data.msg
+  },
+
   async getRelations(relation: string) {
     const url = config.apiURL + `/relations?relation=${relation}`
     const data = await fetchWrapper<"users", RelationRes[]>(url)

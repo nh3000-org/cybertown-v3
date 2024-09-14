@@ -384,6 +384,26 @@ func (app *application) getDMsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (app *application) updateDMsHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("participantID")
+	pID, err := strconv.Atoi(id)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+	u, ok := r.Context().Value("user").(*t.User)
+	if !ok {
+		unauthRequest(w, nil)
+		return
+	}
+	err = app.repo.UpdateDMs(context.Background(), u.ID, pID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	msgResponse(w, "ok")
+}
+
 func (app *application) getMessagesHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("participantID")
 	pID, err := strconv.Atoi(id)

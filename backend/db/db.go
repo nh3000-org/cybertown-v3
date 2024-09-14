@@ -538,7 +538,8 @@ func (r *Repo) GetDMs(ctx context.Context, userID int) ([]*t.DMResponse, error) 
 	SELECT * FROM (
    SELECT dp1.dm_id, u.id, u.username, u.avatar, 
 	  	(SELECT json_build_object('content', m.content, 'isDeleted', m.is_deleted, 'createdAt', m.created_at,  'from', 
-	  		json_build_object('id', u.id, 'username', u.username, 'avatar', u.avatar)) 
+	  		json_build_object('id', u.id, 'username', u.username, 'avatar', u.avatar),
+				'isUnread', (dp1.last_read_at IS NULL OR dp1.last_read_at < m.created_at) AND m."from" != $1) 
 	  		FROM messages m JOIN users u ON u.id = m."from" 
 	  		WHERE m.dm_id = dp1.dm_id 
 	  		ORDER BY m.created_at DESC LIMIT 1
@@ -581,6 +582,19 @@ func (r *Repo) GetDMs(ctx context.Context, userID int) ([]*t.DMResponse, error) 
 		return nil, err
 	}
 	return dms, nil
+}
+
+func (r *Repo) UpdateDMs(ctx context.Context, userID int, participantID int) error {
+	query := `
+	 UPDATE dm_participants dp SET last_read_at = NOW()
+	 WHERE dm_id in (
+		SELECT dp1.dm_id from dm_participants dp1 
+		JOIN dm_participants dp2 ON dp2.dm_id = dp1.dm_id
+		WHERE dp1.user_id = $1 AND dp2.user_id = $2
+	 ) AND dp.user_id = $1
+	`
+	_, err := r.pool.Exec(ctx, query, userID, participantID)
+	return err
 }
 
 func (r *Repo) GetMessages(ctx context.Context, userID, participantID int) ([]*t.Message, error) {

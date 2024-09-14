@@ -5,14 +5,17 @@ import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { Mail as MessagesIcon } from 'lucide-react'
 import { cn, formatDate } from '@/lib/utils'
 import { Profile } from '@/components/Profile'
+import { useAppStore } from '@/stores/appStore'
 
 type Props = {
   setDM: (dm: User | null) => void
 }
 
 export const DMList = React.forwardRef((props: Props, _ref) => {
-  const { data: dms, isLoading } = useDMs()
+  const user = useAppStore().user
+  const { data: dms, isLoading } = useDMs(user !== null)
   const [open, setOpen] = useState<Record<number, boolean>>({})
+  const dmUnread = useAppStore().dmUnread
 
   if (isLoading) {
     return (
@@ -56,9 +59,14 @@ export const DMList = React.forwardRef((props: Props, _ref) => {
                   )}
                 </div>
                 {dm.lastMessage && (
-                  <p className={cn("text-muted text-sm ellipsis", {
-                    "italic": dm.lastMessage.isDeleted
-                  })}>{dm.lastMessage.isDeleted ? 'This message has been deleted' : dm.lastMessage.content}</p>
+                  <div className="flex items-center">
+                    <p className={cn("text-muted text-sm ellipsis flex-1", {
+                      "italic": dm.lastMessage.isDeleted
+                    })}>{dm.lastMessage.isDeleted ? 'This message has been deleted' : dm.lastMessage.content}</p>
+                    {dmUnread[dm.user.id] && (
+                      <span className="w-2 h-2 rounded-full rounded-full block bg-danger" />
+                    )}
+                  </div>
                 )}
               </div>
             </div>

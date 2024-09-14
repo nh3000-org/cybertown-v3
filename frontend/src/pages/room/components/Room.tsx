@@ -4,16 +4,20 @@ import { Participants } from "./Participants";
 import { useState } from "react";
 import { User } from "@/types";
 import * as Tabs from '@radix-ui/react-tabs';
-import { Settings as SettingsIcon, Mail as MessagesIcon, SquarePen as PencilIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Mail as MessagesIcon, SquarePen as PencilIcon, Webhook as WebhookIcon } from 'lucide-react';
 import { WelcomeMessage } from "./WelcomeMessage";
 import { useAppStore } from "@/stores/appStore";
 import { Status } from "./Status";
+import { useDMs } from "@/hooks/queries/useDMs";
+import { Social } from "@/components/social";
+import { Tooltip } from "@/components/Tooltip";
 
 type Props = {
   roomID: number
 }
 
 export function Room(props: Props) {
+  const dmUnread = useAppStore().dmUnread
   const { data: rooms, isLoading } = useRooms()
   const room = rooms?.find(room => room.id === props.roomID)
   const [pm, setPM] = useState<User | null>(null)
@@ -22,6 +26,8 @@ export function Room(props: Props) {
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const messages = useAppStore().messages
   const isHost = room?.settings.host.id === user?.id
+  useDMs(user !== null)
+  const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
 
   if (!room) {
     return
@@ -46,17 +52,30 @@ export function Room(props: Props) {
       <div className="border border-border rounded-md bg-bg overflow-hidden">
         <Tabs.Root className="flex flex-col h-full" value={tab} onValueChange={setTab}>
           <Tabs.List className="flex justify-between border-b border-border p-1">
-            <Tabs.Trigger value="messages" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center">
-              <MessagesIcon size={18} className="text-muted" />
-              <p>Messages</p>
+            <Tabs.Trigger value="messages" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
+              <Tooltip title="Messages">
+                <MessagesIcon size={18} className="text-muted" />
+              </Tooltip>
             </Tabs.Trigger>
-            <Tabs.Trigger value="settings" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center">
-              <SettingsIcon size={18} className="text-muted" />
-              <p>Settings</p>
+            <Tabs.Trigger value="social" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
+              <Tooltip title="Social">
+                <WebhookIcon size={18} className="text-muted" />
+                {hasUnread && <span className="w-2 h-2 rounded-full rounded-full block bg-danger" />}
+              </Tooltip>
+            </Tabs.Trigger>
+            <Tabs.Trigger value="settings" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
+              <Tooltip title="Settings">
+                <SettingsIcon size={18} className="text-muted" />
+              </Tooltip>
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content asChild value="messages">
             {room && <Messages pm={pm} setPM={setPM} room={room} messages={messages} dm={null} />}
+          </Tabs.Content>
+          <Tabs.Content asChild value="social">
+            <div className="flex-1 h-full overflow-hidden">
+              <Social hasUnread={hasUnread} />
+            </div>
           </Tabs.Content>
           <Tabs.Content asChild value="settings">
             <div className="flex-1 p-4 focus:outline-none flex flex-col gap-6">

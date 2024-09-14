@@ -20,6 +20,7 @@ func (app *application) router() http.Handler {
 	router.Handle("DELETE /follow", ensureAuthed(http.HandlerFunc(app.followHandler(false))))
 	router.Handle("GET /relations", ensureAuthed(http.HandlerFunc(app.getRelationsHandler)))
 	router.Handle("GET /dms", ensureAuthed(http.HandlerFunc(app.getDMsHandler)))
+	router.Handle("PUT /dms/{participantID}", ensureAuthed(http.HandlerFunc(app.updateDMsHandler)))
 	router.Handle("GET /messages/{participantID}", ensureAuthed(http.HandlerFunc(app.getMessagesHandler)))
 
 	v1 := http.NewServeMux()

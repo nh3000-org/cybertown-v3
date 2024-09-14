@@ -1,4 +1,5 @@
 import { Messages } from "@/components/messages";
+import { useUpdateDM } from "@/hooks/mutations/useUpdateDM";
 import { useMessages } from "@/hooks/queries/useMessages";
 import { useAppStore } from "@/stores/appStore";
 import { User } from "@/types"
@@ -13,8 +14,10 @@ type Props = {
 export function DM(props: Props) {
   const setDM = useAppStore().setDM
   const clearDM = useAppStore().clearDM
+  const setDMRead = useAppStore().setDMReadForParticipant
   const { data: prevMessages } = useMessages(props.user.id)
   const messages = useAppStore().dm[props.user.id] ?? []
+  const { mutate: updateDM } = useUpdateDM()
 
   useEffect(() => {
     if (prevMessages) {
@@ -25,6 +28,14 @@ export function DM(props: Props) {
       clearDM(props.user.id)
     }
   }, [prevMessages, props.user.id])
+
+  useEffect(() => {
+    const timeoutID = setTimeout(() => {
+      setDMRead(props.user.id)
+      updateDM(props.user.id)
+    }, 1500)
+    return () => clearTimeout(timeoutID)
+  }, [messages])
 
   return (
     <div className="flex flex-col h-full">
