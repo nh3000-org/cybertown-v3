@@ -44,7 +44,7 @@ export function RoomCard(props: Props) {
           </Popover.Trigger>
           <Popover.Anchor />
           <Popover.Portal>
-            <Popover.Content side='bottom' align='end' sideOffset={12} className='focus:outline-none rounded-lg p-6 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border'>
+            <Popover.Content side='bottom' align='end' sideOffset={12} className='focus:outline-none rounded-lg p-6 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border min-w-[150px]'>
               <div className="flex flex-col items-center justify-center gap-3 relative">
                 <p className="text-muted">Host</p>
                 <img src={room.settings.host.avatar} className="w-12 h-12 rounded-full" />

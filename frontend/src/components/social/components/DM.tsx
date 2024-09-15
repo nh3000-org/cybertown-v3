@@ -3,10 +3,9 @@ import { useMessages } from "@/hooks/queries/useMessages";
 import { useAppStore } from "@/stores/appStore";
 import { User } from "@/types"
 import { ChevronLeft as LeftIcon } from 'lucide-react';
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { MESSAGES_LIMIT, usePreviousMessages } from "../hooks/usePreviousMessages";
-import { Message } from "@/types/broadcast";
 
 type Props = {
   user: User
@@ -15,24 +14,32 @@ type Props = {
 
 export function DM(props: Props) {
   const clearDM = useAppStore().clearDM
+  const setDM = useAppStore().setDM
   const dmUnread = useAppStore().dmUnread
   const { data: initialMessages } = useMessages(props.user.id)
   const messages = useAppStore().dm[props.user.id] ?? []
-  const [previousMessages, setPreviousMessages] = useState<Message[]>([])
   const { ref: messagesStartRef, inView } = useInView()
   const { loading: isPrevMessagesLoading, fetchMessages } = usePreviousMessages(props.user.id)
 
+  const startID = initialMessages ? initialMessages[0].id : ''
+  const endID = initialMessages ? initialMessages[initialMessages.length - 1].id : ''
+  const startIdx = messages.findIndex(msg => msg.id === startID)
+  const endIdx = messages.findIndex(msg => msg.id === endID)
+
   useEffect(() => {
+    if (initialMessages) {
+      setDM(props.user.id, initialMessages)
+    }
     return function() {
       clearDM(props.user.id)
     }
-  }, [props.user.id])
+  }, [props.user.id, initialMessages])
 
   useEffect(() => {
-    if (inView && !isPrevMessagesLoading && initialMessages && initialMessages.length >= MESSAGES_LIMIT) {
-      fetchMessages(initialMessages[0].createdAt).then(messages => {
+    if (inView && !isPrevMessagesLoading && messages.length >= MESSAGES_LIMIT) {
+      fetchMessages(messages[0].createdAt).then(messages => {
         if (messages) {
-          setPreviousMessages(prev => [...messages, ...prev])
+          setDM(props.user.id, messages)
         }
       })
     }
@@ -55,14 +62,14 @@ export function DM(props: Props) {
       <Messages
         pm={null}
         setPM={() => { }}
-        messages={messages}
+        messages={endIdx === - 1 ? [] : messages.slice(endIdx + 1)}
         room={null}
         dm={props.user}
-        initialMessages={initialMessages}
+        initialMessages={startIdx === - 1 || endIdx === -1 ? [] : messages.slice(startIdx, endIdx + 1)}
         prevMsg={{
           isLoading: isPrevMessagesLoading,
           ref: messagesStartRef,
-          messages: previousMessages,
+          messages: startIdx === - 1 ? [] : messages.slice(0, startIdx),
         }}
       />
     </div>

@@ -8,11 +8,12 @@ type Props = {
   open: boolean
   setOpen: (visibility: boolean) => void
   trigger: React.ReactNode
+  side?: "bottom" | "top" | "right" | "left"
   align?: "start" | "center" | "end"
 }
 
 export const EmojiPicker = React.forwardRef((props: Props, _ref: any) => {
-  const { trigger, align = "end" } = props
+  const { trigger, align = "end", side = "left" } = props
   const { data } = useEmoji()
 
   return (
@@ -22,7 +23,7 @@ export const EmojiPicker = React.forwardRef((props: Props, _ref: any) => {
       </Popover.Trigger>
       <Popover.Anchor />
       <Popover.Portal>
-        <Popover.Content side='left' align={align} onCloseAutoFocus={e => e.preventDefault()} className='focus:outline-none border border-border rounded-md'>
+        <Popover.Content side={side} align={align} onCloseAutoFocus={e => e.preventDefault()} className='focus:outline-none border border-border rounded-md'>
           <Picker data={data} onEmojiSelect={(data: any) => {
             props.onSelect(data.id, data.native)
           }} previewPosition="none" skinTonePosition="none" />

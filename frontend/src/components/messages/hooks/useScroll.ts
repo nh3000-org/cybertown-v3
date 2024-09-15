@@ -9,7 +9,7 @@ export function useScroll(messagesEndRef: RefObject<HTMLDivElement>, scrollPerce
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView()
     }
-  }, [initialMessages])
+  }, [initialMessages.length])
 
   useEffect(() => {
     if (!messages.length) {
@@ -20,5 +20,5 @@ export function useScroll(messagesEndRef: RefObject<HTMLDivElement>, scrollPerce
     if ((isFromMe || scrollPercent > 98) && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView()
     }
-  }, [messages])
+  }, [messages.length])
 }

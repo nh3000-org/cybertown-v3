@@ -6,7 +6,7 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { VerticalScrollbar } from "@/components/VerticalScrollbar"
 import { useAppStore } from '@/stores/appStore';
 import { ws } from '@/lib/ws';
-import { Message } from '@/components/messages/Message';
+import { Message } from '@/components/messages/message';
 import { RoomRes, User } from '@/types';
 import React from 'react';
 import { MentionParticipants } from './MentionParticipants';

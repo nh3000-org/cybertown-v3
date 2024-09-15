@@ -47,7 +47,7 @@ export function HomePage() {
               }
             </Popover.Trigger>
             <Popover.Anchor />
-            <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[500px] w-[320px] bg-bg'>
+            <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[560px] w-[380px] bg-bg'>
               <Social hasUnread={hasUnread} />
             </Popover.Content>
           </Popover.Root>
