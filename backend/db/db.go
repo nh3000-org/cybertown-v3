@@ -597,7 +597,11 @@ func (r *Repo) UpdateDMs(ctx context.Context, userID int, participantID int) err
 	return err
 }
 
-func (r *Repo) GetMessages(ctx context.Context, userID, participantID int) ([]*t.Message, error) {
+func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, cursor *time.Time) ([]*t.Message, error) {
+	var isCursored bool
+	if cursor != nil {
+		isCursored = true
+	}
 	query := `
 	  SELECT * FROM (
 			SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reply_to, 
@@ -607,14 +611,14 @@ func (r *Repo) GetMessages(ctx context.Context, userID, participantID int) ([]*t
 				SELECT dp1.dm_id from dm_participants dp1 
 				JOIN dm_participants dp2 ON dp2.dm_id = dp1.dm_id
 				WHERE dp1.user_id = $1 AND dp2.user_id = $2
-			)  ORDER BY created_at DESC LIMIT 50
+			) AND ($3 = FALSE OR m.created_at < $4) ORDER BY m.created_at DESC LIMIT 50
 	  ) ORDER BY created_at ASC;
 	`
-	rows, err := r.pool.Query(ctx, query, userID, participantID)
+	rows, err := r.pool.Query(ctx, query, userID, participantID, isCursored, cursor)
 	if err != nil {
 		return nil, err
 	}
-	var messages []*t.Message
+	messages := make([]*t.Message, 0)
 	for rows.Next() {
 		var msg t.Message
 		err := rows.Scan(&msg.ID, &msg.Content, &msg.IsEdited,

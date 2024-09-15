@@ -1,10 +1,12 @@
 import { Messages } from "@/components/messages";
-import { useUpdateDM } from "@/hooks/mutations/useUpdateDM";
 import { useMessages } from "@/hooks/queries/useMessages";
 import { useAppStore } from "@/stores/appStore";
 import { User } from "@/types"
 import { ChevronLeft as LeftIcon } from 'lucide-react';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import { MESSAGES_LIMIT, usePreviousMessages } from "../hooks/usePreviousMessages";
+import { Message } from "@/types/broadcast";
 
 type Props = {
   user: User
@@ -12,30 +14,29 @@ type Props = {
 }
 
 export function DM(props: Props) {
-  const setDM = useAppStore().setDM
   const clearDM = useAppStore().clearDM
-  const setDMRead = useAppStore().setDMReadForParticipant
-  const { data: prevMessages } = useMessages(props.user.id)
+  const dmUnread = useAppStore().dmUnread
+  const { data: initialMessages } = useMessages(props.user.id)
   const messages = useAppStore().dm[props.user.id] ?? []
-  const { mutate: updateDM } = useUpdateDM()
+  const [previousMessages, setPreviousMessages] = useState<Message[]>([])
+  const { ref: messagesStartRef, inView } = useInView()
+  const { loading: isPrevMessagesLoading, fetchMessages } = usePreviousMessages(props.user.id)
 
   useEffect(() => {
-    if (prevMessages) {
-      setDM(props.user.id, prevMessages)
-    }
-
     return function() {
       clearDM(props.user.id)
     }
-  }, [prevMessages, props.user.id])
+  }, [props.user.id])
 
   useEffect(() => {
-    const timeoutID = setTimeout(() => {
-      setDMRead(props.user.id)
-      updateDM(props.user.id)
-    }, 1500)
-    return () => clearTimeout(timeoutID)
-  }, [messages])
+    if (inView && !isPrevMessagesLoading && initialMessages && initialMessages.length >= MESSAGES_LIMIT) {
+      fetchMessages(initialMessages[0].createdAt).then(messages => {
+        if (messages) {
+          setPreviousMessages(prev => [...messages, ...prev])
+        }
+      })
+    }
+  }, [inView])
 
   return (
     <div className="flex flex-col h-full">
@@ -43,7 +44,12 @@ export function DM(props: Props) {
         <button className="focus:ring-0" onClick={() => props.setDM(null)}>
           <LeftIcon size={22} className="text-muted" />
         </button>
-        <img className="w-8 h-8 rounded-full mr-1" src={props.user.avatar} referrerPolicy="no-referrer" />
+        <div className="relative">
+          <img className="w-8 h-8 rounded-full mr-1" src={props.user.avatar} referrerPolicy="no-referrer" />
+          {dmUnread[props.user.id] && (
+            <span className="w-[10px] h-[10px] rounded-full rounded-full block bg-danger absolute right-[2px] top-0" />
+          )}
+        </div>
         <p>{props.user.username}</p>
       </div>
       <Messages
@@ -52,6 +58,12 @@ export function DM(props: Props) {
         messages={messages}
         room={null}
         dm={props.user}
+        initialMessages={initialMessages}
+        prevMsg={{
+          isLoading: isPrevMessagesLoading,
+          ref: messagesStartRef,
+          messages: previousMessages,
+        }}
       />
     </div>
   )

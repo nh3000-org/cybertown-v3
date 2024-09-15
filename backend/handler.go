@@ -411,16 +411,28 @@ func (app *application) getMessagesHandler(w http.ResponseWriter, r *http.Reques
 		badRequest(w, err)
 		return
 	}
+
+	var req struct {
+		Cursor *time.Time
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		badRequest(w, nil)
+		return
+	}
+
 	u, ok := r.Context().Value("user").(*t.User)
 	if !ok {
 		unauthRequest(w, nil)
 		return
 	}
-	messages, err := app.repo.GetMessages(context.Background(), u.ID, pID)
+
+	messages, err := app.repo.GetMessages(context.Background(), u.ID, pID, req.Cursor)
 	if err != nil {
 		serverError(w, err)
 		return
 	}
+
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"messages": messages,
 	})

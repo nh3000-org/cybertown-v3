@@ -27,19 +27,20 @@ export function useEmojiSearch(content: string) {
     }) : []
 
   useEffect(() => {
-    const words = content.split(" ")
-    const lastWord = words[words.length - 1]
-    const show = lastWord.startsWith(":") && lastWord.length >= 2
-
-    let query = ''
-    if (show) {
-      query += lastWord.substring(1)
-    }
-
-    setSearch({
-      show,
-      query,
-    })
+    const timeoutID = setTimeout(() => {
+      const words = content.split(" ")
+      const lastWord = words[words.length - 1]
+      const show = lastWord.startsWith(":") && lastWord.length >= 2
+      let query = ''
+      if (show) {
+        query += lastWord.substring(1)
+      }
+      setSearch({
+        show,
+        query,
+      })
+    }, 300)
+    return () => clearTimeout(timeoutID)
   }, [content])
 
   return {

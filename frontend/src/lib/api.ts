@@ -83,9 +83,12 @@ export const api = {
     return data.dms
   },
 
-  async getMessages(participantID: number) {
+  async getMessages(participantID: number, cursor?: string) {
     const url = config.apiURL + `/messages/${participantID}`
-    const data = await fetchWrapper<"messages", Message[]>(url)
+    const data = await fetchWrapper<"messages", Message[]>(url, {
+      method: "POST",
+      body: JSON.stringify({ cursor }),
+    })
     return data.messages
   },
 

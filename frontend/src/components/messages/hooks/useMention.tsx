@@ -23,31 +23,34 @@ export function useMention(content: string, room: RoomRes | null) {
       return
     }
 
-    const words = content.split(" ")
-    const lastWord = words[words.length - 1]
-    if (!lastWord) {
+    const timeoutID = setTimeout(() => {
+      const words = content.split(" ")
+      const lastWord = words[words.length - 1]
+      if (!lastWord) {
+        setSearch({
+          show: false,
+          query: '',
+        })
+        return
+      }
+      if (lastWord.endsWith('@')) {
+        setSearch({
+          query: '',
+          show: true,
+        })
+        return
+      }
+      const index = lastWord.lastIndexOf('@')
+      if (index === -1) {
+        return
+      }
+      const query = lastWord.substring(index + 1)
       setSearch({
-        show: false,
-        query: '',
-      })
-      return
-    }
-    if (lastWord.endsWith('@')) {
-      setSearch({
-        query: '',
+        query,
         show: true,
       })
-      return
-    }
-    const index = lastWord.lastIndexOf('@')
-    if (index === -1) {
-      return
-    }
-    const query = lastWord.substring(index + 1)
-    setSearch({
-      query,
-      show: true,
     })
+    return () => clearTimeout(timeoutID)
   }, [content])
 
   return {

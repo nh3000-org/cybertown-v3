@@ -17,18 +17,33 @@ import { SendMessage } from './SendMessage';
 import { Emoji, useEmojiSearch } from './hooks/useEmojiSearch';
 import { EmojiSearch } from './EmojiSearch';
 import { Message as TMessage } from '@/types/broadcast';
+import { LoadingIcon } from '@/pages/home/components/LoadingIcon';
+import { useScroll } from './hooks/useScroll';
+import { useReadMessage } from './hooks/useReadMessage';
+import { useScrollPercentage } from './hooks/useScrollPercentage';
 
 type Props = {
   pm: User | null
   setPM: (pm: User | null) => void
   room: RoomRes | null
   messages: TMessage[]
+
+  // when this component is used as "dm"
+  initialMessages?: TMessage[]
   dm: User | null
+  prevMsg: {
+    messages: TMessage[]
+    isLoading: boolean
+    ref: (node: Element | null) => void
+  } | null
 }
 
 export const Messages = React.forwardRef((props: Props, _ref) => {
-  const { messages } = props
+  const { initialMessages = [] } = props
+  const previousMessages = props.prevMsg?.messages ?? []
   const user = useAppStore().user
+  const messages = [...previousMessages, ...initialMessages, ...props.messages]
+  const messagesRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [editMsgID, setEditMsgID] = useState<string | undefined>(undefined)
@@ -38,6 +53,10 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
   const [content, setContent] = useState('')
   const { search, setSearch, mentionedParticipants } = useMention(content, props.room)
   const { search: emojiSearch, setSearch: setEmojiSearch, emojis } = useEmojiSearch(content)
+
+  const viewRef = useReadMessage(props.dm?.id, initialMessages, props.messages)
+  const scrollPercent = useScrollPercentage(messagesRef)
+  useScroll(messagesEndRef, scrollPercent, initialMessages, props.messages)
 
   function selectParticipant(participant: User) {
     setSearch({
@@ -69,29 +88,24 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
     setContent(value)
   }
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView()
-    }
-  }, [messages.length])
-
   // am now lazy to lift the state up and do it declaratively
   useEffect(() => {
     if (props.pm) {
       setEditMsgID(undefined)
-      if (textareaRef.current) {
-        textareaRef.current.value = ''
-      }
+      setContent('')
     }
   }, [props.pm])
 
   return (
     <div className="flex-1 flex flex-col bg-bg rounded-md overflow-hidden">
       <ScrollArea.Root className="overflow-hidden flex-1">
-        <ScrollArea.Viewport className={cn("w-full h-full pt-2", {
+        <ScrollArea.Viewport ref={messagesRef} className={cn("w-full h-full pt-2", {
           "pb-14": replyTo || props.pm,
           "pb-32": replyTo && props.pm,
         })}>
+          {props.prevMsg && <div ref={props.prevMsg.ref} className="min-h-1 flex items-center justify-center">
+            {props.prevMsg.isLoading && <LoadingIcon className='mt-2 text-accent/30 fill-accent' />}
+          </div>}
           {messages.map(message => {
             return (
               <Message
@@ -107,6 +121,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
               />
             )
           })}
+          <div className="min-h-1" ref={viewRef} />
           <div ref={messagesEndRef} />
         </ScrollArea.Viewport>
         <VerticalScrollbar />

@@ -14,7 +14,6 @@ export function useDMs(hasUser: boolean) {
           [curr.user.id]: curr.lastMessage?.isUnread ?? false
         }
       }, {}) as Record<string, boolean>
-      console.log(dmUnread)
       useAppStore.getState().setDMUnread(dmUnread)
     }
   })
