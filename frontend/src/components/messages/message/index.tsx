@@ -57,7 +57,7 @@ export function Message(props: Props) {
               open={emojiOpen}
               setOpen={setEmojiOpen}
               onSelect={id => {
-                ws.reactionToMsg(props.message.id, id, getParticipantID(props.message, user!))
+                ws.reactionToMsg(props.message.id, id, getParticipantID(props.message, user!), false)
                 setEmojiOpen(false)
               }}
               trigger={null}
@@ -66,7 +66,7 @@ export function Message(props: Props) {
         </div>
         {replyToMsg && <ReplyTo message={replyToMsg} isDM={props.dm !== null} />}
         <MessageContent message={message} />
-        {!message.isDeleted && <Reactions message={message} />}
+        {!message.isDeleted && <Reactions message={message} isDM={props.dm !== null} />}
       </div>
     </div>
   )

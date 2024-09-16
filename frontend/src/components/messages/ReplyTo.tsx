@@ -28,7 +28,7 @@ export function ReplyTo(props: Props) {
       <div className="flex-1 flex flex-col gap-1 text-sm overflow-x-hidden">
         <div className="flex items-center justify-between">
           <p className="text-muted">{replyToMsg.from.username}</p>
-          <button onClick={(e) => {
+          <button className="focus:ring-0" onClick={(e) => {
             props.setReplyTo(undefined)
             e.stopPropagation()
           }}>

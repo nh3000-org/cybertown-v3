@@ -61,7 +61,7 @@ export type ReactionToMsgEvent = {
   data: {
     id: string
     reaction: string
-    roomID: number
+    roomID?: number
     participantID?: number
   }
 }

@@ -28,7 +28,6 @@ class WS {
       console.log("socket connection closed", e.code)
     }
 
-
     socket.onmessage = (e: MessageEvent) => {
       try {
         const event: BroadcastEvent = JSON.parse(e.data)
@@ -55,9 +54,6 @@ class WS {
             useAppStore.getState().deleteMsg(event)
             break;
           case "REACTION_TO_MESSAGE_BROADCAST":
-            if (event.data.roomID !== this.roomID) {
-              return
-            }
             useAppStore.getState().reactionToMsg(event)
             break;
           case "CLEAR_CHAT_BROADCAST":
@@ -127,14 +123,14 @@ class WS {
     })
   }
 
-  reactionToMsg(id: string, reaction: string, participantID?: number) {
+  reactionToMsg(id: string, reaction: string, participantID?: number, isDM?: boolean) {
     this.sendClientEvent({
       name: 'REACTION_TO_MESSAGE',
       data: {
         id,
         reaction,
         participantID,
-        roomID: this.roomID!,
+        roomID: isDM ? undefined : this.roomID!,
       }
     })
   }

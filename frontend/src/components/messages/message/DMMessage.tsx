@@ -1,5 +1,5 @@
 import { MessageContent } from "./MessageContent"
-import { cn, getParticipantID, toHHMM } from "@/lib/utils"
+import { cn, toHHMM } from "@/lib/utils"
 import { useAppStore } from "@/stores/appStore"
 import { MessageOptions } from "./MessageOptions"
 import { Props } from '.'
@@ -8,6 +8,7 @@ import { EmojiPicker } from "@/components/EmojiPicker"
 import { ws } from "@/lib/ws"
 import { ReplyTo } from "./ReplyTo"
 import { SquarePenIcon as PencilIcon } from "lucide-react"
+import { Reactions } from "./Reactions"
 
 export function DMMessage(props: Props) {
   const user = useAppStore().user
@@ -15,6 +16,7 @@ export function DMMessage(props: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
   const isFromMe = user?.id === message.from.id
+  console.log(message.reactions)
 
   return (
     <div className={cn("px-4 py-1 py-2 flex flex-col group", {
@@ -37,13 +39,14 @@ export function DMMessage(props: Props) {
             open={emojiOpen}
             setOpen={setEmojiOpen}
             onSelect={id => {
-              ws.reactionToMsg(props.message.id, id, getParticipantID(props.message, user!))
+              ws.reactionToMsg(props.message.id, id, props.dm?.id, true)
               setEmojiOpen(false)
             }}
             trigger={null}
           />
         </div>
       </div>
+      {!message.isDeleted && <Reactions message={message} isDM={props.dm !== null} />}
       <div className={cn("flex gap-2 self-end mt-2", {
         "self-start": !isFromMe,
       })}>

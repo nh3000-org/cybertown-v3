@@ -21,8 +21,9 @@ export function DM(props: Props) {
   const { ref: messagesStartRef, inView } = useInView()
   const { loading: isPrevMessagesLoading, fetchMessages } = usePreviousMessages(props.user.id)
 
-  const startID = initialMessages ? initialMessages[0].id : ''
-  const endID = initialMessages ? initialMessages[initialMessages.length - 1].id : ''
+  const hasMessages = initialMessages?.length
+  const startID = hasMessages ? initialMessages[0].id : ''
+  const endID = hasMessages ? initialMessages[initialMessages.length - 1].id : ''
   const startIdx = messages.findIndex(msg => msg.id === startID)
   const endIdx = messages.findIndex(msg => msg.id === endID)
 
@@ -62,7 +63,7 @@ export function DM(props: Props) {
       <Messages
         pm={null}
         setPM={() => { }}
-        messages={endIdx === - 1 ? [] : messages.slice(endIdx + 1)}
+        messages={messages.slice(endIdx === -1 ? 0 : endIdx + 1)}
         room={null}
         dm={props.user}
         initialMessages={startIdx === - 1 || endIdx === -1 ? [] : messages.slice(startIdx, endIdx + 1)}

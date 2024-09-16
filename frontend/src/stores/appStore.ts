@@ -154,12 +154,22 @@ export const useAppStore = create<State & Actions>()(
     }),
 
     reactionToMsg: (event) => set((state) => {
+      let messages = []
+      if (event.data.roomID === ws.roomID) {
+        messages = state.messages
+      } else {
+        const id = getDMParticipant(event.data.from, event.data.participant!, state.user!)
+        messages = state.dm[id]
+      }
       const { id, reaction, from } = event.data
-      const index = state.messages.findIndex(msg => msg.id === id)
+      const index = messages.findIndex(msg => msg.id === id)
       if (index === -1) {
         return
       }
-      const reactions = state.messages[index].reactions
+      if (!messages[index].reactions) {
+        messages[index].reactions = {}
+      }
+      const reactions = messages[index].reactions
       if (!reactions[reaction]) {
         reactions[reaction] = {}
       }

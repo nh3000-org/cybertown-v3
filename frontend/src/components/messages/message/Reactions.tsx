@@ -6,6 +6,7 @@ import * as HoverCard from '@radix-ui/react-hover-card'
 
 type Props = {
   message: Message
+  isDM: boolean
 }
 
 export function Reactions(props: Props) {
@@ -19,7 +20,7 @@ export function Reactions(props: Props) {
           <HoverCard.Root key={reaction}>
             <HoverCard.Trigger asChild>
               <button key={reaction} className='text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md' onClick={() => {
-                ws.reactionToMsg(props.message.id, reaction, getParticipantID(props.message, user!))
+                ws.reactionToMsg(props.message.id, reaction, getParticipantID(props.message, user!), props.isDM)
               }}>
                 <em-emoji id={reaction}></em-emoji>
                 <span className='font-semibold'>{Object.keys(userMap).length}</span>

@@ -367,11 +367,12 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 		return
 	}
 
+	user := s.participants[s.conns[conn]].User
 	d := map[string]any{
 		"id":       data.ID,
 		"roomID":   data.RoomID,
 		"reaction": data.Reaction,
-		"from":     s.participants[s.conns[conn]].User,
+		"from":     user,
 	}
 	event := t.Event{
 		Name: "REACTION_TO_MESSAGE_BROADCAST",
@@ -381,10 +382,18 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
 		d["roomID"] = data.RoomID
 	}
-	if msgType == t.RoomMsg || msgType == t.PrivateRoomMsg {
-		s.broadcastRoomEvent(*data.RoomID, &event)
+	if msgType == t.DMMsg {
+		d["participant"] = map[string]any{
+			"id": *data.ParticipantID,
+		}
 	}
-	// TODO: handle dms
+
+	if msgType == t.RoomMsg {
+		s.broadcastRoomEvent(*data.RoomID, &event)
+	} else {
+		pIDs := []int{user.ID, *data.ParticipantID}
+		s.broadcastMsgEvent(pIDs, &event)
+	}
 }
 
 func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {

@@ -128,9 +128,10 @@ export type DeleteMessage = {
 
 export type ReactionToMessage = {
   id: string
-  roomID: number
   from: User
   reaction: string
+  roomID?: number
+  participant: User
 }
 
 type RoomAction = {
