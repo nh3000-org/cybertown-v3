@@ -10,7 +10,7 @@ class WS {
   private static instance: WS
   roomID: number | null = null
 
-  public static getInstance(): WS {
+  static getInstance(): WS {
     if (!WS.instance) {
       WS.instance = new WS()
     }
@@ -213,6 +213,10 @@ class WS {
 
   sendClientEvent(event: ClientEvent) {
     this.socket.send(JSON.stringify(event))
+  }
+
+  close() {
+    this.socket.close()
   }
 }
 

@@ -9,6 +9,7 @@ type State = {
   isKicked: {
     expiredAt: string
   } | null
+  joinedAnotherRoom: boolean
   dm: Record<string, Message[]>
   dmUnread: Record<string, boolean>
   user: User | null
@@ -37,8 +38,11 @@ type Actions = {
   clearMessages: () => void
   setToast: (open: boolean, content?: State['toast']['content']) => void
   setCreateOrUpdateRoom: (open: boolean, room?: Room) => void
-  clearDM: (participantID: number) => void
+  setJoinedAnotherRoom: (isJoined: boolean) => void
+
+  // dm
   setDM: (participantID: number, messages: Message[]) => void
+  clearDM: (participantID: number) => void
   setDMUnread: (dmUnread: Record<string, boolean>) => void
   setDMReadForParticipant: (participantID: number) => void
 
@@ -55,6 +59,7 @@ export const useAppStore = create<State & Actions>()(
   immer((set) => ({
     isKicked: null,
     user: null,
+    joinedAnotherRoom: false,
     messages: [],
     dm: {},
     dmUnread: {},
@@ -72,6 +77,10 @@ export const useAppStore = create<State & Actions>()(
 
     setUser: (user) => set((state) => {
       state.user = user
+    }),
+
+    setJoinedAnotherRoom: (isJoined) => set((state) => {
+      state.joinedAnotherRoom = isJoined
     }),
 
     setAlert: (alert, visibility) => set((state) => {

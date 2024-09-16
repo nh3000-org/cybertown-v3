@@ -1,7 +1,7 @@
 import { APIError, secondsToHHMMSS, getGoogleOAuthURL } from "@/lib/utils"
 import { User } from "@/types"
 import { Link } from "react-router-dom"
-import { Ban as BanIcon, Key as KeyIcon, IceCreamCone as ConeIcon, BatteryFull as FullIcon } from 'lucide-react';
+import { Ban as BanIcon, Key as KeyIcon, IceCreamCone as ConeIcon, BatteryFull as FullIcon, TabletSmartphone as RoomIcon } from 'lucide-react';
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -10,10 +10,11 @@ type Props = {
   isKicked: {
     expiredAt: string
   } | null
+  joinedAnotherRoom: boolean
 }
 
 export function RoomError(props: Props) {
-  const { error, isKicked, user } = props
+  const { error, isKicked, user, joinedAnotherRoom } = props
 
   if (!user) {
     return <Error status={401} />
@@ -32,6 +33,10 @@ export function RoomError(props: Props) {
     return <Kicked
       expiredAt={errors.expiredAt ?? isKicked?.expiredAt ?? ''}
     />
+  }
+
+  if (joinedAnotherRoom) {
+    return <Error status={429} />
   }
 
   return null
@@ -54,6 +59,11 @@ export function Error(props: { status: number }) {
       title: "No spots left in this room",
       desc: "Return to home page and explore other rooms",
       icon: <FullIcon className="stroke-yellow-500 mb-2" />,
+    },
+    429: {
+      title: "Room Disconnected",
+      desc: "You've joined a new room in another tab.",
+      icon: <RoomIcon className="stroke-orange-500 mb-2" />,
     }
   }
 

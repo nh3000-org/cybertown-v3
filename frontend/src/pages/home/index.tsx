@@ -6,6 +6,8 @@ import { Webhook as WebhookIcon } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover'
 import { Social } from '@/components/social';
 import { useDMs } from '@/hooks/queries/useDMs';
+import { useEffect } from 'react';
+import { bc } from '@/lib/bc';
 
 export function HomePage() {
   const user = useAppStore().user
@@ -16,6 +18,10 @@ export function HomePage() {
 
   useDMs(user !== null)
   const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
+
+  useEffect(() => {
+    bc.sendMessage('VISITED_HOMEPAGE')
+  }, [])
 
   return (
     <main className="max-w-7xl mx-auto p-4">

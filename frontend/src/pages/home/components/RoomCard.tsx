@@ -1,9 +1,7 @@
 import { RoomRes } from '@/types'
-import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/appStore'
 import * as Popover from '@radix-ui/react-popover';
 import { Info as InfoIcon, SquarePen as PencilIcon, Ban as BanIcon } from 'lucide-react'
-import { formatRelative } from 'date-fns'
 import { Profile } from '@/components/Profile';
 import { useState } from 'react';
 import { cn, formatDate } from '@/lib/utils';
@@ -17,7 +15,6 @@ export function RoomCard(props: Props) {
   const setAlert = useAppStore().setAlert
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const { room } = props
-  const navigate = useNavigate()
   const [open, setOpen] = useState<Record<number, boolean>>({})
   const isRoomFull = room.participants.length >= room.maxParticipants
 
@@ -31,7 +28,7 @@ export function RoomCard(props: Props) {
       setAlert('login', true)
       return
     }
-    navigate(`/room/${roomID}`)
+    window.open(`${window.location.origin}/room/${roomID}`)
   }
 
   return (
