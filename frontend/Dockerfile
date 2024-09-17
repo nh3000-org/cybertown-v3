@@ -7,9 +7,7 @@ COPY . .
 RUN npm run build
 
 # serve stage
-FROM caddy:alpine as serve-stage
+FROM caddy:2.8.4 as serve-stage
 WORKDIR /app
-COPY --from=build-stage /app/dist /app
-COPY Caddyfile /app
-EXPOSE 5173
+COPY --from=build-stage /app/dist /var/www/html
 CMD ["caddy", "run"]
