@@ -23,11 +23,11 @@ jobs:
       with:
         context: ./backend
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/cybertown-backend:latest
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
         context: ./frontend
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/cybertown-frontend:latest
