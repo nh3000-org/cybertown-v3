@@ -1,4 +1,3 @@
-import { useRelation } from '@/hooks/queries/useRelation';
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useState } from 'react';
 import { RelationList } from './RelationList';

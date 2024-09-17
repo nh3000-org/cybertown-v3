@@ -1,0 +1,26 @@
+services:
+  backend:
+    container_name: cybertown-backend
+    build: ./backend
+    ports:
+      - 6969:6969
+    volumes:
+      - ./backend/.env:/app/.env:ro
+    restart: always
+  frontend:
+    container_name: cybertown-frontend
+    build: ./frontend
+    ports:
+      - 5173:5173
+  db:
+    image: postgres:16
+    container_name: cybertown-db
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: cybertown
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./backend/db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432

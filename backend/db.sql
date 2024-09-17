@@ -1,5 +1,3 @@
-CREATE DATABASE cybertown;
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
@@ -41,24 +39,24 @@ CREATE TABLE IF NOT EXISTS room_kicks (
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE follows (
+CREATE TABLE IF NOT EXISTS follows (
   follower_id INT REFERENCES users(id) ON DELETE CASCADE,
   followee_id INT REFERENCES users(id) ON DELETE CASCADE,
   PRIMARY KEY (follower_id, followee_id)
 );
 
-CREATE TABLE dms (
+CREATE TABLE IF NOT EXISTS dms (
   id SERIAL PRIMARY KEY
 ); 
 
-CREATE TABLE dm_participants (
+CREATE TABLE IF NOT EXISTS dm_participants (
   dm_id INT REFERENCES dms(id) ON DELETE CASCADE,
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
   last_read_at TIMESTAMP WITHOUT TIME ZONE,
   PRIMARY KEY (dm_id, user_id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   dm_id INT REFERENCES dms(id) ON DELETE CASCADE,
   id VARCHAR(64) NOT NULL UNIQUE PRIMARY KEY,
   "from" INT REFERENCES users(id) ON DELETE CASCADE,

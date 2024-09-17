@@ -50,7 +50,7 @@ func main() {
 		Handler: app.enableCORS(app.router()),
 	}
 
-	go app.ss.populateRooms()
+	app.ss.populateRooms()
 	go app.deleteInactiveRooms(context.Background())
 
 	log.Println("server starting at port 6969")

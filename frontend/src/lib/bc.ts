@@ -1,5 +1,4 @@
 import { config } from "@/config"
-import { ws } from "./ws"
 import { useAppStore } from "@/stores/appStore"
 
 class BC {
