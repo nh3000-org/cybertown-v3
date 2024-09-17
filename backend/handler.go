@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"nhooyr.io/websocket"
 )
 
 func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +150,11 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 			"roomID": roomID,
 		},
 	})
+
+	app.ss.rooms[roomID] = &socketRoom{
+		lastActivity: time.Now().UTC(),
+		conns:        make(map[*websocket.Conn]struct{}),
+	}
 
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"roomID": roomID,

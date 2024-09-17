@@ -25,7 +25,7 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/cybertown-backend:latest
 
-    - name: Build and push frontend image
+    - name: Build and push caddy image
       uses: docker/build-push-action@v5
       with:
         context: ./frontend
