@@ -5,6 +5,7 @@ import (
 	"backend/service"
 	"backend/types"
 	"backend/utils"
+	"context"
 	"log"
 	"net/http"
 
@@ -48,6 +49,9 @@ func main() {
 		Addr:    ":6969",
 		Handler: app.enableCORS(app.router()),
 	}
+
+	go app.ss.populateRooms()
+	go app.deleteInactiveRooms(context.Background())
 
 	log.Println("server starting at port 6969")
 	if err := server.ListenAndServe(); err != nil {

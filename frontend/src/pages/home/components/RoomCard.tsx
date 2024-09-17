@@ -16,7 +16,7 @@ export function RoomCard(props: Props) {
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const { room } = props
   const [open, setOpen] = useState<Record<number, boolean>>({})
-  const isRoomFull = room.participants.length >= room.maxParticipants
+  const isRoomFull = room.maxParticipants !== -1 && room.participants.length >= room.maxParticipants
 
   const style = {
     width: room.maxParticipants > 3 ? 58 : 96,

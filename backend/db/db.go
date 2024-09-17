@@ -43,6 +43,14 @@ func NewPool(url string) *pgxpool.Pool {
 	return p
 }
 
+func (r *Repo) DeleteRooms(ctx context.Context, roomIDs []int) error {
+	query := `
+		DELETE FROM rooms WHERE id = any($1);
+	`
+	_, err := r.pool.Exec(ctx, query, roomIDs)
+	return err
+}
+
 func (r *Repo) CreateUser(ctx context.Context, u *t.GoogleUserInfo) (int, error) {
 	query := `
 	  INSERT INTO users(oauth_id, username, email, avatar)

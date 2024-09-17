@@ -35,6 +35,7 @@ class WS {
         switch (event.name) {
           case "JOINED_ROOM_BROADCAST":
           case "LEFT_ROOM_BROADCAST":
+          case "ROOMS_DELETED_BROADCAST":
           case "NEW_ROOM_BROADCAST":
           case "UPDATE_ROOM_BROADCAST":
           case "ASSIGN_ROLE_BROADCAST":

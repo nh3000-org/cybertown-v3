@@ -201,7 +201,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	participants := app.ss.getParticipantsInRoom(room.ID)
-	if len(participants) >= room.MaxParticipants {
+	if room.MaxParticipants != -1 && len(participants) >= room.MaxParticipants {
 		badRequest(w, err)
 		return
 	}

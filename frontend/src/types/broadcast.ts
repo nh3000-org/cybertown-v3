@@ -3,6 +3,7 @@ import { RoomRole, User } from '@/types'
 export type BroadcastEvent =
   JoinedRoomBroadcastEvent |
   LeftRoomBroadcastEvent |
+  RoomsDeletedBroadcastEvent |
   NewRoomBroadcastEvent |
   UpdateRoomBroadcastEvent |
   NewMsgBroadcastEvent |
@@ -28,6 +29,13 @@ export type LeftRoomBroadcastEvent = {
   data: {
     roomID: number
     user: User
+  }
+}
+
+export type RoomsDeletedBroadcastEvent = {
+  name: "ROOMS_DELETED_BROADCAST"
+  data: {
+    roomIDs: number[]
   }
 }
 

@@ -18,10 +18,15 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
+type socketRoom struct {
+	conns        map[*websocket.Conn]struct{}
+	lastActivity time.Time
+}
+
 type socketServer struct {
 	conns        map[*websocket.Conn]int
 	participants map[int]*t.Participant
-	rooms        map[int]map[*websocket.Conn]struct{}
+	rooms        map[int]*socketRoom
 	repo         *db.Repo
 	emojis       map[string]struct{}
 	svc          *service.Service
@@ -30,7 +35,7 @@ type socketServer struct {
 func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
 		conns:        make(map[*websocket.Conn]int),
-		rooms:        make(map[int]map[*websocket.Conn]struct{}),
+		rooms:        make(map[int]*socketRoom),
 		participants: make(map[int]*t.Participant),
 		emojis:       emojis,
 		repo:         repo,
@@ -58,7 +63,7 @@ func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
 
 func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
 	if _, ok := s.rooms[roomID]; ok {
-		_, ok := s.rooms[roomID][conn]
+		_, ok := s.rooms[roomID].conns[conn]
 		return ok
 	}
 	return false
@@ -66,9 +71,13 @@ func (s *socketServer) isInRoom(conn *websocket.Conn, roomID int) bool {
 
 func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 	if _, ok := s.rooms[roomID]; !ok {
-		s.rooms[roomID] = make(map[*websocket.Conn]struct{})
+		r := &socketRoom{
+			conns:        make(map[*websocket.Conn]struct{}),
+			lastActivity: time.Now().UTC(),
+		}
+		s.rooms[roomID] = r
 	}
-	s.rooms[roomID][conn] = struct{}{}
+	s.rooms[roomID].conns[conn] = struct{}{}
 	s.broadcastEvent(&t.Event{
 		Name: "JOINED_ROOM_BROADCAST",
 		Data: map[string]any{
@@ -76,10 +85,11 @@ func (s *socketServer) joinRoom(conn *websocket.Conn, roomID int) {
 			"user":   s.participants[s.conns[conn]].User,
 		},
 	})
+	s.rooms[roomID].lastActivity = time.Now().UTC()
 }
 
 func (s *socketServer) leaveRoom(conn *websocket.Conn, user *t.User, roomID int) {
-	delete(s.rooms[roomID], conn)
+	delete(s.rooms[roomID].conns, conn)
 	s.broadcastEvent(&t.Event{
 		Name: "LEFT_ROOM_BROADCAST",
 		Data: map[string]any{
@@ -87,6 +97,7 @@ func (s *socketServer) leaveRoom(conn *websocket.Conn, user *t.User, roomID int)
 			"user":   user,
 		},
 	})
+	s.rooms[roomID].lastActivity = time.Now().UTC()
 }
 
 func (s *socketServer) broadcastEvent(event *t.Event) {
@@ -104,13 +115,13 @@ func (s *socketServer) broadcastMsgEvent(pIDs []int, event *t.Event) {
 }
 
 func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
-	conns, ok := s.rooms[roomID]
+	r, ok := s.rooms[roomID]
 	if !ok {
 		log.Printf("broadcast to room failed, room not found: %d", roomID)
 		return
 	}
 
-	for conn := range conns {
+	for conn := range r.conns {
 		utils.WriteEvent(conn, event)
 	}
 }
@@ -118,7 +129,7 @@ func (s *socketServer) broadcastRoomEvent(roomID int, event *t.Event) {
 func (s *socketServer) getParticipantsInRoom(roomID int) []*t.Participant {
 	participants := make([]*t.Participant, 0)
 	if _, ok := s.rooms[roomID]; ok {
-		for conn := range s.rooms[roomID] {
+		for conn := range s.rooms[roomID].conns {
 			if pID, ok := s.conns[conn]; ok {
 				participants = append(participants, s.participants[pID])
 			}
@@ -139,7 +150,7 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte) (int, err
 		return 0, err
 	}
 
-	if len(s.rooms[data.RoomID]) >= r.MaxParticipants {
+	if r.MaxParticipants != -1 && len(s.rooms[data.RoomID].conns) >= r.MaxParticipants {
 		return 0, errors.New("max participants limit reached")
 	}
 
@@ -253,7 +264,7 @@ func (s *socketServer) participantsInRoom(conn *websocket.Conn, roomID int, part
 	if !ok {
 		return false
 	}
-	for conn := range room {
+	for conn := range room.conns {
 		if s.conns[conn] == *participantID {
 			return true
 		}
@@ -733,6 +744,20 @@ func (s *socketServer) deleteMessageHandler(conn *websocket.Conn, b []byte) {
 		pIDs := []int{u.ID, *data.ParticipantID}
 		s.broadcastMsgEvent(pIDs, &event)
 	}
+}
+
+func (s *socketServer) populateRooms() error {
+	rooms, err := s.repo.GetRooms(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, r := range rooms {
+		s.rooms[r.ID] = &socketRoom{
+			lastActivity: time.Now().UTC(),
+			conns:        make(map[*websocket.Conn]struct{}),
+		}
+	}
+	return nil
 }
 
 func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
