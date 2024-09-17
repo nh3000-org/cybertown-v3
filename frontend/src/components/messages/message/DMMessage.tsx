@@ -16,7 +16,6 @@ export function DMMessage(props: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const replyToMsg = messages.find(msg => message.replyTo && message.replyTo === msg.id)
   const isFromMe = user?.id === message.from.id
-  console.log(message.reactions)
 
   return (
     <div className={cn("px-4 py-1 py-2 flex flex-col group", {

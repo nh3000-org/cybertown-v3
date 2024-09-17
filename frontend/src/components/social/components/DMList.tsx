@@ -13,7 +13,7 @@ type Props = {
 
 export const DMList = React.forwardRef((props: Props, _ref) => {
   const user = useAppStore().user
-  const { data: dms, isLoading } = useDMs(user !== null)
+  const { data: dms, isLoading } = useDMs(Boolean(user))
   const [open, setOpen] = useState<Record<number, boolean>>({})
   const dmUnread = useAppStore().dmUnread
 

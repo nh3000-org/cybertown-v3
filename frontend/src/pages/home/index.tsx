@@ -16,7 +16,7 @@ export function HomePage() {
   const setOpen = useAppStore().setCreateOrUpdateRoom
   const { data: rooms } = useRooms()
 
-  useDMs(user !== null)
+  useDMs(Boolean(user))
   const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
 
   useEffect(() => {

@@ -1,12 +1,14 @@
-import { APIError, secondsToHHMMSS, getGoogleOAuthURL } from "@/lib/utils"
+import { APIError, getGoogleOAuthURL } from "@/lib/utils"
 import { User } from "@/types"
 import { Link } from "react-router-dom"
-import { Ban as BanIcon, Key as KeyIcon, IceCreamCone as ConeIcon, BatteryFull as FullIcon, TabletSmartphone as RoomIcon } from 'lucide-react';
-import { useEffect, useState } from "react";
+import { DoorOpen as DoorOpenIcon, DoorClosed as BanIcon, BatteryFull as FullIcon, TabletSmartphone as RoomIcon, UserX as UserIcon } from 'lucide-react';
+import { useEffect } from "react";
+import { ws } from "@/lib/ws";
+import { format } from 'date-fns'
 
 type Props = {
   error: APIError | undefined
-  user: User | null
+  user: User | null | undefined
   isKicked: {
     expiredAt: string
   } | null
@@ -15,6 +17,10 @@ type Props = {
 
 export function RoomError(props: Props) {
   const { error, isKicked, user, joinedAnotherRoom } = props
+
+  useEffect(() => {
+    ws.close()
+  }, [])
 
   if (!user) {
     return <Error status={401} />
@@ -46,24 +52,24 @@ export function RoomError(props: Props) {
 export function Error(props: { status: number }) {
   const contentMap: Record<number, Record<string, any>> = {
     404: {
-      title: "Hey, this room doesn't exist",
-      desc: 'Return to home page and explore other rooms.',
-      icon: <ConeIcon className="stroke-pink-500 mb-2" />,
+      title: "This room can't be found",
+      desc: "The room you're looking for doesn't seem to exist",
+      icon: <DoorOpenIcon className="stroke-pink-500 mb-2 h-12 w-12" />,
     },
     401: {
       title: "Log in to join the room",
       desc: "You'll be redirected to google to login",
-      icon: <KeyIcon className="stroke-accent mb-2" />,
+      icon: <UserIcon className="stroke-danger mb-2 h-12 w-12" />,
     },
     400: {
-      title: "No spots left in this room",
-      desc: "Return to home page and explore other rooms",
-      icon: <FullIcon className="stroke-yellow-500 mb-2" />,
+      title: "Room is full",
+      desc: "All the spots are occupied by other participants",
+      icon: <FullIcon className="stroke-yellow-500 mb-2 h-12 w-12" />,
     },
     429: {
-      title: "Room Disconnected",
-      desc: "You've joined a new room in another tab.",
-      icon: <RoomIcon className="stroke-orange-500 mb-2" />,
+      title: "Room disconnected",
+      desc: "You've joined a room in another tab.",
+      icon: <RoomIcon className="stroke-orange-500 mb-2 h-12 w-12" />,
     }
   }
 
@@ -75,9 +81,11 @@ export function Error(props: { status: number }) {
         {content.icon}
         <h1 className="text-4xl font-bold mb-3">{content.title}</h1>
         <p className="text-muted mb-5">{content.desc}</p>
-        <Link to={props.status === 401 ? getGoogleOAuthURL() : '/'} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
-          {props.status === 401 ? 'Login' : 'Go to Home'}
-        </Link>
+        {props.status === 401 && (
+          <Link to={getGoogleOAuthURL()} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
+            Login
+          </Link>
+        )}
       </div>
     </main>
   )
@@ -86,38 +94,19 @@ export function Error(props: { status: number }) {
 export function Kicked(props: {
   expiredAt: string
 }) {
-  const { expiredAt } = props
-  const [timeLeft, setTimeLeft] = useState(-1)
-  const endTime = new Date(expiredAt).getTime()
-
-  useEffect(() => {
-    function updateTimer() {
-      const diff = endTime - new Date().getTime()
-      if (diff > 0) {
-        setTimeLeft(diff / 1000)
-      } else {
-        setTimeLeft(-1)
-        window.location.reload()
-      }
-    }
-    const interval = setInterval(updateTimer, 1000)
-    return function() {
-      clearInterval(interval)
-    }
-  }, [expiredAt])
+  const rejoinAt = format(props.expiredAt, "dd-MM-yyyy HH:mm:ss a")
 
   return (
     <main className="h-full w-full grid place-items-center">
       <div className="max-w-[600px] grid place-items-center text-center px-4">
-        <BanIcon className="stroke-danger mb-2" />
-        <h1 className="text-4xl font-bold mb-3">You got kicked from the room</h1>
-        {timeLeft !== -1 && (
-          <p className="mb-3 font-bold text-2xl">{secondsToHHMMSS(timeLeft)}</p>
-        )}
-        <p className="text-muted mb-5">Return to home page and explore other rooms</p>
-        <Link to="/" className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
-          Go to Home
-        </Link>
+        <BanIcon className="stroke-danger mb-2 h-12 w-12" />
+        <h1 className="text-4xl font-bold mb-3">You've been kicked</h1>
+        <p className="text-muted mb-3">
+          You got removed from the room. You can rejoin at:
+        </p>
+        <p className="bg-bg-2 text-fg-2 px-4 py-2 rounded-md border border-border">
+          {rejoinAt}
+        </p>
       </div>
     </main>
   )

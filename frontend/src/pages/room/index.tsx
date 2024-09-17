@@ -7,7 +7,6 @@ import { RoomError } from "@/pages/room/components/RoomError"
 import { Room } from "@/pages/room/components/Room"
 import { useAppStore } from "@/stores/appStore"
 import { APIError } from "@/lib/utils"
-import { join } from "path"
 import { bc } from "@/lib/bc"
 
 export function RoomPage() {
@@ -16,7 +15,7 @@ export function RoomPage() {
   const user = useAppStore().user
   const isKicked = useAppStore().isKicked
   const joinedAnotherRoom = useAppStore().joinedAnotherRoom
-  const { isLoading, error } = useJoinRoom(roomID!, user !== null)
+  const { isLoading, error } = useJoinRoom(roomID!, user !== null && user !== undefined)
 
   useEffect(() => {
     if (!isOnboarding && user) {
@@ -28,11 +27,11 @@ export function RoomPage() {
     bc.sendMessage("JOIN_ROOM_REQUEST")
   }, [])
 
-  if (isLoading) {
+  if (isLoading || user === undefined) {
     return null
   }
 
-  if (!user || error || isKicked || joinedAnotherRoom) {
+  if (user === null || error || isKicked || joinedAnotherRoom) {
     return <RoomError error={error as APIError} user={user} isKicked={isKicked} joinedAnotherRoom={joinedAnotherRoom} />
   }
 

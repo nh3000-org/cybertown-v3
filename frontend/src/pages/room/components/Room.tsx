@@ -26,7 +26,7 @@ export function Room(props: Props) {
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const messages = useAppStore().messages
   const isHost = room?.settings.host.id === user?.id
-  useDMs(user !== null)
+  useDMs(Boolean(user))
   const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
 
   if (!room) {

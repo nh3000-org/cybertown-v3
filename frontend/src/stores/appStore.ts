@@ -10,14 +10,23 @@ type State = {
     expiredAt: string
   } | null
   joinedAnotherRoom: boolean
+
   dm: Record<string, Message[]>
   dmUnread: Record<string, boolean>
-  user: User | null
+
+  /*
+   undefined -> /me api call is not made yet
+   null      -> /me api call is made but no user
+  */
+  user: User | null | undefined
+
   messages: Message[]
+
   alerts: {
     login: boolean
     logout: boolean
   }
+
   toast: {
     open: boolean
     content?: {
@@ -26,6 +35,7 @@ type State = {
       description: string
     }
   }
+
   createOrUpdateRoom: {
     open: boolean
     room?: Room
@@ -33,7 +43,7 @@ type State = {
 }
 
 type Actions = {
-  setUser: (user: User | null) => void
+  setUser: (user: User | null | undefined) => void
   setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
   clearMessages: () => void
   setToast: (open: boolean, content?: State['toast']['content']) => void
@@ -58,7 +68,7 @@ type Actions = {
 export const useAppStore = create<State & Actions>()(
   immer((set) => ({
     isKicked: null,
-    user: null,
+    user: undefined,
     joinedAnotherRoom: false,
     messages: [],
     dm: {},

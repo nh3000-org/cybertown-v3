@@ -4,6 +4,6 @@ import { useQuery } from "react-query";
 export function useRooms() {
   return useQuery({
     queryKey: ['rooms'],
-    queryFn: api.getRooms
+    queryFn: api.getRooms,
   })
 }

@@ -40,9 +40,14 @@ class WS {
           case "ASSIGN_ROLE_BROADCAST":
           case "UPDATE_WELCOME_MESSAGE_BROADCAST":
           case "SET_STATUS_BROADCAST":
-            queryClient.invalidateQueries({
-              queryKey: ['rooms'],
-            })
+            // react-query handles deduplication. sometimes (when user just joined a room)
+            // we want to still make an API call and fetch the current state in the server.
+            // https://github.com/TanStack/query/discussions/608 
+            setTimeout(() => {
+              queryClient.invalidateQueries({
+                queryKey: ['rooms'],
+              })
+            }, 100)
             break;
           case "NEW_MESSAGE_BROADCAST":
             useAppStore.getState().addMsg(event)

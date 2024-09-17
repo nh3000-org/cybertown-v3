@@ -23,7 +23,6 @@ class BC {
       if (msg.data === "VISITED_HOMEPAGE" && url.pathname === '/') {
         window.location.href = config.redirectURL
       } else if (msg.data === "JOIN_ROOM_REQUEST" && roomRegex.test(url.pathname)) {
-        ws.close()
         useAppStore.getState().setJoinedAnotherRoom(true)
       }
     })

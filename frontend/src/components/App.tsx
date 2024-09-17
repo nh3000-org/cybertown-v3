@@ -15,7 +15,7 @@ type Props = {
 export function App(props: Props) {
   const location = useLocation()
   const pathnameRef = useRef<string>()
-  const { data: user, isLoading } = useMe()
+  const { data: user, isLoading, error } = useMe()
   const setUser = useAppStore().setUser
 
   useEffect(() => {
@@ -33,8 +33,11 @@ export function App(props: Props) {
   }, [location.pathname])
 
   useEffect(() => {
-    setUser(user ?? null)
-  }, [user])
+    if (isLoading) {
+      return
+    }
+    setUser(error ? null : user)
+  }, [user, isLoading, error])
 
   if (isLoading) {
     return null
