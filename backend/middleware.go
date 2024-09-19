@@ -23,7 +23,7 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("origin")
 
-		if origin == app.conf.RedirectURL {
+		if origin == app.conf.WebURL {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")

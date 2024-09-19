@@ -144,17 +144,19 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.ss.broadcastEvent(&t.Event{
-		Name: "NEW_ROOM_BROADCAST",
-		Data: map[string]any{
-			"roomID": roomID,
-		},
-	})
+	go func() {
+		app.ss.rooms[roomID] = &socketRoom{
+			lastActivity: time.Now().UTC(),
+			conns:        make(map[*websocket.Conn]struct{}),
+		}
 
-	app.ss.rooms[roomID] = &socketRoom{
-		lastActivity: time.Now().UTC(),
-		conns:        make(map[*websocket.Conn]struct{}),
-	}
+		app.ss.broadcastEvent(&t.Event{
+			Name: "NEW_ROOM_BROADCAST",
+			Data: map[string]any{
+				"roomID": roomID,
+			},
+		})
+	}()
 
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"roomID": roomID,
@@ -207,7 +209,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	participants := app.ss.getParticipantsInRoom(room.ID)
-	if room.MaxParticipants != -1 && len(participants) >= room.MaxParticipants {
+	if len(participants) >= room.MaxParticipants {
 		badRequest(w, err)
 		return
 	}

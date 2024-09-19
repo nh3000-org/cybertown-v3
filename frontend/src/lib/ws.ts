@@ -95,17 +95,6 @@ class WS {
     })
   }
 
-  leaveRoom(roomID: number) {
-    this.roomID = null
-    useAppStore.getState().clearMessages()
-    this.sendClientEvent({
-      name: "LEAVE_ROOM",
-      data: {
-        roomID: roomID,
-      }
-    })
-  }
-
   editMsg(id: string, content: string, participantID?: number, isDM?: boolean) {
     this.sendClientEvent({
       name: "EDIT_MESSAGE",

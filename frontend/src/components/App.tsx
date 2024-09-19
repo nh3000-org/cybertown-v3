@@ -1,8 +1,7 @@
 import { useMe } from '@/hooks/queries/useMe'
-import { ws } from '@/lib/ws'
 import { useAppStore } from '@/stores/appStore'
-import { useEffect, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet } from 'react-router-dom'
 import { Toast } from './Toast'
 import { CreateRoom } from '@/pages/home/components/CreateRoom'
 import { LogoutAlert } from '@/pages/home/components/LogoutAlert'
@@ -13,24 +12,8 @@ type Props = {
 }
 
 export function App(props: Props) {
-  const location = useLocation()
-  const pathnameRef = useRef<string>()
   const { data: user, isLoading, error } = useMe()
   const setUser = useAppStore().setUser
-
-  useEffect(() => {
-    if (pathnameRef.current) {
-      const isHomeRoute = location.pathname === '/'
-
-      const paths = pathnameRef.current.split("/")
-      const isRoomRoute = paths.length === 3 && ws.roomID === Number(paths[2])
-
-      if (isHomeRoute && isRoomRoute) {
-        ws.leaveRoom(Number(paths[2]))
-      }
-    }
-    pathnameRef.current = location.pathname
-  }, [location.pathname])
 
   useEffect(() => {
     if (isLoading) {

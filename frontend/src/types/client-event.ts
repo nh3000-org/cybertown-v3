@@ -5,7 +5,6 @@ export type ClientEvent =
   NewMsgEvent |
   EditMsgEvent |
   DeleteMsgEvent |
-  LeaveRoomEvent |
   ReactionToMsgEvent |
   ClearChatEvent |
   AssignRoleEvent |
@@ -15,13 +14,6 @@ export type ClientEvent =
 
 export type JoinRoomEvent = {
   name: "JOIN_ROOM"
-  data: {
-    roomID: number
-  }
-}
-
-export type LeaveRoomEvent = {
-  name: "LEAVE_ROOM"
   data: {
     roomID: number
   }

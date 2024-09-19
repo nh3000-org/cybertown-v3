@@ -67,7 +67,7 @@ type Config struct {
 		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 	}
 	PostgresURL string `env:"POSTGRES_URL"`
-	RedirectURL string `env:"REDIRECT_URL"`
+	WebURL      string `env:"WEB_URL"`
 }
 
 type RoomsResponse struct {

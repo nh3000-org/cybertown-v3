@@ -94,3 +94,12 @@ func GetMsgType(roomID, participantID *int) t.MsgType {
 	}
 	return t.UnknowMsg
 }
+
+func ParseJSON[T any](b []byte) (*T, error) {
+	var event T
+	err := json.Unmarshal(b, &event)
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}

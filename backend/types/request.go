@@ -12,7 +12,7 @@ const (
 
 var (
 	allowedLanguages       = []string{"english", "hindi", "tamil", "indonesian", "vietnamese"}
-	allowedMaxParticipants = []int{-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	allowedMaxParticipants = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20}
 )
 
 type CreateRoomRequest struct {
@@ -40,7 +40,7 @@ func (s *OAuthState) Validate(config *Config) bool {
 	if err != nil {
 		return false
 	}
-	b, err := url.Parse(config.RedirectURL)
+	b, err := url.Parse(config.WebURL)
 	if err != nil {
 		return false
 	}
