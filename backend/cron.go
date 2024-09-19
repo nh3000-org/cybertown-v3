@@ -29,6 +29,11 @@ func (a *application) deleteInactiveRooms(ctx context.Context) {
 					log.Printf("failed to delete rooms: %v", err)
 					continue
 				}
+
+				for _, rID := range roomIDs {
+					delete(a.ss.rooms, rID)
+				}
+
 				a.ss.broadcastEvent(&types.Event{
 					Name: "ROOMS_DELETED_BROADCAST",
 					Data: map[string]any{

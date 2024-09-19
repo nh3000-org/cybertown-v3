@@ -168,7 +168,7 @@ func (app *application) getRoomsHandler(w http.ResponseWriter, _ *http.Request) 
 		return
 	}
 
-	var res []*t.RoomsResponse
+	res := make([]*t.RoomsResponse, 0)
 	for _, room := range rooms {
 		roomRes := t.RoomsResponse{
 			Room:         room,

@@ -1,20 +1,22 @@
-import { useAppStore } from '@/stores/appStore'
-import { UserMenu } from './components/UserMenu'
-import { useRooms } from '@/hooks/queries/useRooms'
-import { RoomCard } from './components/RoomCard'
-import { Webhook as WebhookIcon } from 'lucide-react';
-import * as Popover from '@radix-ui/react-popover'
 import { Social } from '@/components/social';
 import { useDMs } from '@/hooks/queries/useDMs';
-import { useEffect } from 'react';
+import { useRooms } from '@/hooks/queries/useRooms';
+import { useElementHeight } from '@/hooks/useEelmentHeight';
 import { bc } from '@/lib/bc';
+import { useAppStore } from '@/stores/appStore';
+import * as Popover from '@radix-ui/react-popover';
+import { Webhook as WebhookIcon } from 'lucide-react';
+import { useEffect } from 'react';
+import { LoadingIcon } from './components/LoadingIcon';
+import { NoRooms } from './components/NoRooms';
+import { RoomCard } from './components/RoomCard';
+import { Header } from './components/Header';
 
 export function HomePage() {
   const user = useAppStore().user
   const dmUnread = useAppStore().dmUnread
-  const setAlert = useAppStore().setAlert
-  const setOpen = useAppStore().setCreateOrUpdateRoom
-  const { data: rooms } = useRooms()
+  const { data: rooms, isLoading } = useRooms()
+  const { ref, height } = useElementHeight()
 
   useDMs(Boolean(user))
   const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
@@ -24,24 +26,26 @@ export function HomePage() {
   }, [])
 
   return (
-    <main className="max-w-7xl mx-auto p-4">
-      <div className="flex justify-end">
-        {user ? <UserMenu /> :
-          <button onClick={() => {
-            setAlert("login", true)
-          }} className="bg-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">Login</button>}
-      </div>
-      <h1 className="text-4xl font-bold text-center my-8">Cybertown</h1>
+    <main className="max-w-7xl mx-auto px-4 h-full flex flex-col" style={{ paddingTop: `${height + 16}px` }}>
+     <Header ref={ref} />
 
-      <button onClick={() => setOpen(true)} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
-        <span>Create Room</span>
-      </button>
+      {isLoading && (
+        <div className="flex-1 grid place-items-center">
+          <LoadingIcon className='text-accent/20 fill-accent h-7 w-7' />
+        </div>
+      )}
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rooms?.map(room => {
-          return <RoomCard key={room.id} room={room} />
-        })}
-      </div>
+      {!isLoading && Boolean(!rooms?.length) && <NoRooms />}
+
+      {!isLoading && Boolean(rooms?.length) && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pb-8">
+            {rooms?.map(room => {
+              return <RoomCard key={room.id} room={room} />
+            })}
+          </div>
+        </>
+      )}
 
       {user && (
         <div className="fixed bottom-8 right-8">
