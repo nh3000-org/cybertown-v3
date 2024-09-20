@@ -6,7 +6,8 @@ type Event struct {
 }
 
 type JoinRoom struct {
-	RoomID int `json:"roomID"`
+	RoomID int    `json:"roomID"`
+	Key    string `json:"key"`
 }
 
 type LeaveRoom struct {

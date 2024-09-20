@@ -137,3 +137,9 @@ export function formatDate(date: string) {
 export function getDMParticipant(from: User, participant: User, currentUser: User) {
   return from.id !== currentUser.id ? from.id : participant.id
 }
+
+export function generateRandomID() {
+  const array = new Uint32Array(1);
+  window.crypto.getRandomValues(array);
+  return array[0].toString(16);
+}

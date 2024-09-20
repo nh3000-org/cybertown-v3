@@ -11,8 +11,8 @@ type Props = {
 }
 
 export function Status(props: Props) {
-  const user = useAppStore().user!
-  const status = props.room.participants.find(p => p.id === user.id)?.status ?? 'None'
+  const sid = useAppStore().sid
+  const status = props.room.participants.find(p => p.sid === sid!)?.status ?? 'None'
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="status">Status</Label>

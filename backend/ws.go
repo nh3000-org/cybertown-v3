@@ -24,8 +24,9 @@ type socketRoom struct {
 }
 
 type socketServer struct {
-	conns        map[*websocket.Conn]int
-	participants map[int]*t.Participant
+	conns        map[*websocket.Conn]string
+	participants map[string]*t.Participant
+	users        map[int][]string
 	rooms        map[int]*socketRoom
 	repo         *db.Repo
 	emojis       map[string]struct{}
@@ -34,9 +35,10 @@ type socketServer struct {
 
 func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
-		conns:        make(map[*websocket.Conn]int),
+		conns:        make(map[*websocket.Conn]string),
 		rooms:        make(map[int]*socketRoom),
-		participants: make(map[int]*t.Participant),
+		participants: make(map[string]*t.Participant),
+		users:        make(map[int][]string),
 		emojis:       emojis,
 		repo:         repo,
 		svc:          svc,
@@ -45,13 +47,22 @@ func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]stru
 
 func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
 	p := &t.Participant{
+		SID:    shortuuid.New(),
 		Status: "None",
 	}
+
 	if user != nil {
 		p.User = *user
+
+		if _, ok := s.users[user.ID]; !ok {
+			s.users[user.ID] = []string{p.SID}
+		} else {
+			s.users[user.ID] = append(s.users[user.ID], p.SID)
+		}
 	}
-	s.conns[conn] = p.ID
-	s.participants[p.ID] = p
+
+	s.conns[conn] = p.SID
+	s.participants[p.SID] = p
 }
 
 func (s *socketServer) close(conn *websocket.Conn, roomID int, user *t.User) {
@@ -76,6 +87,17 @@ func (s *socketServer) leaveRoom(conn *websocket.Conn, user *t.User, roomID int)
 		return
 	}
 
+	// remove participants from users map
+	if _, ok := s.users[user.ID]; ok {
+		s.users[user.ID] = utils.Filter(s.users[user.ID], func(val string) bool {
+			return val != s.conns[conn]
+		})
+
+		if len(s.users[user.ID]) == 0 {
+			delete(s.users, user.ID)
+		}
+	}
+
 	delete(room.conns, conn)
 	room.lastActivity = time.Now().UTC()
 
@@ -94,9 +116,16 @@ func (s *socketServer) broadcastEvent(event *t.Event) {
 	}
 }
 
-func (s *socketServer) broadcastMsgEvent(pIDs []int, event *t.Event) {
-	for conn, pID := range s.conns {
-		if utils.Includes(pIDs, pID) {
+func (s *socketServer) broadcastMsgEvent(userIDs []int, event *t.Event) {
+	var sIDs []string
+	for u, ids := range s.users {
+		if utils.Includes(userIDs, u) {
+			sIDs = append(sIDs, ids...)
+		}
+	}
+
+	for conn, sID := range s.conns {
+		if utils.Includes(sIDs, sID) {
 			utils.WriteEvent(conn, event)
 		}
 	}
@@ -157,6 +186,8 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte) (int, err
 		Data: map[string]any{
 			"roomID": data.RoomID,
 			"user":   s.getParticipant(conn).User,
+			"sid":    s.conns[conn],
+			"key":    data.Key,
 		},
 	})
 
@@ -221,16 +252,8 @@ func (s *socketServer) participantsInRoom(conn *websocket.Conn, roomID int, part
 	if participantID == nil {
 		return true
 	}
-	room, ok := s.rooms[roomID]
-	if !ok {
-		return false
-	}
-	for conn := range room.conns {
-		if s.conns[conn] == *participantID {
-			return true
-		}
-	}
-	return false
+	_, ok := s.users[*participantID]
+	return ok
 }
 
 func (s *socketServer) editMessageHandler(conn *websocket.Conn, b []byte) {
@@ -344,7 +367,7 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {
 		Name: "CLEAR_CHAT_BROADCAST",
 		Data: map[string]any{
 			"roomID":      data.RoomID,
-			"participant": s.participants[data.ParticipantID].User,
+			"participant": s.getUser(data.ParticipantID),
 			"by":          p.User,
 		},
 	})
@@ -372,7 +395,7 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte) {
 			"roomID":      data.RoomID,
 			"by":          p.User,
 			"role":        data.Role,
-			"participant": s.participants[data.ParticipantID].User,
+			"participant": s.getUser(data.ParticipantID),
 		},
 	})
 }
@@ -468,23 +491,27 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte) {
 
 	d := map[string]any{
 		"by":          p.User,
-		"participant": s.participants[data.ParticipantID].User,
+		"participant": s.getUser(data.ParticipantID),
 		"roomID":      data.RoomID,
 	}
+
 	if data.ClearChat {
 		s.broadcastRoomEvent(data.RoomID, &t.Event{
 			Name: "CLEAR_CHAT_BROADCAST",
 			Data: d,
 		})
 	}
+
 	d["expiredAt"] = k.ExpiredAt
 	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "KICK_PARTICIPANT_BROADCAST",
 		Data: d,
 	})
-	for conn, pID := range s.conns {
-		if pID == data.ParticipantID {
-			s.leaveRoom(conn, &s.participants[pID].User, data.RoomID)
+
+	sIDs := s.users[data.ParticipantID]
+	for conn, sID := range s.conns {
+		if utils.Includes(sIDs, sID) {
+			s.leaveRoom(conn, &s.participants[sID].User, data.RoomID)
 		}
 	}
 }
@@ -552,6 +579,16 @@ func (s *socketServer) getParticipant(conn *websocket.Conn) *t.Participant {
 	return s.participants[s.conns[conn]]
 }
 
+func (s *socketServer) getUser(userID int) *t.User {
+	for u, participants := range s.users {
+		if u == userID {
+			pID := participants[0]
+			return &s.participants[pID].User
+		}
+	}
+	return nil
+}
+
 func (s *socketServer) createMsgData(d map[string]any, m t.MsgType, roomID, pID *int) *map[string]any {
 	if m == t.RoomMsg || m == t.PrivateRoomMsg {
 		d["roomID"] = *roomID
@@ -581,7 +618,7 @@ func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage)
 	}
 
 	if m == t.PrivateRoomMsg {
-		msg.Participant = &s.participants[*d.ParticipantID].User
+		msg.Participant = s.getUser(*d.ParticipantID)
 	}
 
 	if m == t.DMMsg {

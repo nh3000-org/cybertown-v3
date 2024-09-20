@@ -21,6 +21,8 @@ export type JoinedRoomBroadcastEvent = {
   data: {
     roomID: number
     user: User
+    sid: string
+    key: string
   }
 }
 

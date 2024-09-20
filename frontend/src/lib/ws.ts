@@ -1,7 +1,7 @@
 import { config } from "@/config";
 import { ClientEvent } from "@/types/client-event";
 import { BroadcastEvent } from "@/types/broadcast";
-import { queryClient } from "./utils";
+import { generateRandomID, queryClient } from "./utils";
 import { useAppStore } from "@/stores/appStore";
 import { RoomRole } from "@/types";
 
@@ -9,6 +9,7 @@ class WS {
   private socket: WebSocket
   private static instance: WS
   roomID: number | null = null
+  joinRoomKey: string | null = null
 
   static getInstance(): WS {
     if (!WS.instance) {
@@ -41,6 +42,9 @@ class WS {
           case "ASSIGN_ROLE_BROADCAST":
           case "UPDATE_WELCOME_MESSAGE_BROADCAST":
           case "SET_STATUS_BROADCAST":
+            if (event.name === "JOINED_ROOM_BROADCAST" && event.data.key === this.joinRoomKey) {
+              useAppStore.getState().joinedRoom(event)
+            }
             // react-query handles deduplication. sometimes (when user just joined a room)
             // we want to still make an API call and fetch the current state in the server.
             // https://github.com/TanStack/query/discussions/608 
@@ -86,11 +90,15 @@ class WS {
     if (this.roomID) {
       return
     }
+
     this.roomID = roomID
+    this.joinRoomKey = generateRandomID()
+
     this.sendClientEvent({
       name: "JOIN_ROOM",
       data: {
         roomID: roomID,
+        key: this.joinRoomKey
       }
     })
   }

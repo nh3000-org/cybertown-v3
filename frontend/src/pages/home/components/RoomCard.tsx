@@ -15,7 +15,7 @@ export function RoomCard(props: Props) {
   const setAlert = useAppStore().setAlert
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const { room } = props
-  const [open, setOpen] = useState<Record<number, boolean>>({})
+  const [open, setOpen] = useState<Record<string, boolean>>({})
   const isRoomFull = room.participants.length >= room.maxParticipants
 
   const style = {
@@ -66,10 +66,10 @@ export function RoomCard(props: Props) {
 
       <div className="min-h-[60px] my-8 flex flex-wrap gap-4">
         {room.participants.map(p => {
-          return <Profile key={p.id} user={p} style={style} open={open[p.id]} setOpen={open => {
+          return <Profile key={p.sid} user={p} style={style} open={open[p.sid]} setOpen={open => {
             setOpen(prev => ({
               ...prev,
-              [p.id]: open
+              [p.sid]: open
             }))
           }} />
         })}

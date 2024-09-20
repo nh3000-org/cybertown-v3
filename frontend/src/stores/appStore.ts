@@ -1,7 +1,7 @@
 import { getDMParticipant } from '@/lib/utils'
 import { ws } from '@/lib/ws'
 import { Room, User } from '@/types'
-import { ClearChatBroadcastEvent, DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, KickParticipantBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
+import { ClearChatBroadcastEvent, DeleteMsgBroadcastEvent, EditMsgBroadcastEvent, JoinedRoomBroadcastEvent, KickParticipantBroadcastEvent, Message, NewMsgBroadcastEvent, ReactionToMsgBroadcastEvent } from '@/types/broadcast'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -20,6 +20,7 @@ type State = {
   */
   user: User | null | undefined
 
+  sid: string | null
   messages: Message[]
 
   alerts: {
@@ -57,6 +58,7 @@ type Actions = {
   setDMReadForParticipant: (participantID: number) => void
 
   // broadcast events
+  joinedRoom: (event: JoinedRoomBroadcastEvent) => void
   addMsg: (event: NewMsgBroadcastEvent) => void
   editMsg: (event: EditMsgBroadcastEvent) => void
   deleteMsg: (event: DeleteMsgBroadcastEvent) => void
@@ -68,19 +70,25 @@ type Actions = {
 export const useAppStore = create<State & Actions>()(
   immer((set) => ({
     isKicked: null,
-    user: undefined,
     joinedAnotherRoom: false,
+
+    user: undefined,
+
+    sid: null,
     messages: [],
+
     dm: {},
     dmUnread: {},
-    hasUnreadDM: false,
+
     alerts: {
       login: false,
       logout: false,
     },
+
     toast: {
       open: false
     },
+
     createOrUpdateRoom: {
       open: false
     },
@@ -120,6 +128,12 @@ export const useAppStore = create<State & Actions>()(
       }
       state.createOrUpdateRoom.open = open
       state.createOrUpdateRoom.room = room
+    }),
+
+    joinedRoom: (event) => set((state) => {
+      if (event.data.user.id === state.user?.id) {
+        state.sid = event.data.sid
+      }
     }),
 
     addMsg: (event) =>

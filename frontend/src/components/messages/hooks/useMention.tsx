@@ -14,9 +14,13 @@ export function useMention(content: string, room: RoomRes | null) {
     show: false,
   })
 
-  const mentionedParticipants = room === null ? [] : room.participants.
-    filter(el => el.id !== user?.id && el.username.toLowerCase().
-      includes(search.query.toLowerCase()))
+  const mentionedParticipants = room === null ? [] :
+    Array.from(
+      room.participants
+        .filter(el => el.id !== user?.id && el.username.toLowerCase().includes(search.query.toLowerCase()))
+        .reduce((map, el) => map.set(el.id, el), new Map())
+        .values()
+    );
 
   useEffect(() => {
     if (room === null) {

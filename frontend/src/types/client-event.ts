@@ -16,6 +16,7 @@ export type JoinRoomEvent = {
   name: "JOIN_ROOM"
   data: {
     roomID: number
+    key: string
   }
 }
 

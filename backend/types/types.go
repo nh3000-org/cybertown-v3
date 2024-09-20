@@ -20,6 +20,7 @@ type Profile struct {
 
 type Participant struct {
 	User
+	SID    string `json:"sid"`
 	Status string `json:"status,omitempty"`
 }
 

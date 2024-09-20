@@ -18,7 +18,7 @@ export function Participants(props: Props) {
         const isHost = room.settings.host.id === p.id
         const isCoHost = room.settings.coHosts?.includes(p.id)
         return (
-          <div key={p.id} className="bg-cover group participant h-[96px] w-[96px] rounded-sm shadow-sm text-center place-content-center text-sm relative" style={{
+          <div key={p.sid} className="bg-cover group participant h-[96px] w-[96px] rounded-sm shadow-sm text-center place-content-center text-sm relative" style={{
             backgroundImage: `url(${p.avatar})`
           }}>
             {(isHost || isCoHost || p.status !== 'None') && (

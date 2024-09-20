@@ -21,8 +21,8 @@ func ReplaceAfter(s, v, with string) string {
 	return s[:index] + with
 }
 
-func Filter(slice []int, callback func(int) bool) []int {
-	var result []int
+func Filter[T string | int](slice []T, callback func(T) bool) []T {
+	var result []T
 	for _, value := range slice {
 		if callback(value) {
 			result = append(result, value)
