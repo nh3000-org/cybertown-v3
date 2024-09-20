@@ -84,7 +84,9 @@ export function ParticipantOptions(props: Props) {
         </Dropdown.Portal>
       </Dropdown.Root>
 
-      <KickParticipant open={open} setOpen={setOpen} participant={participant} />
+      {open && (
+        <KickParticipant open={open} setOpen={setOpen} participant={participant} />
+      )}
     </>
   )
 }

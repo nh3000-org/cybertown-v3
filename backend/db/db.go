@@ -433,16 +433,22 @@ func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *t.Message) erro
 	return err
 }
 
-func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID int, isReaction bool) (*t.Message, error) {
+func (r *Repo) GetMessage(ctx context.Context, msgID string, userID, pID int, isReaction bool) (*t.Message, error) {
 	query := `
 	 SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reactions,
 	        u.id, u.avatar, u.username
 	 FROM messages m
-	 INNER JOIN users u on u.id = m."from"
-	 WHERE dm_id = $1 AND m.id = $2 AND (m."from" = $3 OR $4 = True)
+	 INNER JOIN users u ON u.id = m."from"
+	 WHERE m.dm_id = (
+		 SELECT dp1.dm_id 
+		 FROM dm_participants dp1 
+		 JOIN dm_participants dp2 ON dp2.dm_id = dp1.dm_id
+		 WHERE dp1.user_id = $2 AND dp2.user_id = $3
+	 )
+	 AND m.id = $1 AND (m."from" = $2 OR $4 = True)
 	`
 	var m t.Message
-	err := r.pool.QueryRow(ctx, query, dmID, msgID, userID, isReaction).Scan(
+	err := r.pool.QueryRow(ctx, query, msgID, userID, pID, isReaction).Scan(
 		&m.ID,
 		&m.Content,
 		&m.IsEdited,
@@ -455,20 +461,19 @@ func (r *Repo) GetMessage(ctx context.Context, dmID int, msgID string, userID in
 	return &m, err
 }
 
-func (r *Repo) UpdateMessage(ctx context.Context, dmID int, msg *t.Message, isReaction bool) error {
+func (r *Repo) UpdateMessage(ctx context.Context, msg *t.Message, isReaction bool) error {
 	query := `
 	 UPDATE messages
 	 SET
-	   content = $5,
-	   is_edited = $6,
-	   is_deleted = $7,
-	   reactions = $8
-	 WHERE dm_id = $1 AND id = $2 AND ("from" = $3 OR $4 = True)
+	   content = $4,
+	   is_edited = $5,
+	   is_deleted = $6,
+	   reactions = $7
+	 WHERE id = $1 AND ("from" = $2 OR $3 = True)
 	`
 	_, err := r.pool.Exec(
 		ctx,
 		query,
-		dmID,
 		msg.ID,
 		msg.From.ID,
 		isReaction,

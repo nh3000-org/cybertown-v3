@@ -5,7 +5,6 @@ import (
 	"backend/service"
 	"backend/types"
 	"backend/utils"
-	"context"
 	"log"
 	"net/http"
 
@@ -51,7 +50,7 @@ func main() {
 	}
 
 	app.ss.populateRooms()
-	go app.deleteInactiveRooms(context.Background())
+	// go app.deleteInactiveRooms(context.Background())
 
 	log.Println("server starting at port 6969")
 	if err := server.ListenAndServe(); err != nil {

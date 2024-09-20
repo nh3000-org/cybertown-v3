@@ -16,7 +16,7 @@ export function RoomCard(props: Props) {
   const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
   const { room } = props
   const [open, setOpen] = useState<Record<number, boolean>>({})
-  const isRoomFull = room.maxParticipants !== -1 && room.participants.length >= room.maxParticipants
+  const isRoomFull = room.participants.length >= room.maxParticipants
 
   const style = {
     width: room.maxParticipants > 3 ? 58 : 96,
@@ -73,7 +73,7 @@ export function RoomCard(props: Props) {
             }))
           }} />
         })}
-        {Array.from({ length: room.maxParticipants - room.participants.length }).map((_, i) => {
+        {Array.from({ length: Math.min(room.maxParticipants, 10) - room.participants.length }).map((_, i) => {
           return <div key={i} style={style} className="rounded-full border border-border border-dashed" />
         })}
       </div>

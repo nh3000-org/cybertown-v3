@@ -11,7 +11,7 @@ func (s *Service) GetDM(ctx context.Context, userID, participantID int) (int, er
 		return 0, err
 	}
 	if !ok {
-		return 0, errors.New("Should be friends to create a dm")
+		return 0, errors.New("should be friends to create a dm")
 	}
 
 	dmID, err := s.repo.GetDM(context.Background(), userID, participantID)

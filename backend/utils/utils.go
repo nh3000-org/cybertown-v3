@@ -30,11 +30,3 @@ func Filter(slice []int, callback func(int) bool) []int {
 	}
 	return result
 }
-
-func KeyOf[K any](input map[int]K) []int {
-	var result []int
-	for k := range input {
-		result = append(result, k)
-	}
-	return result
-}

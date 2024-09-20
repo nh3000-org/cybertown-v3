@@ -189,7 +189,7 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 
 	p := s.getParticipant(conn)
 	msg := s.createMessage(
-		p.ID,
+		&p.User,
 		msgType,
 		data,
 	)
@@ -564,13 +564,13 @@ func (s *socketServer) createMsgData(d map[string]any, m t.MsgType, roomID, pID 
 	return &d
 }
 
-func (s *socketServer) createMessage(userID int, m t.MsgType, d *t.NewMessage) *t.Message {
+func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage) *t.Message {
 	reactions := make(map[string]any)
 
 	msg := t.Message{
 		ID:        shortuuid.New(),
 		Content:   d.Content,
-		From:      t.User{ID: userID},
+		From:      *user,
 		CreatedAt: time.Now().UTC(),
 		Reactions: &reactions,
 		ReplyTo:   d.ReplyTo,

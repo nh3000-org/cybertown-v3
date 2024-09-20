@@ -16,8 +16,10 @@ import (
 
 func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	code := q.Get("code")
-	s := q.Get("state")
+	var (
+		code = q.Get("code")
+		s    = q.Get("state")
+	)
 
 	var state t.OAuthState
 	err := json.Unmarshal([]byte(s), &state)
@@ -66,25 +68,15 @@ func (app *application) authCallbackHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) meHandler(w http.ResponseWriter, r *http.Request) {
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	data := map[string]any{
 		"user": u,
 	}
-
 	jsonResponse(w, http.StatusOK, data)
 }
 
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
+	u := r.Context().Value("user").(*t.User)
 
 	c, err := r.Cookie("session")
 	if err != nil {
@@ -109,7 +101,7 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &emptyCookie)
-	msgResponse(w, "Logged out")
+	msgResponse(w, "ok")
 }
 
 func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request) {
@@ -126,12 +118,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	roomID, err := app.repo.CreateRoom(context.Background(), &t.Room{
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
@@ -144,7 +131,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	go func() {
+	go func(roomID int) {
 		app.ss.rooms[roomID] = &socketRoom{
 			lastActivity: time.Now().UTC(),
 			conns:        make(map[*websocket.Conn]struct{}),
@@ -156,7 +143,7 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 				"roomID": roomID,
 			},
 		})
-	}()
+	}(roomID)
 
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"roomID": roomID,
@@ -192,12 +179,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	room, err := app.repo.GetRoom(context.Background(), id)
 	if err != nil {
 		if errors.Is(pgx.ErrNoRows, err) {
@@ -253,12 +235,7 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	room, err := app.repo.GetRoomForUser(context.Background(), id, u.ID)
 	if err != nil {
 		serverError(w, err)
@@ -274,14 +251,16 @@ func (app *application) updateRoomHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.ss.broadcastEvent(&t.Event{
-		Name: "UPDATE_ROOM_BROADCAST",
-		Data: map[string]any{
-			"roomID": room.ID,
-		},
-	})
+	go func(roomID int) {
+		app.ss.broadcastEvent(&t.Event{
+			Name: "UPDATE_ROOM_BROADCAST",
+			Data: map[string]any{
+				"roomID": room.ID,
+			},
+		})
+	}(room.ID)
 
-	msgResponse(w, "Room updated successfully")
+	msgResponse(w, "ok")
 }
 
 func (app *application) followHandler(isFollow bool) func(http.ResponseWriter, *http.Request) {
@@ -296,12 +275,7 @@ func (app *application) followHandler(isFollow bool) func(http.ResponseWriter, *
 			return
 		}
 
-		u, ok := r.Context().Value("user").(*t.User)
-		if !ok {
-			unauthRequest(w, nil)
-			return
-		}
-
+		u := r.Context().Value("user").(*t.User)
 		if u.ID == req.FolloweeID {
 			badRequest(w, nil)
 			return
@@ -357,12 +331,7 @@ func (app *application) getRelationsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	users, err := app.repo.GetRelations(context.Background(), u.ID, t.Relation(relation))
 	if err != nil {
 		serverError(w, err)
@@ -375,18 +344,12 @@ func (app *application) getRelationsHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getDMsHandler(w http.ResponseWriter, r *http.Request) {
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	dms, err := app.repo.GetDMs(context.Background(), u.ID)
 	if err != nil {
 		serverError(w, err)
 		return
 	}
-
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"dms": dms,
 	})
@@ -399,11 +362,7 @@ func (app *application) updateDMsHandler(w http.ResponseWriter, r *http.Request)
 		badRequest(w, err)
 		return
 	}
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
+	u := r.Context().Value("user").(*t.User)
 	err = app.repo.UpdateDMs(context.Background(), u.ID, pID)
 	if err != nil {
 		serverError(w, err)
@@ -429,12 +388,7 @@ func (app *application) getMessagesHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	u, ok := r.Context().Value("user").(*t.User)
-	if !ok {
-		unauthRequest(w, nil)
-		return
-	}
-
+	u := r.Context().Value("user").(*t.User)
 	messages, err := app.repo.GetMessages(context.Background(), u.ID, pID, req.Cursor)
 	if err != nil {
 		serverError(w, err)
