@@ -21,18 +21,13 @@ class WS {
   constructor() {
     const socket = new WebSocket(config.wsURL);
 
-    socket.onopen = function() {
-      console.log("socket connection established")
-    }
-
     socket.onclose = function(e: CloseEvent) {
-      console.log("socket connection closed", e.code)
+      console.error("socket connection closed", e.code)
     }
 
     socket.onmessage = (e: MessageEvent) => {
       try {
         const event: BroadcastEvent = JSON.parse(e.data)
-        console.log("received event", event)
         switch (event.name) {
           case "JOINED_ROOM_BROADCAST":
           case "LEFT_ROOM_BROADCAST":

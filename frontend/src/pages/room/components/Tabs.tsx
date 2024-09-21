@@ -34,18 +34,24 @@ export function RoomTabs(props: Props) {
         <Tabs.List className="flex justify-between border-b border-border p-1">
           <Tabs.Trigger value="messages" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
             <Tooltip title="Messages">
-              <MessagesIcon size={18} className="text-muted" />
+              <button>
+                <MessagesIcon size={18} className="text-muted" />
+              </button>
             </Tooltip>
           </Tabs.Trigger>
           <Tabs.Trigger value="social" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
             <Tooltip title="Social">
-              <WebhookIcon size={18} className="text-muted" />
-              {hasUnread && <span className="w-2 h-2 rounded-full rounded-full block bg-danger" />}
+              <button>
+                <WebhookIcon size={18} className="text-muted" />
+                {hasUnread && <span className="w-2 h-2 rounded-full rounded-full block bg-danger" />}
+              </button>
             </Tooltip>
           </Tabs.Trigger>
           <Tabs.Trigger value="settings" className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center" asChild>
             <Tooltip title="Settings">
-              <SettingsIcon size={18} className="text-muted" />
+              <button>
+                <SettingsIcon size={18} className="text-muted" />
+              </button>
             </Tooltip>
           </Tabs.Trigger>
         </Tabs.List>

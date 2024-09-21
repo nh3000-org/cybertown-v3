@@ -5,6 +5,7 @@ import { Info as InfoIcon, SquarePen as PencilIcon, Ban as BanIcon } from 'lucid
 import { Profile } from '@/components/Profile';
 import { useState } from 'react';
 import { cn, formatDate } from '@/lib/utils';
+import { Tooltip } from '@/components/Tooltip';
 
 type Props = {
   room: RoomRes
@@ -34,7 +35,9 @@ export function RoomCard(props: Props) {
   return (
     <div className="p-4 border border-border rounded-md bg-bg-2 text-fg-2 flex flex-col">
       <div className="flex items-center justify-between">
-        <p className="text-lg font-semibold mb-1 flex-1">{room.topic}</p>
+        <Tooltip title={room.topic}>
+          <p className="text-lg font-semibold mb-1 flex-1 ellipsis pr-2">{room.topic}</p>
+        </Tooltip>
         <Popover.Root>
           <Popover.Trigger className="rounded-lg">
             <InfoIcon size={18} className="text-muted" />

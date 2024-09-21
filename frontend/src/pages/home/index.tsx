@@ -1,7 +1,6 @@
 import { Social } from '@/components/social';
 import { useDMs } from '@/hooks/queries/useDMs';
 import { useRooms } from '@/hooks/queries/useRooms';
-import { useElementHeight } from '@/hooks/useElementHeight';
 import { bc } from '@/lib/bc';
 import { useAppStore } from '@/stores/appStore';
 import * as Popover from '@radix-ui/react-popover';
@@ -16,7 +15,6 @@ export function HomePage() {
   const user = useAppStore().user
   const dmUnread = useAppStore().dmUnread
   const { data: rooms, isLoading } = useRooms()
-  const { ref, height } = useElementHeight()
 
   useDMs(Boolean(user))
   const hasUnread = Object.values(dmUnread).some(isUnread => isUnread)
@@ -26,8 +24,8 @@ export function HomePage() {
   }, [])
 
   return (
-    <main className="max-w-7xl mx-auto px-4 h-full flex flex-col" style={{ paddingTop: `${height + 16}px` }}>
-      <Header ref={ref} />
+    <main className="max-w-7xl mx-auto px-4 h-full flex flex-col pt-4">
+      <Header />
 
       {isLoading && (
         <div className="flex-1 grid place-items-center">
@@ -39,7 +37,7 @@ export function HomePage() {
 
       {!isLoading && Boolean(rooms?.length) && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
             {rooms?.map(room => {
               return <RoomCard key={room.id} room={room} />
             })}

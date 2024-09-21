@@ -30,10 +30,6 @@ export function App(props: Props) {
     init({ data: emoji })
   }, [])
 
-  if (isLoading) {
-    return null
-  }
-
   return (
     <>
       {props.children ?? <Outlet />}

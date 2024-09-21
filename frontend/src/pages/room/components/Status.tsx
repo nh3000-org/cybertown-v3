@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { RoomRes } from '@/types';
 import { useAppStore } from '@/stores/appStore';
 import { ws } from '@/lib/ws';
+import { useEffect, useState } from 'react';
 
 type Props = {
   room: RoomRes
@@ -12,11 +13,18 @@ type Props = {
 
 export function Status(props: Props) {
   const sid = useAppStore().sid
-  const status = props.room.participants.find(p => p.sid === sid!)?.status ?? 'None'
+  const serverStatus = props.room.participants.find(p => p.sid === sid!)?.status ?? 'None'
+  const [status, setStatus] = useState('None')
+
+  useEffect(() => {
+    setStatus(serverStatus)
+  }, [serverStatus])
+
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="status">Status</Label>
       <RadioGroup.Root value={status} id="status" className="rounded-md border border-border flex justify-between" onValueChange={status => {
+        setStatus(status)
         ws.setStatus(status)
       }}>
         {constants.status.map((s, i) => {
