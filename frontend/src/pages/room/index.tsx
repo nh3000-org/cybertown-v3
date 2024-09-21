@@ -8,6 +8,7 @@ import { Room } from "@/pages/room/components/Room"
 import { useAppStore } from "@/stores/appStore"
 import { APIError } from "@/lib/utils"
 import { bc } from "@/lib/bc"
+import { LoadingIcon } from "../home/components/LoadingIcon"
 
 export function RoomPage() {
   const [isOnboarding, setIsOnBoarding] = useState(true)
@@ -27,8 +28,12 @@ export function RoomPage() {
     bc.sendMessage("VISITED_ROOM_PAGE")
   }, [])
 
-  if (isLoading || user === undefined) {
-    return null
+  if (isLoading && user === undefined) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingIcon className="text-accent/20 fill-accent w-8 h-8" />
+      </div>
+    )
   }
 
   if (user === null || error || isKicked || joinedAnotherRoom) {
