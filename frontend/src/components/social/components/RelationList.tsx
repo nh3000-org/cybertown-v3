@@ -4,6 +4,7 @@ import { useRelation } from "@/hooks/queries/useRelation"
 import { Users as UsersIcon } from 'lucide-react';
 import { LoadingIcon } from "@/pages/home/components/LoadingIcon";
 import { Profile } from "@/components/Profile";
+import React from "react";
 
 const text = {
   'following': "You're not following anyone yet. Pick your favorites!",
@@ -16,7 +17,7 @@ type Props = {
   relation: "followers" | "following" | "friends"
 }
 
-export function RelationList(props: Props) {
+export const RelationList = React.forwardRef((props: Props, _ref) => {
   const [open, setOpen] = useState<Record<number, boolean>>({})
   const { data: users, isLoading } = useRelation(props.relation)
 
@@ -28,26 +29,26 @@ export function RelationList(props: Props) {
 
   if (isLoading) {
     return (
-      <div className="w-[87%] mx-auto mt-20 text-muted flex flex-col items-center justify-center gap-3">
-        <LoadingIcon className="fill-white text-accent w-6 h-6" />
+      <div className="flex-1 flex items-center justify-center">
+        <LoadingIcon className="text-accent/20 fill-accent w-6 h-6" />
       </div>
     )
   }
 
   if (!isLoading && !users?.length) {
     return (
-      <div className="w-[87%] mx-auto mt-20 text-muted flex flex-col items-center justify-center gap-3">
+      <div className="flex-1 text-muted flex flex-col items-center justify-center gap-3">
         <UsersIcon strokeWidth={1.5} />
-        <p>{text[props.relation]}</p>
+        <p className="max-w-[300px] text-center ">{text[props.relation]}</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-5">
+    <div className="flex-1 px-3 pb-3 overflow-auto scroller">
       {users.map(u => {
         return (
-          <div key={u.id} className="flex items-center gap-3">
+          <div key={u.id} className="flex items-center gap-3 mt-4">
             <Profile user={u} style={{ width: 32, height: 32 }} open={open[u.id]} setOpen={open => {
               setOpen(prev => ({
                 ...prev,
@@ -60,4 +61,4 @@ export function RelationList(props: Props) {
       })}
     </div>
   )
-}
+})

@@ -424,13 +424,14 @@ func (r *Repo) IsFriends(ctx context.Context, userID, participantID int) (bool, 
 	return isFriends, err
 }
 
-func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *t.Message) error {
+func (r *Repo) CreateMessage(ctx context.Context, dmID int, msg *t.Message) (string, error) {
 	query := `
-	  INSERT INTO messages (dm_id, id, content, "from", reply_to, created_at) 
-	  VALUES($1, $2, $3, $4, $5, $6);
+	  INSERT INTO messages (dm_id, content, "from", reply_to, created_at) 
+	  VALUES($1, $2, $3, $4, $5) RETURNING id;
 	`
-	_, err := r.pool.Exec(ctx, query, dmID, msg.ID, msg.Content, msg.From.ID, msg.ReplyTo, msg.CreatedAt)
-	return err
+	var mID string
+	err := r.pool.QueryRow(ctx, query, dmID, msg.Content, msg.From.ID, msg.ReplyTo, msg.CreatedAt).Scan(&mID)
+	return mID, err
 }
 
 func (r *Repo) GetMessage(ctx context.Context, msgID string, userID, pID int, isReaction bool) (*t.Message, error) {
@@ -562,7 +563,7 @@ func (r *Repo) GetDMs(ctx context.Context, userID int) ([]*t.DMResponse, error) 
 	  JOIN users u ON u.id = dp2.user_id
 	  JOIN follows f1 ON f1.follower_id = dp1.user_id AND f1.followee_id = dp2.user_id
 	  JOIN follows f2 ON f2.follower_id = dp2.user_id AND f2.followee_id = dp1.user_id
-	  WHERE dp1.user_id = $1 AND dp2.user_id != $1
+	  WHERE dp1.user_id = $1 AND dp2.user_id != $1 AND EXISTS(select 1 from messages m WHERE dm_id = dp1.dm_id limit 1)
    ) AS sq ORDER BY (sq.last_message->>'createdAt')::timestamp DESC;
 	`
 	rows, err := r.pool.Query(ctx, query, userID)

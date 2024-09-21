@@ -6,6 +6,7 @@ import { ChevronLeft as LeftIcon } from 'lucide-react';
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { MESSAGES_LIMIT, usePreviousMessages } from "../hooks/usePreviousMessages";
+import { LoadingIcon } from "@/pages/home/components/LoadingIcon";
 
 type Props = {
   user: User
@@ -16,7 +17,7 @@ export function DM(props: Props) {
   const clearDM = useAppStore().clearDM
   const setDM = useAppStore().setDM
   const dmUnread = useAppStore().dmUnread
-  const { data: initialMessages } = useMessages(props.user.id)
+  const { data: initialMessages, isLoading } = useMessages(props.user.id)
   const messages = useAppStore().dm[props.user.id] ?? []
   const { ref: messagesStartRef, inView } = useInView()
   const { loading: isPrevMessagesLoading, fetchMessages } = usePreviousMessages(props.user.id)
@@ -60,19 +61,28 @@ export function DM(props: Props) {
         </div>
         <p>{props.user.username}</p>
       </div>
-      <Messages
-        pm={null}
-        setPM={() => { }}
-        messages={messages.slice(endIdx === -1 ? 0 : endIdx + 1)}
-        room={null}
-        dm={props.user}
-        initialMessages={startIdx === - 1 || endIdx === -1 ? [] : messages.slice(startIdx, endIdx + 1)}
-        prevMsg={{
-          isLoading: isPrevMessagesLoading,
-          ref: messagesStartRef,
-          messages: startIdx === - 1 ? [] : messages.slice(0, startIdx),
-        }}
-      />
+
+      {isLoading && (
+        <div className="flex items-center justify-center flex-1">
+          <LoadingIcon className="text-accent/20 fill-accent w-6 h-6" />
+        </div>
+      )}
+
+      {!isLoading && (
+        <Messages
+          pm={null}
+          setPM={() => { }}
+          messages={messages.slice(endIdx === -1 ? 0 : endIdx + 1)}
+          room={null}
+          dm={props.user}
+          initialMessages={startIdx === - 1 || endIdx === -1 ? [] : messages.slice(startIdx, endIdx + 1)}
+          prevMsg={{
+            isLoading: isPrevMessagesLoading,
+            ref: messagesStartRef,
+            messages: startIdx === - 1 ? [] : messages.slice(0, startIdx),
+          }}
+        />
+      )}
     </div>
   )
 }

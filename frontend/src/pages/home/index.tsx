@@ -1,7 +1,7 @@
 import { Social } from '@/components/social';
 import { useDMs } from '@/hooks/queries/useDMs';
 import { useRooms } from '@/hooks/queries/useRooms';
-import { useElementHeight } from '@/hooks/useEelmentHeight';
+import { useElementHeight } from '@/hooks/useElementHeight';
 import { bc } from '@/lib/bc';
 import { useAppStore } from '@/stores/appStore';
 import * as Popover from '@radix-ui/react-popover';
@@ -27,7 +27,7 @@ export function HomePage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 h-full flex flex-col" style={{ paddingTop: `${height + 16}px` }}>
-     <Header ref={ref} />
+      <Header ref={ref} />
 
       {isLoading && (
         <div className="flex-1 grid place-items-center">
@@ -57,7 +57,7 @@ export function HomePage() {
               }
             </Popover.Trigger>
             <Popover.Anchor />
-            <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[560px] w-[380px] bg-bg'>
+            <Popover.Content sideOffset={56} side='top' align="end" className='focus:outline-none border border-border rounded-md h-[470px] w-[360px] bg-bg'>
               <Social hasUnread={hasUnread} />
             </Popover.Content>
           </Popover.Root>

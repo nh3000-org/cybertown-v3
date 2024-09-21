@@ -48,6 +48,10 @@
     @apply outline-none ring-accent ring-1;
   }
 
+  input::placeholder {
+    @apply text-muted;
+  }
+
   input[type=number]::-webkit-inner-spin-button, 
   input[type=number]::-webkit-outer-spin-button { 
    -webkit-appearance: none;

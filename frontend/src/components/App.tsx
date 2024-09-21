@@ -6,6 +6,8 @@ import { Toast } from './Toast'
 import { CreateRoom } from '@/pages/home/components/CreateRoom'
 import { LogoutAlert } from '@/pages/home/components/LogoutAlert'
 import { LoginAlert } from '@/pages/home/components/LoginAlert'
+import { useEmoji } from '@/hooks/queries/useEmoji'
+import { init } from 'emoji-mart'
 
 type Props = {
   children?: React.ReactNode
@@ -14,6 +16,7 @@ type Props = {
 export function App(props: Props) {
   const { data: user, isLoading, error } = useMe()
   const setUser = useAppStore().setUser
+  const { data: emoji } = useEmoji()
 
   useEffect(() => {
     if (isLoading) {
@@ -21,6 +24,11 @@ export function App(props: Props) {
     }
     setUser(error ? null : user)
   }, [user, isLoading, error])
+
+  // load emojis for "em-emoji" web component
+  useEffect(() => {
+    init({ data: emoji })
+  }, [])
 
   if (isLoading) {
     return null

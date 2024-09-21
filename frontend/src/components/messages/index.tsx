@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { CircleX as CloseIcon, SmilePlus as EmojiIcon } from 'lucide-react'
+import { CircleX as CloseIcon, SmilePlus as EmojiIcon, Hand as NoMessagesIcon } from 'lucide-react'
 import { cn, getParticipantID } from "@/lib/utils"
 import { EmojiPicker } from "@/components/EmojiPicker"
 import * as ScrollArea from '@radix-ui/react-scroll-area';
@@ -98,34 +98,46 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 
   return (
     <div className="flex-1 flex flex-col bg-bg rounded-md overflow-hidden">
-      <ScrollArea.Root className="overflow-hidden flex-1">
-        <ScrollArea.Viewport ref={messagesRef} className={cn("w-full h-full pt-2", {
-          "pb-14": replyTo || props.pm,
-          "pb-32": replyTo && props.pm,
-        })}>
-          {props.prevMsg && <div ref={props.prevMsg.ref} className="min-h-1 flex items-center justify-center">
-            {props.prevMsg.isLoading && <LoadingIcon className='mt-2 text-accent/30 fill-accent' />}
-          </div>}
-          {messages.map(message => {
-            return (
-              <Message
-                messages={messages}
-                key={message.id}
-                message={message}
-                textareaRef={textareaRef}
-                editMsgID={editMsgID}
-                setEditMsgID={setEditMsgID}
-                setReplyTo={setReplyTo}
-                setPM={props.setPM}
-                dm={props.dm}
-              />
-            )
-          })}
-          <div className="min-h-1" ref={viewRef} />
-          <div ref={messagesEndRef} />
-        </ScrollArea.Viewport>
-        <VerticalScrollbar />
-      </ScrollArea.Root>
+      {!messages.length && props.dm && (
+        <div className="flex-1 text-muted flex flex-col items-center justify-center gap-3">
+          <NoMessagesIcon strokeWidth={1.5} />
+          <p className="max-w-[300px] text-center">
+            Start a conversation! Messages older than 15 days will be automatically deleted
+          </p>
+        </div>
+      )}
+
+      {(messages.length || !props.dm) && (
+        <ScrollArea.Root className="overflow-hidden flex-1">
+          <ScrollArea.Viewport ref={messagesRef} className={cn("w-full h-full pt-2", {
+            "pb-14": replyTo || props.pm,
+            "pb-32": replyTo && props.pm,
+          })}>
+            {props.prevMsg && <div ref={props.prevMsg.ref} className="min-h-1 flex items-center justify-center">
+              {props.prevMsg.isLoading && <LoadingIcon className='mt-2 text-accent/30 fill-accent' />}
+            </div>}
+            {messages.map(message => {
+              return (
+                <Message
+                  messages={messages}
+                  key={message.id}
+                  message={message}
+                  textareaRef={textareaRef}
+                  editMsgID={editMsgID}
+                  setEditMsgID={setEditMsgID}
+                  setReplyTo={setReplyTo}
+                  setPM={props.setPM}
+                  dm={props.dm}
+                />
+              )
+            })}
+            <div className="min-h-1" ref={viewRef} />
+            <div ref={messagesEndRef} />
+          </ScrollArea.Viewport>
+          <VerticalScrollbar />
+        </ScrollArea.Root>
+      )}
+
 
       <div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
         <div className="flex">

@@ -19,26 +19,26 @@ export const DMList = React.forwardRef((props: Props, _ref) => {
 
   if (isLoading) {
     return (
-      <div className="w-[87%] mx-auto mt-20 text-muted flex flex-col items-center justify-center gap-3">
-        <LoadingIcon className="fill-white text-accent w-6 h-6" />
+      <div className="flex items-center justify-center flex-1">
+        <LoadingIcon className="text-accent/20 fill-accent w-6 h-6" />
       </div>
     )
   }
 
   if (!isLoading && !dms?.length) {
     return (
-      <div className="w-[87%] mx-auto mt-20 text-muted flex flex-col items-center justify-center gap-3">
+      <div className="flex-1 text-muted flex flex-col items-center justify-center gap-3">
         <MessagesIcon strokeWidth={1.5} />
-        <p>You haven't messaged with anyone yet. Start a conversation!</p>
+        <p className="max-w-[300px] text-center">You haven't messaged with anyone yet. Start a conversation!</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 p-4 focus:outline-none flex flex-col gap-5">
+    <div className="flex-1 px-3 pb-3 focus:outline-none flex flex-col overflow-auto scroller">
       {dms.map(dm => {
         return (
-          <div key={dm.user.id} className="flex gap-2">
+          <div key={dm.user.id} className="flex gap-3 mt-4">
             <Profile
               user={dm.user}
               style={{ width: 32, height: 32 }}

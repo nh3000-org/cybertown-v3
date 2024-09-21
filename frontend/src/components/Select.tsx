@@ -21,7 +21,7 @@ export function Select(props: Props) {
     <RSelect
       inputId={props.id}
       isClearable={false}
-      placeholder={props.placeholder}
+      placeholder={<div className="react-select__placeholder">{props.placeholder}</div>}
       onBlur={(event) => {
         // https://github.com/JedWatson/react-select/issues/5732
         const element = event.relatedTarget;

@@ -22,7 +22,7 @@ export const RelationsTab = React.forwardRef((props: Props, _ref) => {
   const [relation, setRelation] = useState('following')
 
   return (
-    <Tabs.Root className="flex flex-col h-full" value={relation} onValueChange={setRelation}>
+    <Tabs.Root className="flex-1 flex flex-col overflow-hidden" value={relation} onValueChange={setRelation}>
       <Tabs.List className="flex justify-between border-b border-border p-1 gap-3">
         {relations.map(r => {
           return (
@@ -32,13 +32,13 @@ export const RelationsTab = React.forwardRef((props: Props, _ref) => {
           )
         })}
       </Tabs.List>
-      <Tabs.Content value="following" className="flex-1 p-4 focus:outline-none">
+      <Tabs.Content asChild value="following">
         <RelationList setDM={props.setDM} relation="following" />
       </Tabs.Content>
-      <Tabs.Content value="followers" className="flex-1 p-4 focus:outline-none">
+      <Tabs.Content asChild value="followers">
         <RelationList setDM={props.setDM} relation="followers" />
       </Tabs.Content>
-      <Tabs.Content value="friends" className="flex-1 p-4 focus:outline-none">
+      <Tabs.Content asChild value="friends">
         <RelationList setDM={props.setDM} relation="friends" />
       </Tabs.Content>
     </Tabs.Root>

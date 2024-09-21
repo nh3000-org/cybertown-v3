@@ -15,12 +15,19 @@ import * as Toast from '@radix-ui/react-toast';
 import '@/styles/index.css'
 import '@/styles/react-select.css'
 import '@/styles/prose.css'
+import { NotFound } from './pages/NotFound';
+import { ErrorPage } from './pages/ErrorPage';
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
+      {
+        path: "*",
+        element: <NotFound />
+      },
       {
         path: "/",
         element: <HomePage />,

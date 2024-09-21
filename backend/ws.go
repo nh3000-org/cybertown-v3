@@ -225,7 +225,8 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 		data,
 	)
 	if msgType == t.DMMsg {
-		err := s.svc.CreateMessage(context.Background(), msg, p.ID, *data.ParticipantID)
+		mID, err := s.svc.CreateMessage(context.Background(), msg, p.ID, *data.ParticipantID)
+		msg.ID = mID
 		if err != nil {
 			log.Printf("new message event: failed to create message: %v", err)
 			return
@@ -610,7 +611,6 @@ func (s *socketServer) createMsgData(d map[string]any, m t.MsgType, roomID, pID 
 
 func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage) *t.Message {
 	msg := t.Message{
-		ID:        shortuuid.New(),
 		Content:   d.Content,
 		From:      *user,
 		CreatedAt: time.Now().UTC(),
@@ -618,6 +618,7 @@ func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage)
 	}
 
 	if m == t.RoomMsg || m == t.PrivateRoomMsg {
+		msg.ID = shortuuid.New()
 		msg.RoomID = d.RoomID
 	}
 

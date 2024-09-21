@@ -6,6 +6,10 @@
   @apply outline-none ring-0 shadow-none !important;
 }
 
+.react-select__placeholder {
+  @apply text-muted !important;
+}
+
 .react-select__indicator-separator {
   @apply hidden !important;
 }
