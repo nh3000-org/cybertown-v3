@@ -2,6 +2,7 @@ package service
 
 import (
 	t "backend/types"
+	"backend/utils"
 	"context"
 )
 
@@ -33,4 +34,34 @@ func (s *Service) CreateMessage(ctx context.Context, msg *t.Message, userID, par
 		return err
 	}
 	return s.repo.CreateMessage(ctx, dmID, msg)
+}
+
+func (s *Service) ReactionToMessage(ctx context.Context, msgID string, userID, participantID int, reaction string) error {
+	m, err := s.repo.GetMessage(ctx, msgID, userID, participantID, true)
+	if err != nil {
+		return err
+	}
+
+	reactions := map[string][]int{}
+	if m.Reactions != nil {
+		reactions = *m.Reactions
+	}
+
+	if _, ok := reactions[reaction]; ok {
+		if !utils.Includes(reactions[reaction], userID) {
+			reactions[reaction] = append(reactions[reaction], userID)
+		} else {
+			reactions[reaction] = utils.Filter(reactions[reaction], func(val int) bool {
+				return val != userID
+			})
+		}
+		if len(reactions[reaction]) == 0 {
+			delete(reactions, reaction)
+		}
+	} else {
+		reactions[reaction] = append(reactions[reaction], userID)
+	}
+	m.Reactions = &reactions
+
+	return s.repo.UpdateMessage(ctx, m, true)
 }

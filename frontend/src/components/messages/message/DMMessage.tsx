@@ -45,7 +45,7 @@ export function DMMessage(props: Props) {
           />
         </div>
       </div>
-      {!message.isDeleted && <Reactions message={message} isDM={props.dm !== null} />}
+      {!message.isDeleted && <Reactions message={message} dm={props.dm} />}
       <div className={cn("flex gap-2 self-end mt-2", {
         "self-start": !isFromMe,
       })}>

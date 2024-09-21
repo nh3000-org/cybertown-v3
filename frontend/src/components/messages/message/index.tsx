@@ -66,7 +66,7 @@ export function Message(props: Props) {
         </div>
         {replyToMsg && <ReplyTo message={replyToMsg} isDM={props.dm !== null} />}
         <MessageContent message={message} />
-        {!message.isDeleted && <Reactions message={message} isDM={props.dm !== null} />}
+        {!message.isDeleted && <Reactions message={message} dm={props.dm} />}
       </div>
     </div>
   )

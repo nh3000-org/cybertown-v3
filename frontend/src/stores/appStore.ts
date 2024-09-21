@@ -192,7 +192,7 @@ export const useAppStore = create<State & Actions>()(
         messages = state.messages
       } else {
         const id = getDMParticipant(event.data.from, event.data.participant!, state.user!)
-        messages = state.dm[id]
+        messages = state.dm[id] ?? []
       }
       const { id, reaction, from } = event.data
       const index = messages.findIndex(msg => msg.id === id)

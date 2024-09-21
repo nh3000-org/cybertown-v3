@@ -114,7 +114,7 @@ export type Message = {
   createdAt: string
   from: User
   roomID: number
-  reactions: Record<string, Record<string, User>>
+  reactions: Record<string, Record<number, User>>
   isEdited?: boolean
   isDeleted?: boolean
   replyTo?: string

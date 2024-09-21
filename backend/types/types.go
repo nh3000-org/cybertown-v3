@@ -85,16 +85,21 @@ const (
 )
 
 type Message struct {
-	ID          string          `json:"id"`
-	Content     string          `json:"content"`
-	From        User            `json:"from"`
-	ReplyTo     *string         `json:"replyTo,omitempty"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	RoomID      *int            `json:"roomID,omitempty"`
-	Reactions   *map[string]any `json:"reactions,omitempty"`
-	Participant *User           `json:"participant,omitempty"`
-	IsDeleted   bool            `json:"isDeleted"`
-	IsEdited    bool            `json:"isEdited"`
+	ID          string            `json:"id"`
+	Content     string            `json:"content"`
+	From        User              `json:"from"`
+	ReplyTo     *string           `json:"replyTo,omitempty"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	RoomID      *int              `json:"roomID,omitempty"`
+	Reactions   *map[string][]int `json:"reactions,omitempty"`
+	Participant *User             `json:"participant,omitempty"`
+	IsDeleted   bool              `json:"isDeleted"`
+	IsEdited    bool              `json:"isEdited"`
+}
+
+type MessageResponse struct {
+	Message
+	Reactions *map[string]map[int]struct{} `json:"reactions,omitempty"`
 }
 
 type MsgType int

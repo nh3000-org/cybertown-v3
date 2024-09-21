@@ -610,11 +610,12 @@ func (r *Repo) UpdateDMs(ctx context.Context, userID int, participantID int) err
 	return err
 }
 
-func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, cursor *time.Time) ([]*t.Message, error) {
+func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, cursor *time.Time) ([]*t.MessageResponse, error) {
 	var isCursored bool
 	if cursor != nil {
 		isCursored = true
 	}
+
 	query := `
 	  SELECT * FROM (
 			SELECT m.id, m.content, m.is_edited, m.is_deleted, m.reply_to, 
@@ -627,23 +628,43 @@ func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, curso
 			) AND ($3 = FALSE OR m.created_at < $4) ORDER BY m.created_at DESC LIMIT 50
 	  ) ORDER BY created_at ASC;
 	`
+
 	rows, err := r.pool.Query(ctx, query, userID, participantID, isCursored, cursor)
 	if err != nil {
 		return nil, err
 	}
-	messages := make([]*t.Message, 0)
+
+	messages := make([]*t.MessageResponse, 0)
+
 	for rows.Next() {
-		var msg t.Message
+		var msg t.MessageResponse
+		var reactions *map[string][]int
+
 		err := rows.Scan(&msg.ID, &msg.Content, &msg.IsEdited,
-			&msg.IsDeleted, &msg.ReplyTo, &msg.Reactions, &msg.CreatedAt,
+			&msg.IsDeleted, &msg.ReplyTo, &reactions, &msg.CreatedAt,
 			&msg.From.ID, &msg.From.Username, &msg.From.Avatar)
+
+		if reactions != nil {
+			rMap := make(map[string]map[int]struct{})
+			for r, pIDs := range *reactions {
+				rMap[r] = make(map[int]struct{})
+				for _, pID := range pIDs {
+					rMap[r][pID] = struct{}{}
+				}
+			}
+			msg.Reactions = &rMap
+		}
+
 		if err != nil {
 			return nil, err
 		}
+
 		messages = append(messages, &msg)
 	}
+
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return messages, nil
 }

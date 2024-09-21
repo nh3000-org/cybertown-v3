@@ -329,11 +329,18 @@ func (s *socketServer) reactionToMsgHandler(conn *websocket.Conn, b []byte) {
 	}
 
 	p := s.getParticipant(conn)
+	if msgType == t.DMMsg {
+		err := s.svc.ReactionToMessage(context.Background(), data.ID, p.ID, *data.ParticipantID, data.Reaction)
+		if err != nil {
+			log.Printf("reaction msg event: failed to update message: %v", err)
+			return
+		}
+	}
+
 	event := t.Event{
 		Name: "REACTION_TO_MESSAGE_BROADCAST",
 		Data: s.createMsgData(map[string]any{
 			"id":       data.ID,
-			"roomID":   data.RoomID,
 			"reaction": data.Reaction,
 			"from":     p.User,
 		}, msgType, data.RoomID, data.ParticipantID),
@@ -602,14 +609,11 @@ func (s *socketServer) createMsgData(d map[string]any, m t.MsgType, roomID, pID 
 }
 
 func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage) *t.Message {
-	reactions := make(map[string]any)
-
 	msg := t.Message{
 		ID:        shortuuid.New(),
 		Content:   d.Content,
 		From:      *user,
 		CreatedAt: time.Now().UTC(),
-		Reactions: &reactions,
 		ReplyTo:   d.ReplyTo,
 	}
 
