@@ -28,7 +28,7 @@ export function RoomPage() {
     bc.sendMessage("VISITED_ROOM_PAGE")
   }, [])
 
-  if (isLoading && user === undefined) {
+  if (isLoading || user === undefined) {
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingIcon className="text-accent/20 fill-accent w-8 h-8" />
