@@ -19,8 +19,6 @@ export function Room(props: Props) {
   return (
     <main className="h-full w-full p-4 grid grid-cols-[1fr_400px] bg-sidebar gap-4">
       <div className="border border-border rounded-md bg-bg flex flex-col">
-        <div className="min-h-[100px]">
-        </div>
         <div className="flex-1 flex items-center justify-center">
           {room?.settings.welcomeMessage && (
             <p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">

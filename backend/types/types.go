@@ -20,8 +20,9 @@ type Profile struct {
 
 type Participant struct {
 	User
-	SID    string `json:"sid"`
-	Status string `json:"status,omitempty"`
+	SID      string    `json:"sid"`
+	Status   string    `json:"status,omitempty"`
+	JoinedAt time.Time `json:"joinedAt"`
 }
 
 type Room struct {

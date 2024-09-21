@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -47,8 +48,9 @@ func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]stru
 
 func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
 	p := &t.Participant{
-		SID:    shortuuid.New(),
-		Status: "None",
+		SID:      shortuuid.New(),
+		Status:   "None",
+		JoinedAt: time.Now().UTC(),
 	}
 
 	if user != nil {
@@ -152,6 +154,11 @@ func (s *socketServer) getParticipantsInRoom(roomID int) []*t.Participant {
 			}
 		}
 	}
+
+	sort.Slice(participants, func(i, j int) bool {
+		return participants[i].JoinedAt.Before(participants[j].JoinedAt)
+	})
+
 	return participants
 }
 

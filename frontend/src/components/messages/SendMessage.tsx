@@ -59,13 +59,13 @@ export function SendMessage(props: Props) {
   const editMsg = messages.find(msg => editMsgID && msg.id === editMsgID)
 
   function handleNewMessage(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && search.show && mentionedParticipants.length) {
+    if ((e.key === "Enter" || e.key === "Tab") && search.show && mentionedParticipants.length) {
       e.preventDefault()
       selectParticipant(mentionedParticipants[0])
       return
     }
 
-    if (e.key === "Enter" && emojiSearch.show && emojis.length) {
+    if ((e.key === "Enter" || e.key === "Tab") && emojiSearch.show && emojis.length) {
       e.preventDefault()
       selectEmoji(emojis[0])
       return
