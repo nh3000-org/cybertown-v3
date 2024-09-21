@@ -10,6 +10,7 @@ import { MultiValue, SingleValue } from 'react-select'
 import * as constants from '@/constants'
 import { useUpdateRoom } from '@/hooks/mutations/useUpdateRoom';
 import { flattenError } from '@/lib/utils';
+import { useLanguages } from '@/hooks/queries/useLanguages';
 
 const createRoomSchema = z.object({
   topic: z.string().min(3, { message: 'Should be minimum of 3 characters' }).max(128, { message: 'Exceeded maximum of 128 characters' }),
@@ -24,6 +25,7 @@ export function CreateRoom() {
   const editRoom = useAppStore().createOrUpdateRoom.room
   const { mutateAsync: createRoom, isLoading } = useCreateRoom()
   const { mutateAsync: updateRoom, isLoading: isUpdateLoading } = useUpdateRoom()
+  const { data: languages } = useLanguages()
 
   const [room, setRoom] = useState<{
     topic: string
@@ -101,13 +103,13 @@ export function CreateRoom() {
   }, [open])
 
   useEffect(() => {
-    if (editRoom) {
+    if (editRoom && languages) {
       const maxParticipants = constants.maxParticipants.find(p => p.value === String(editRoom.maxParticipants))
-      const languages = constants.languages.filter(p => editRoom.languages.includes(p.value))
+      const selectedLanguages = languages.filter(p => editRoom.languages.includes(p.value))
       setRoom({
         topic: editRoom.topic,
         maxParticipants,
-        languages
+        languages: selectedLanguages
       })
     }
   }, [editRoom])
@@ -141,7 +143,7 @@ export function CreateRoom() {
             <Label htmlFor="languages">Language</Label>
             <Select id="languages" multiCount={2} value={room.languages} setValue={(language) => {
               onChange('languages', language ?? [])
-            }} isMulti placeholder="Select language" options={constants.languages} />
+            }} isMulti placeholder="Select language" options={languages ?? []} />
             {errors.languages ? <span className="text-danger text-sm">{errors.languages}</span> : null}
           </div>
 

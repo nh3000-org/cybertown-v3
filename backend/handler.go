@@ -399,3 +399,9 @@ func (app *application) getMessagesHandler(w http.ResponseWriter, r *http.Reques
 		"messages": messages,
 	})
 }
+
+func (app *application) getLanguagesHandler(w http.ResponseWriter, _ *http.Request) {
+	jsonResponse(w, http.StatusOK, map[string]any{
+		"languages": t.AllowedLanguages,
+	})
+}

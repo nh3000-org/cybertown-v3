@@ -11,7 +11,6 @@ const (
 )
 
 var (
-	allowedLanguages       = []string{"english", "hindi", "tamil", "indonesian", "vietnamese"}
 	allowedMaxParticipants = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20}
 )
 
@@ -26,8 +25,12 @@ func (r *CreateRoomRequest) Validate() (bool, error) {
 	vd.Count("topic", &r.Topic, "min", minTopicLen).
 		Count("topic", &r.Topic, "max", maxTopicLen).
 		CountSlice("language", r.Languages, "min", 1).
-		IsInSlice("language", r.Languages, allowedLanguages).
 		IsInInt("maxParticipants", r.MaxParticipants, allowedMaxParticipants)
+
+	if !IsInAllowedLanguages(r.Languages) {
+		vd.Errors["language"] = "invalid language"
+	}
+
 	return vd.IsValid(), vd
 }
 

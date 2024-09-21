@@ -2,6 +2,7 @@ import { config } from "@/config"
 import { fetchWrapper } from "@/lib/fetchWrapper"
 import { CreateRoom, Room, RoomRes, User, Profile, RelationRes, DMsRes } from "@/types"
 import { Message } from "@/types/broadcast"
+import { Option } from "@/components/Select"
 
 export const api = {
   async me() {
@@ -98,4 +99,10 @@ export const api = {
     const data = await res.json()
     return data
   },
+
+  async getLanguages() {
+    const url = config.apiURL + "/languages"
+    const data = await fetchWrapper<"languages", Option[]>(url)
+    return data.languages
+  }
 }

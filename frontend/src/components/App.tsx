@@ -8,6 +8,7 @@ import { LogoutAlert } from '@/pages/home/components/LogoutAlert'
 import { LoginAlert } from '@/pages/home/components/LoginAlert'
 import { useEmoji } from '@/hooks/queries/useEmoji'
 import { init } from 'emoji-mart'
+import { useLanguages } from '@/hooks/queries/useLanguages'
 
 type Props = {
   children?: React.ReactNode
@@ -16,7 +17,9 @@ type Props = {
 export function App(props: Props) {
   const { data: user, isLoading, error } = useMe()
   const setUser = useAppStore().setUser
+  
   const { data: emoji } = useEmoji()
+  useLanguages()
 
   useEffect(() => {
     if (isLoading) {

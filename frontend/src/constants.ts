@@ -12,14 +12,6 @@ export const maxParticipants = [
   { value: '10', label: '10' },
 ]
 
-export const languages = [
-  { value: 'english', label: 'English' },
-  { value: 'tamil', label: 'Tamil' },
-  { value: 'hindi', label: 'Hindi' },
-  { value: 'vietnamese', label: 'Vietnamese' },
-  { value: 'indonesian', label: 'Indonesian' },
-]
-
 export const status = [
   'None',
   'AFK',
