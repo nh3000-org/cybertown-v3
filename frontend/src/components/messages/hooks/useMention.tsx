@@ -14,7 +14,7 @@ export function useMention(content: string, room: RoomRes | null) {
     show: false,
   })
 
-  const mentionedParticipants = room === null ? [] :
+  const mentionedParticipants = !room ? [] :
     Array.from(
       room.participants
         .filter(el => el.id !== user?.id && el.username.toLowerCase().includes(search.query.toLowerCase()))

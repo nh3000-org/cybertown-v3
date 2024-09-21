@@ -21,14 +21,14 @@ export function Room(props: Props) {
       <div className="border border-border rounded-md bg-bg flex flex-col">
         <div className="min-h-[100px]">
         </div>
-        <div className="flex-1 border-y border-border flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           {room?.settings.welcomeMessage && (
             <p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">
               {room.settings.welcomeMessage.replace('{username}', user?.username ?? '')}
             </p>
           )}
         </div>
-        <div className="min-h-[100px] p-4">
+        <div className="p-4">
           {(!isLoading && room) && <Participants room={room} setPM={setPM} setTab={setTab} />}
         </div>
       </div>
