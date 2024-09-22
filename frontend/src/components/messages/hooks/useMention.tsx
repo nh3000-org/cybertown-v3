@@ -1,65 +1,70 @@
-import { useAppStore } from "@/stores/appStore"
-import { RoomRes } from "@/types"
-import { useEffect, useState } from "react"
+import { useAppStore } from '@/stores/appStore'
+import { RoomRes } from '@/types'
+import { useEffect, useState } from 'react'
 
 export type TextareaSearch = {
-  query: string
-  show: boolean
+	query: string
+	show: boolean
 }
 
 export function useMention(content: string, room: RoomRes | null) {
-  const user = useAppStore().user
-  const [search, setSearch] = useState<TextareaSearch>({
-    query: '',
-    show: false,
-  })
+	const user = useAppStore().user
+	const [search, setSearch] = useState<TextareaSearch>({
+		query: '',
+		show: false,
+	})
 
-  const mentionedParticipants = !room ? [] :
-    Array.from(
-      room.participants
-        .filter(el => el.id !== user?.id && el.username.toLowerCase().includes(search.query.toLowerCase()))
-        .reduce((map, el) => map.set(el.id, el), new Map())
-        .values()
-    );
+	const mentionedParticipants = !room
+		? []
+		: Array.from(
+				room.participants
+					.filter(
+						(el) =>
+							el.id !== user?.id &&
+							el.username.toLowerCase().includes(search.query.toLowerCase())
+					)
+					.reduce((map, el) => map.set(el.id, el), new Map())
+					.values()
+			)
 
-  useEffect(() => {
-    if (room === null) {
-      return
-    }
+	useEffect(() => {
+		if (room === null) {
+			return
+		}
 
-    const timeoutID = setTimeout(() => {
-      const words = content.split(" ")
-      const lastWord = words[words.length - 1]
-      if (!lastWord) {
-        setSearch({
-          show: false,
-          query: '',
-        })
-        return
-      }
-      if (lastWord.endsWith('@')) {
-        setSearch({
-          query: '',
-          show: true,
-        })
-        return
-      }
-      const index = lastWord.lastIndexOf('@')
-      if (index === -1) {
-        return
-      }
-      const query = lastWord.substring(index + 1)
-      setSearch({
-        query,
-        show: true,
-      })
-    })
-    return () => clearTimeout(timeoutID)
-  }, [content])
+		const timeoutID = setTimeout(() => {
+			const words = content.split(' ')
+			const lastWord = words[words.length - 1]
+			if (!lastWord) {
+				setSearch({
+					show: false,
+					query: '',
+				})
+				return
+			}
+			if (lastWord.endsWith('@')) {
+				setSearch({
+					query: '',
+					show: true,
+				})
+				return
+			}
+			const index = lastWord.lastIndexOf('@')
+			if (index === -1) {
+				return
+			}
+			const query = lastWord.substring(index + 1)
+			setSearch({
+				query,
+				show: true,
+			})
+		})
+		return () => clearTimeout(timeoutID)
+	}, [content])
 
-  return {
-    search,
-    setSearch,
-    mentionedParticipants
-  }
+	return {
+		search,
+		setSearch,
+		mentionedParticipants,
+	}
 }

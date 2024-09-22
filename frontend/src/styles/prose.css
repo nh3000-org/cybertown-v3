@@ -1,87 +1,105 @@
 .prose {
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium;
-  }
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-medium;
+	}
 
-  h1, h2, h3, h4, h5, h6, p, ul, ol, pre, table {
-    & + * {
-      @apply mt-3;
-    }
-  }
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6,
+	p,
+	ul,
+	ol,
+	pre,
+	table {
+		& + * {
+			@apply mt-3;
+		}
+	}
 
-  ul li, ol li {
-    @apply pl-3;
-  }
+	ul li,
+	ol li {
+		@apply pl-3;
+	}
 
-  ul li::before, ol li::before {
-    content: '• ';
-    color: theme('colors.muted');
-  }
+	ul li::before,
+	ol li::before {
+		content: '• ';
+		color: theme('colors.muted');
+	}
 
-  a {
-    @apply text-accent no-underline break-all;
-  }
+	a {
+		@apply text-accent no-underline break-all;
+	}
 
-  a:focus {
-    @apply ring-0;
-  }
+	a:focus {
+		@apply ring-0;
+	}
 
-  hr {
-    @apply border-t border-border my-2;
-  }
+	hr {
+		@apply border-t border-border my-2;
+	}
 
-  code:not(pre code) {
-    @apply bg-bg-2 px-[4px] py-[2px] rounded-md;
-  }
+	code:not(pre code) {
+		@apply bg-bg-2 px-[4px] py-[2px] rounded-md;
+	}
 
-  code {
-    @apply whitespace-break-spaces text-sm;
-  }
+	code {
+		@apply whitespace-break-spaces text-sm;
+	}
 
-  p {
-    @apply break-words;
-  }
+	p {
+		@apply break-words;
+	}
 
-  pre {
-    @apply bg-bg-3/20 p-2 rounded-md;
-  }
+	pre {
+		@apply bg-bg-3/20 p-2 rounded-md;
+	}
 
-  h1 {
-    @apply text-3xl;
-  }
-  h3 {
-    @apply text-2xl;
-  }
-  h2 {
-    @apply text-xl;
-  }
-  h4 {
-    @apply text-lg;
-  }
-  h5 {
-    @apply text-lg;
-  }
-  h6 {
-    @apply text-lg;
-  }
+	h1 {
+		@apply text-3xl;
+	}
+	h3 {
+		@apply text-2xl;
+	}
+	h2 {
+		@apply text-xl;
+	}
+	h4 {
+		@apply text-lg;
+	}
+	h5 {
+		@apply text-lg;
+	}
+	h6 {
+		@apply text-lg;
+	}
 
-  .table-wrapper {
-    @apply w-[313px] overflow-x-auto whitespace-nowrap;
-  }
+	.table-wrapper {
+		@apply w-[313px] overflow-x-auto whitespace-nowrap;
+	}
 
-  table {
-    @apply w-full my-4 border-collapse;
-  }
+	table {
+		@apply w-full my-4 border-collapse;
+	}
 
-  th, td {
-    @apply py-2 px-3 border border-border text-left;
-  }
+	th,
+	td {
+		@apply py-2 px-3 border border-border text-left;
+	}
 
-  blockquote {
-    @apply pl-2 border-l-2 border-accent italic;
-  }
+	blockquote {
+		@apply pl-2 border-l-2 border-accent italic;
+	}
 
-  .no-space {
-    @apply break-all;
-  }
+	.no-space {
+		@apply break-all;
+	}
 }

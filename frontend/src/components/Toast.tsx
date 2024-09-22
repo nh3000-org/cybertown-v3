@@ -3,32 +3,32 @@ import * as RToast from '@radix-ui/react-toast'
 import { X as CloseIcon, Info as InfoIcon, Ban as BanIcon } from 'lucide-react'
 
 export function Toast() {
-  const toast = useAppStore().toast
-  const setToast = useAppStore().setToast
-  const iconMap = {
-    'error': BanIcon,
-    'info': InfoIcon
-  }
-  const Icon = toast.content?.type ? iconMap[toast.content.type] : null
+	const toast = useAppStore().toast
+	const setToast = useAppStore().setToast
+	const iconMap = {
+		error: BanIcon,
+		info: InfoIcon,
+	}
+	const Icon = toast.content?.type ? iconMap[toast.content.type] : null
 
-  return (
-    <RToast.Root
-      className="border border-border bg-sidebar shadow-md rounded-md pl-6 pr-10 py-4 relative flex flex-col gap-2"
-      open={toast.open}
-      onOpenChange={setToast}
-    >
-      <RToast.Title className="font-semibold flex gap-2 items-center">
-        {Icon && <Icon size={18} className="text-muted" />}
-        <span>{toast.content?.title}</span>
-      </RToast.Title>
-      <RToast.Description className="text-muted">
-        {toast.content?.description}
-      </RToast.Description>
-      <RToast.Close asChild>
-        <button className="absolute top-3 right-4">
-          <CloseIcon size={20} className="text-muted" />
-        </button>
-      </RToast.Close>
-    </RToast.Root>
-  )
+	return (
+		<RToast.Root
+			className="border border-border bg-sidebar shadow-md rounded-md pl-6 pr-10 py-4 relative flex flex-col gap-2"
+			open={toast.open}
+			onOpenChange={setToast}
+		>
+			<RToast.Title className="font-semibold flex gap-2 items-center">
+				{Icon && <Icon size={18} className="text-muted" />}
+				<span>{toast.content?.title}</span>
+			</RToast.Title>
+			<RToast.Description className="text-muted">
+				{toast.content?.description}
+			</RToast.Description>
+			<RToast.Close asChild>
+				<button className="absolute top-3 right-4">
+					<CloseIcon size={20} className="text-muted" />
+				</button>
+			</RToast.Close>
+		</RToast.Root>
+	)
 }

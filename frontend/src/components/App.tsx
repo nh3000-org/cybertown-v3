@@ -11,35 +11,35 @@ import { init } from 'emoji-mart'
 import { useLanguages } from '@/hooks/queries/useLanguages'
 
 type Props = {
-  children?: React.ReactNode
+	children?: React.ReactNode
 }
 
 export function App(props: Props) {
-  const { data: user, isLoading, error } = useMe()
-  const setUser = useAppStore().setUser
-  
-  const { data: emoji } = useEmoji()
-  useLanguages()
+	const { data: user, isLoading, error } = useMe()
+	const setUser = useAppStore().setUser
 
-  useEffect(() => {
-    if (isLoading) {
-      return
-    }
-    setUser(error ? null : user)
-  }, [user, isLoading, error])
+	const { data: emoji } = useEmoji()
+	useLanguages()
 
-  // load emojis for "em-emoji" web component
-  useEffect(() => {
-    init({ data: emoji })
-  }, [])
+	useEffect(() => {
+		if (isLoading) {
+			return
+		}
+		setUser(error ? null : user)
+	}, [user, isLoading, error])
 
-  return (
-    <>
-      {props.children ?? <Outlet />}
-      <Toast />
-      <CreateRoom />
-      <LogoutAlert />
-      <LoginAlert />
-    </>
-  )
+	// load emojis for "em-emoji" web component
+	useEffect(() => {
+		init({ data: emoji })
+	}, [])
+
+	return (
+		<>
+			{props.children ?? <Outlet />}
+			<Toast />
+			<CreateRoom />
+			<LogoutAlert />
+			<LoginAlert />
+		</>
+	)
 }

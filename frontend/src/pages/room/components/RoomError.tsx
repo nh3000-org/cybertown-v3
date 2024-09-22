@@ -1,113 +1,117 @@
-import { APIError, getGoogleOAuthURL } from "@/lib/utils"
-import { User } from "@/types"
-import { Link } from "react-router-dom"
-import { DoorOpen as DoorOpenIcon, DoorClosed as BanIcon, BatteryFull as FullIcon, TabletSmartphone as RoomIcon, UserX as UserIcon } from 'lucide-react';
-import { useEffect } from "react";
-import { ws } from "@/lib/ws";
+import { APIError, getGoogleOAuthURL } from '@/lib/utils'
+import { User } from '@/types'
+import { Link } from 'react-router-dom'
+import {
+	DoorOpen as DoorOpenIcon,
+	DoorClosed as BanIcon,
+	BatteryFull as FullIcon,
+	TabletSmartphone as RoomIcon,
+	UserX as UserIcon,
+} from 'lucide-react'
+import { useEffect } from 'react'
+import { ws } from '@/lib/ws'
 import { format } from 'date-fns'
 
 type Props = {
-  error: APIError | undefined
-  user: User | null | undefined
-  isKicked: {
-    expiredAt: string
-  } | null
-  joinedAnotherRoom: boolean
+	error: APIError | undefined
+	user: User | null | undefined
+	isKicked: {
+		expiredAt: string
+	} | null
+	joinedAnotherRoom: boolean
 }
 
 export function RoomError(props: Props) {
-  const { error, isKicked, user, joinedAnotherRoom } = props
+	const { error, isKicked, user, joinedAnotherRoom } = props
 
-  useEffect(() => {
-    ws.close()
-  }, [])
+	useEffect(() => {
+		ws.close()
+	}, [])
 
-  if (!user) {
-    return <Error status={401} />
-  }
+	if (!user) {
+		return <Error status={401} />
+	}
 
-  if (error?.status === 400) {
-    return <Error status={error.status} />
-  }
+	if (error?.status === 400) {
+		return <Error status={error.status} />
+	}
 
-  if (error?.status === 404) {
-    return <Error status={error.status} />
-  }
+	if (error?.status === 404) {
+		return <Error status={error.status} />
+	}
 
-  if (error?.status === 403 || isKicked) {
-    const errors = error?.errors ?? {}
-    return <Kicked
-      expiredAt={errors.expiredAt ?? isKicked?.expiredAt ?? ''}
-    />
-  }
+	if (error?.status === 403 || isKicked) {
+		const errors = error?.errors ?? {}
+		return <Kicked expiredAt={errors.expiredAt ?? isKicked?.expiredAt ?? ''} />
+	}
 
-  if (joinedAnotherRoom) {
-    return <Error status={429} />
-  }
+	if (joinedAnotherRoom) {
+		return <Error status={429} />
+	}
 
-  return null
+	return null
 }
-
 
 export function Error(props: { status: number }) {
-  const contentMap: Record<number, Record<string, any>> = {
-    404: {
-      title: "This room can't be found",
-      desc: "The room you're looking for doesn't seem to exist",
-      icon: <DoorOpenIcon className="stroke-pink-500 mb-2 h-12 w-12" />,
-    },
-    401: {
-      title: "Log in to join the room",
-      desc: "You'll be redirected to google to login",
-      icon: <UserIcon className="stroke-danger mb-2 h-12 w-12" />,
-    },
-    400: {
-      title: "Room is full",
-      desc: "All the spots are occupied by other participants",
-      icon: <FullIcon className="stroke-yellow-500 mb-2 h-12 w-12" />,
-    },
-    429: {
-      title: "Room disconnected",
-      desc: "You've joined a room in another tab.",
-      icon: <RoomIcon className="stroke-orange-500 mb-2 h-12 w-12" />,
-    }
-  }
+	const contentMap: Record<number, Record<string, any>> = {
+		404: {
+			title: "This room can't be found",
+			desc: "The room you're looking for doesn't seem to exist",
+			icon: <DoorOpenIcon className="stroke-pink-500 mb-2 h-12 w-12" />,
+		},
+		401: {
+			title: 'Log in to join the room',
+			desc: "You'll be redirected to google to login",
+			icon: <UserIcon className="stroke-danger mb-2 h-12 w-12" />,
+		},
+		400: {
+			title: 'Room is full',
+			desc: 'All the spots are occupied by other participants',
+			icon: <FullIcon className="stroke-yellow-500 mb-2 h-12 w-12" />,
+		},
+		429: {
+			title: 'Room disconnected',
+			desc: "You've joined a room in another tab.",
+			icon: <RoomIcon className="stroke-orange-500 mb-2 h-12 w-12" />,
+		},
+	}
 
-  const content = contentMap[props.status]
+	const content = contentMap[props.status]
 
-  return (
-    <main className="h-full w-full grid place-items-center">
-      <div className="max-w-[600px] grid place-items-center text-center px-4">
-        {content.icon}
-        <h1 className="text-4xl font-bold mb-3">{content.title}</h1>
-        <p className="text-muted mb-5">{content.desc}</p>
-        {props.status === 401 && (
-          <Link to={getGoogleOAuthURL()} className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg">
-            Login
-          </Link>
-        )}
-      </div>
-    </main>
-  )
+	return (
+		<main className="h-full w-full grid place-items-center">
+			<div className="max-w-[600px] grid place-items-center text-center px-4">
+				{content.icon}
+				<h1 className="text-4xl font-bold mb-3">{content.title}</h1>
+				<p className="text-muted mb-5">{content.desc}</p>
+				{props.status === 401 && (
+					<Link
+						to={getGoogleOAuthURL()}
+						className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+					>
+						Login
+					</Link>
+				)}
+			</div>
+		</main>
+	)
 }
 
-export function Kicked(props: {
-  expiredAt: string
-}) {
-  const rejoinAt = format(props.expiredAt, "dd-MM-yyyy HH:mm:ss a")
+export function Kicked(props: { expiredAt: string }) {
+	const rejoinAt = format(props.expiredAt, 'dd-MM-yyyy HH:mm:ss a')
 
-  return (
-    <main className="h-full w-full grid place-items-center">
-      <div className="max-w-[600px] grid place-items-center text-center px-4">
-        <BanIcon className="stroke-danger mb-2 h-12 w-12" />
-        <h1 className="text-4xl font-bold mb-3">You've been kicked</h1>
-        <p className="text-muted mb-3">
-          You got removed from the room. You can rejoin at:
-        </p>
-        <p className="bg-bg-2 text-fg-2 px-4 py-2 rounded-md border border-border">
-          {rejoinAt}
-        </p>
-      </div>
-    </main>
-  )
+	return (
+		<main className="h-full w-full grid place-items-center">
+			<div className="max-w-[600px] grid place-items-center text-center px-4">
+				<BanIcon className="stroke-danger mb-2 h-12 w-12" />
+				<h1 className="text-4xl font-bold mb-3">You've been kicked</h1>
+				<p className="text-muted mb-3">
+					You got removed from the room. You can rejoin at:
+				</p>
+				<p className="bg-bg-2 text-fg-2 px-4 py-2 rounded-md border border-border">
+					{rejoinAt}
+				</p>
+			</div>
+		</main>
+	)
 }

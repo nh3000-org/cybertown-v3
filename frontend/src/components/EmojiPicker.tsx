@@ -1,34 +1,42 @@
-import * as Popover from '@radix-ui/react-popover';
+import * as Popover from '@radix-ui/react-popover'
 import Picker from '@emoji-mart/react'
-import { useEmoji } from '@/hooks/queries/useEmoji';
-import React from 'react';
+import { useEmoji } from '@/hooks/queries/useEmoji'
+import React from 'react'
 
 type Props = {
-  onSelect: (id: string, emoji: string) => void
-  open: boolean
-  setOpen: (visibility: boolean) => void
-  trigger: React.ReactNode
-  side?: "bottom" | "top" | "right" | "left"
-  align?: "start" | "center" | "end"
+	onSelect: (id: string, emoji: string) => void
+	open: boolean
+	setOpen: (visibility: boolean) => void
+	trigger: React.ReactNode
+	side?: 'bottom' | 'top' | 'right' | 'left'
+	align?: 'start' | 'center' | 'end'
 }
 
 export const EmojiPicker = React.forwardRef((props: Props, _ref: any) => {
-  const { trigger, align = "end", side = "left" } = props
-  const { data } = useEmoji()
+	const { trigger, align = 'end', side = 'left' } = props
+	const { data } = useEmoji()
 
-  return (
-    <Popover.Root open={props.open} onOpenChange={props.setOpen}>
-      <Popover.Trigger asChild>
-        {trigger}
-      </Popover.Trigger>
-      <Popover.Anchor />
-      <Popover.Portal>
-        <Popover.Content side={side} align={align} onCloseAutoFocus={e => e.preventDefault()} className='focus:outline-none border border-border rounded-md'>
-          <Picker data={data} onEmojiSelect={(data: any) => {
-            props.onSelect(data.id, data.native)
-          }} previewPosition="none" skinTonePosition="none" />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  )
+	return (
+		<Popover.Root open={props.open} onOpenChange={props.setOpen}>
+			<Popover.Trigger asChild>{trigger}</Popover.Trigger>
+			<Popover.Anchor />
+			<Popover.Portal>
+				<Popover.Content
+					side={side}
+					align={align}
+					onCloseAutoFocus={(e) => e.preventDefault()}
+					className="focus:outline-none border border-border rounded-md"
+				>
+					<Picker
+						data={data}
+						onEmojiSelect={(data: any) => {
+							props.onSelect(data.id, data.native)
+						}}
+						previewPosition="none"
+						skinTonePosition="none"
+					/>
+				</Popover.Content>
+			</Popover.Portal>
+		</Popover.Root>
+	)
 })

@@ -1,50 +1,52 @@
 export type User = {
-  id: number
-  username: string
-  avatar: string
+	id: number
+	username: string
+	avatar: string
 }
 
 export type Profile = {
-  isMe: boolean
-  isFollowing: boolean
-  isFriend: boolean
-  friendsCount: number
-  followingCount: number
-  followersCount: number
+	isMe: boolean
+	isFollowing: boolean
+	isFriend: boolean
+	friendsCount: number
+	followingCount: number
+	followersCount: number
 } & User
 
 export type Room = {
-  id: number
-  createdAt: string
-  settings: RoomSettings
+	id: number
+	createdAt: string
+	settings: RoomSettings
 } & CreateRoom
 
 export type RoomSettings = {
-  host: User
-  coHosts?: number[]
-  welcomeMessage?: string
+	host: User
+	coHosts?: number[]
+	welcomeMessage?: string
 }
 
 export type CreateRoom = {
-  topic: string
-  maxParticipants: number
-  languages: string[]
+	topic: string
+	maxParticipants: number
+	languages: string[]
 }
 
-export type RoomRes = Room & { participants: (User & { sid: string, status: string })[] }
+export type RoomRes = Room & {
+	participants: (User & { sid: string; status: string })[]
+}
 
-export type RoomRole = "host" | "coHost" | "guest"
+export type RoomRole = 'host' | 'coHost' | 'guest'
 
 export type RelationRes = { isFriend: boolean } & User
 
 export type DMsRes = {
-  dmID: number
-  user: User
-  lastMessage: {
-    isDeleted: boolean
-    content: string
-    createdAt: string
-    from: User
-    isUnread: boolean
-  } | null
-} 
+	dmID: number
+	user: User
+	lastMessage: {
+		isDeleted: boolean
+		content: string
+		createdAt: string
+		from: User
+		isUnread: boolean
+	} | null
+}
