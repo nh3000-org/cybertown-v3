@@ -51,7 +51,7 @@ export const RelationList = React.forwardRef((props: Props, _ref) => {
 					<div key={u.id} className="flex items-center gap-3 mt-4">
 						<Profile
 							user={u}
-							style={{ width: 32, height: 32 }}
+							classNames="w-8 h-8"
 							open={open[u.id]}
 							setOpen={(open) => {
 								setOpen((prev) => ({

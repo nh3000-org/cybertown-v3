@@ -22,11 +22,7 @@ export function RoomCard(props: Props) {
 	const { room } = props
 	const [open, setOpen] = useState<Record<string, boolean>>({})
 	const isRoomFull = room.participants.length >= room.maxParticipants
-
-	const style = {
-		width: room.maxParticipants > 3 ? 58 : 96,
-		height: room.maxParticipants > 3 ? 58 : 96,
-	}
+	const roomGridCol = Math.max(Math.min(room.maxParticipants, 5), 2)
 
 	function joinRoom(roomID: number) {
 		if (!user) {
@@ -90,13 +86,18 @@ export function RoomCard(props: Props) {
 
 			<p className="text-muted">{room.languages.join(' + ')}</p>
 
-			<div className="min-h-[60px] my-8 flex flex-wrap gap-4">
+			<div
+				className="my-6 grid gap-4 flex-1 empty:min-h-[60px]"
+				style={{
+					gridTemplateColumns: `repeat(${roomGridCol}, 1fr)`,
+				}}
+			>
 				{room.participants.map((p) => {
 					return (
 						<Profile
 							key={p.sid}
 							user={p}
-							style={style}
+							classNames="aspect-square max-w-[100px]"
 							open={open[p.sid]}
 							setOpen={(open) => {
 								setOpen((prev) => ({
@@ -107,17 +108,18 @@ export function RoomCard(props: Props) {
 						/>
 					)
 				})}
-				{Array.from({
-					length: Math.min(room.maxParticipants, 10) - room.participants.length,
-				}).map((_, i) => {
-					return (
-						<div
-							key={i}
-							style={style}
-							className="rounded-full border border-border border-dashed"
-						/>
-					)
-				})}
+				{room.maxParticipants <= 10 &&
+					Array.from({
+						length:
+							Math.min(room.maxParticipants, 10) - room.participants.length,
+					}).map((_, i) => {
+						return (
+							<div
+								key={i}
+								className="rounded-full border border-border border-dashed aspect-square max-w-[100px]"
+							/>
+						)
+					})}
 			</div>
 
 			<button

@@ -8,12 +8,13 @@ import * as Popover from '@radix-ui/react-popover'
 
 type Props = {
 	user: User
-	style: Record<string, number>
 	open: boolean
 	setOpen: (open: boolean) => void
+	classNames?: string
 }
 
 export function Profile(props: Props) {
+	const { classNames = '' } = props
 	const { data: profile } = useProfile(props.user.id, props.open === true)
 	const { mutateAsync: followMutate, isLoading } = useFollow()
 	const user = useAppStore().user
@@ -34,12 +35,13 @@ export function Profile(props: Props) {
 	return (
 		<Popover.Root open={props.open} onOpenChange={props.setOpen}>
 			<Popover.Trigger asChild>
-				<img
-					src={props.user.avatar}
-					referrerPolicy="no-referrer"
-					style={props.style}
-					className="rounded-full"
-				/>
+				<div className={classNames}>
+					<img
+						src={props.user.avatar}
+						referrerPolicy="no-referrer"
+						className="rounded-full"
+					/>
+				</div>
 			</Popover.Trigger>
 			<Popover.Content
 				side="top"

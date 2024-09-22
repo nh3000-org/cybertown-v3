@@ -43,7 +43,7 @@ export const DMList = React.forwardRef((props: Props, _ref) => {
 					<div key={dm.user.id} className="flex gap-3 mt-4">
 						<Profile
 							user={dm.user}
-							style={{ width: 32, height: 32 }}
+							classNames="w-8 h-8"
 							open={open[dm.user.id]}
 							setOpen={(open) => {
 								setOpen((prev) => ({
