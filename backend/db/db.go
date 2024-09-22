@@ -669,3 +669,13 @@ func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, curso
 
 	return messages, nil
 }
+func (r *Repo) CountRoomsHosted(ctx context.Context, userID int) (int, error) {
+	query := `
+		SELECT COUNT(*) FROM rooms r
+		JOIN room_settings rs ON r.id = rs.room_id
+		WHERE rs.host = $1;
+	`
+	var count int
+	err := r.pool.QueryRow(ctx, query, userID).Scan(&count)
+	return count, err
+}

@@ -9,7 +9,7 @@ import { useAppStore } from '@/stores/appStore'
 import { MultiValue, SingleValue } from 'react-select'
 import * as constants from '@/constants'
 import { useUpdateRoom } from '@/hooks/mutations/useUpdateRoom'
-import { flattenError } from '@/lib/utils'
+import { APIError, flattenError } from '@/lib/utils'
 import { useLanguages } from '@/hooks/queries/useLanguages'
 
 const createRoomSchema = z.object({
@@ -73,11 +73,15 @@ export function CreateRoom() {
 				} else {
 					await createRoom(result.data)
 				}
-			} catch {
+			} catch (err) {
+				let description = `Failed to ${editRoom ? 'edit' : 'create'} room. Try Again`
+				if (err instanceof APIError) {
+					description = err.errors.reason
+				}
 				setToast(true, {
 					type: 'error',
 					title: editRoom ? 'Edit Room' : 'Create Room',
-					description: `Failed to ${editRoom ? 'edit' : 'create'} room. Try Again`,
+					description,
 				})
 			} finally {
 				setOpen(false)

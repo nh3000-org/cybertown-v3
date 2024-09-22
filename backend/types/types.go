@@ -68,8 +68,9 @@ type Config struct {
 		ClientID     string `env:"GOOGLE_OAUTH_CLIENT_ID"`
 		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 	}
-	PostgresURL string `env:"POSTGRES_URL"`
-	WebURL      string `env:"WEB_URL"`
+	PostgresURL    string `env:"POSTGRES_URL"`
+	WebURL         string `env:"WEB_URL"`
+	MaxRoomsHosted int    `env:"MAX_ROOMS_HOSTED"`
 }
 
 type RoomsResponse struct {

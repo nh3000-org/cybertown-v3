@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -119,6 +120,20 @@ func (app *application) createRoomHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	u := r.Context().Value("user").(*t.User)
+
+	count, err := app.repo.CountRoomsHosted(context.Background(), u.ID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	if count >= app.conf.MaxRoomsHosted {
+		errMsg := fmt.Sprintf("Can't host more than %d rooms", app.conf.MaxRoomsHosted)
+		errorsResponse(w, http.StatusForbidden, map[string]any{
+			"reason": errMsg,
+		})
+		return
+	}
+
 	roomID, err := app.repo.CreateRoom(context.Background(), &t.Room{
 		Topic:           req.Topic,
 		MaxParticipants: req.MaxParticipants,
@@ -182,7 +197,7 @@ func (app *application) joinRoomHandler(w http.ResponseWriter, r *http.Request) 
 	u := r.Context().Value("user").(*t.User)
 	room, err := app.repo.GetRoom(context.Background(), id)
 	if err != nil {
-		if errors.Is(pgx.ErrNoRows, err) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			notFoundError(w, err)
 		} else {
 			serverError(w, err)

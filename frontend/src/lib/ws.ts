@@ -76,6 +76,14 @@ class WS {
 						}
 						useAppStore.getState().kickParticipant(event)
 						break
+					case 'ERROR_BROADCAST':
+						if (event.data.roomID !== this.roomID) {
+							return
+						}
+						useAppStore.getState().error(event)
+						break
+					default:
+						console.error('unknown event', event)
 				}
 			} catch (err) {
 				console.error("failed to parse broadcast event 'data' field", err)

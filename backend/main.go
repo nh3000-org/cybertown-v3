@@ -43,7 +43,7 @@ func main() {
 		repo: repo,
 		svc:  svc,
 		conf: &conf,
-		ss:   newSocketServer(repo, svc, emojis),
+		ss:   newSocketServer(repo, svc, &conf, emojis),
 	}
 
 	server := http.Server{

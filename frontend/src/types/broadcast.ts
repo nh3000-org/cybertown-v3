@@ -15,6 +15,7 @@ export type BroadcastEvent =
 	| UpdateWelcomeMsgBroadcastEvent
 	| SetStatusBroadcastEvent
 	| KickParticipantBroadcastEvent
+	| ErrorBroadcastEvent
 
 export type JoinedRoomBroadcastEvent = {
 	name: 'JOINED_ROOM_BROADCAST'
@@ -105,6 +106,15 @@ export type KickParticipantBroadcastEvent = {
 		participant: User
 		roomID: number
 		expiredAt: string
+	}
+}
+
+export type ErrorBroadcastEvent = {
+	name: 'ERROR_BROADCAST'
+	data: {
+		content: string
+		roomID: number
+		title: string
 	}
 }
 

@@ -5,6 +5,7 @@ import {
 	ClearChatBroadcastEvent,
 	DeleteMsgBroadcastEvent,
 	EditMsgBroadcastEvent,
+	ErrorBroadcastEvent,
 	JoinedRoomBroadcastEvent,
 	KickParticipantBroadcastEvent,
 	Message,
@@ -74,6 +75,7 @@ type Actions = {
 	reactionToMsg: (event: ReactionToMsgBroadcastEvent) => void
 	clearChat: (event: ClearChatBroadcastEvent) => void
 	kickParticipant: (event: KickParticipantBroadcastEvent) => void
+	error: (event: ErrorBroadcastEvent) => void
 }
 
 export const useAppStore = create<State & Actions>()(
@@ -280,6 +282,18 @@ export const useAppStore = create<State & Actions>()(
 		clearDM: (participantID) =>
 			set((state) => {
 				state.dm[participantID] = []
+			}),
+
+		error: (event) =>
+			set((state) => {
+				state.toast = {
+					open: true,
+					content: {
+						type: 'error',
+						title: event.data.title,
+						description: event.data.content,
+					},
+				}
 			}),
 
 		kickParticipant: (event) =>

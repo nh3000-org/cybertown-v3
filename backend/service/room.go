@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+var (
+	ErrMaxRoomsHosted = errors.New("reached maximum number of rooms hosted")
+)
+
 func (s *Service) UpdateWelcomeMessage(ctx context.Context, roomID, userID int, wm string) error {
 	r, err := s.repo.GetRoomSettings(ctx, roomID)
 	if err != nil {
@@ -61,6 +65,14 @@ func (s *Service) AssignRole(ctx context.Context, role t.RoomRole, roomID, userI
 	switch role {
 
 	case t.RoomRoleHost:
+		count, err := s.repo.CountRoomsHosted(ctx, participantID)
+		if err != nil {
+			return err
+		}
+		if count >= s.conf.MaxRoomsHosted {
+			return ErrMaxRoomsHosted
+		}
+
 		r.CoHosts = utils.Filter(r.CoHosts, filter)
 		r.CoHosts = append(r.CoHosts, r.Host.ID)
 		r.Host = t.User{

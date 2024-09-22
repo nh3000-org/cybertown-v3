@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -32,9 +33,10 @@ type socketServer struct {
 	repo         *db.Repo
 	emojis       map[string]struct{}
 	svc          *service.Service
+	cfg          *t.Config
 }
 
-func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]struct{}) *socketServer {
+func newSocketServer(repo *db.Repo, svc *service.Service, cfg *t.Config, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
 		conns:        make(map[*websocket.Conn]string),
 		rooms:        make(map[int]*socketRoom),
@@ -43,6 +45,7 @@ func newSocketServer(repo *db.Repo, svc *service.Service, emojis map[string]stru
 		emojis:       emojis,
 		repo:         repo,
 		svc:          svc,
+		cfg:          cfg,
 	}
 }
 
@@ -377,6 +380,10 @@ func (s *socketServer) clearChatHandler(conn *websocket.Conn, b []byte) {
 
 	p := s.getParticipant(conn)
 	err = s.svc.CanClearChat(context.Background(), data.RoomID, p.ID, data.ParticipantID)
+	if err != nil {
+		log.Printf("failed to clear chat: %v", err)
+		return
+	}
 
 	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "CLEAR_CHAT_BROADCAST",
@@ -403,6 +410,22 @@ func (s *socketServer) assignRoleHandler(conn *websocket.Conn, b []byte) {
 
 	p := s.getParticipant(conn)
 	err = s.svc.AssignRole(context.Background(), data.Role, data.RoomID, p.ID, data.ParticipantID)
+	if err != nil {
+		if errors.Is(err, service.ErrMaxRoomsHosted) {
+			username := s.getUser(data.ParticipantID).Username
+			msg := fmt.Sprintf("%s is already hosting %d rooms", username, s.cfg.MaxRoomsHosted)
+			s.broadcastMsgEvent([]int{p.ID}, &t.Event{
+				Name: "ERROR_BROADCAST",
+				Data: map[string]any{
+					"roomID":  data.RoomID,
+					"title":   "Transfer Room",
+					"content": msg,
+				},
+			})
+		}
+		log.Printf("failed to assign role: %v", err)
+		return
+	}
 
 	s.broadcastRoomEvent(data.RoomID, &t.Event{
 		Name: "ASSIGN_ROLE_BROADCAST",
@@ -503,6 +526,10 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte) {
 
 	p := s.getParticipant(conn)
 	k, err := s.svc.KickParticipant(context.Background(), duration, data.RoomID, p.ID, data.ParticipantID)
+	if err != nil {
+		log.Printf("failed to kick participant: %v", err)
+		return
+	}
 
 	d := map[string]any{
 		"by":          p.User,
