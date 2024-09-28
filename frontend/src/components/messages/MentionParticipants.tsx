@@ -51,7 +51,7 @@ export function MentionParticipants(props: Props) {
 					sideOffset={-20}
 					align="start"
 					side="top"
-					className="rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border w-[280px] focus:outline-none"
+					className="rounded-lg p-2 shadow-md bg-bg-2 flex flex-col gap-2 border border-border w-[280px] focus:outline-none"
 					onFocusOutside={(e) => e.preventDefault()}
 				>
 					{mentionedParticipants.map((p) => {
@@ -59,7 +59,7 @@ export function MentionParticipants(props: Props) {
 							<div
 								role="button"
 								key={p.id}
-								className="flex gap-3 items-center px-2 py-1 rounded-md hover:bg-highlight"
+								className="flex gap-3 items-center px-2 py-1 rounded-md hover:bg-accent"
 								onClick={() => {
 									if (textareaRef.current) {
 										selectParticipant(p)

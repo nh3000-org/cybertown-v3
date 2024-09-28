@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS sessions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id INT REFERENCES users(id),
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
   expired_at TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
 

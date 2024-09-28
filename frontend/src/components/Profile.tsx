@@ -47,7 +47,7 @@ export function Profile(props: Props) {
 				side="top"
 				sideOffset={12}
 				align="start"
-				className="focus:outline-none rounded-lg p-4 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border"
+				className="focus:outline-none rounded-lg p-4 shadow-md bg-bg flex flex-col gap-2 border border-border"
 			>
 				<div className="min-w-[230px]">
 					<div className="flex items-center justify-between">
@@ -62,17 +62,16 @@ export function Profile(props: Props) {
 									onClick={follow}
 									disabled={isLoading}
 									className={cn(
-										'px-4 py-1 rounded-md transition-colors duration-300 border border-accent bg-accent/30 text-accent-fg focus:ring-0 hover:bg-accent hover:text-white flex items-center gap-2 disabled:pointer-events-none',
+										'px-4 py-1 rounded-md transition-colors duration-300 bg-brand text-brand-fg focus:ring-0 flex items-center gap-2 disabled:pointer-events-none',
 										{
-											'border-danger bg-danger/10 text-danger hover:bg-danger hover:text-white':
-												profile.isFollowing,
+											'bg-danger text-white': profile.isFollowing,
 										}
 									)}
 								>
 									{isLoading && (
 										<LoadingIcon
-											className={cn('fill-accent', {
-												'fill-white text-danger': profile.isFollowing,
+											className={cn('fill-brand', {
+												'fill-danger': profile.isFollowing,
 											})}
 										/>
 									)}

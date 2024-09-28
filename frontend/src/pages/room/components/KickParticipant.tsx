@@ -104,7 +104,7 @@ export function KickParticipant(props: Props) {
 						<div className="justify-end flex justify-end gap-3 items-center mt-8">
 							<button
 								type="button"
-								className="bg-bg-3 text-fg-3 px-4 py-1 rounded-md"
+								className="bg-muted/20 px-4 py-1 rounded-md"
 								onClick={() => {
 									props.setOpen(false)
 								}}
@@ -113,7 +113,7 @@ export function KickParticipant(props: Props) {
 							</button>
 							<button
 								type="submit"
-								className="bg-accent text-accent-fg px-4 py-1 rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
+								className="bg-danger tex-white px-4 py-1 rounded-md focus:ring-danger/40 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
 							>
 								Kick
 							</button>

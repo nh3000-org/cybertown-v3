@@ -36,7 +36,7 @@
 	}
 
 	a {
-		@apply text-accent no-underline break-all;
+		@apply text-brand no-underline break-all;
 	}
 
 	a:focus {
@@ -60,7 +60,7 @@
 	}
 
 	pre {
-		@apply bg-bg-3/20 p-2 rounded-md;
+		@apply bg-bg-2 p-2 rounded-md;
 	}
 
 	h1 {
@@ -96,7 +96,7 @@
 	}
 
 	blockquote {
-		@apply pl-2 border-l-2 border-accent italic;
+		@apply pl-2 border-l-2 border-brand/40 italic;
 	}
 
 	.no-space {

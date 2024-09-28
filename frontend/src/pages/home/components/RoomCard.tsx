@@ -22,7 +22,16 @@ export function RoomCard(props: Props) {
 	const { room } = props
 	const [open, setOpen] = useState<Record<string, boolean>>({})
 	const isRoomFull = room.participants.length >= room.maxParticipants
-	const roomGridCol = Math.max(Math.min(room.maxParticipants, 5), 2)
+
+	const size: Record<number, string> = {
+		1: '100px',
+		2: '90px',
+		3: '70px',
+		4: '60px',
+	}
+	const sizeDecider =
+		room.maxParticipants > 10 ? room.participants.length : room.maxParticipants
+	const participantSize = sizeDecider >= 5 ? '50px' : size[sizeDecider]
 
 	function joinRoom(roomID: number) {
 		if (!user) {
@@ -33,7 +42,7 @@ export function RoomCard(props: Props) {
 	}
 
 	return (
-		<div className="p-4 border border-border rounded-md bg-bg-2 text-fg-2 flex flex-col">
+		<div className="p-4 border border-border rounded-md flex flex-col">
 			<div className="flex items-center justify-between">
 				<Tooltip title={room.topic}>
 					<p className="text-lg font-semibold mb-1 flex-1 ellipsis pr-2">
@@ -50,7 +59,7 @@ export function RoomCard(props: Props) {
 							side="bottom"
 							align="end"
 							sideOffset={12}
-							className="focus:outline-none rounded-lg p-6 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border min-w-[150px]"
+							className="focus:outline-none rounded-lg p-6 shadow-md flex flex-col gap-2 border border-border min-w-[150px] bg-bg"
 						>
 							<div className="flex flex-col items-center justify-center gap-3 relative">
 								<p className="text-muted">Host</p>
@@ -89,7 +98,7 @@ export function RoomCard(props: Props) {
 			<div
 				className="my-6 grid gap-4 flex-1 empty:min-h-[60px]"
 				style={{
-					gridTemplateColumns: `repeat(${roomGridCol}, 1fr)`,
+					gridTemplateColumns: `repeat(auto-fill, minmax(${participantSize}, 1fr))`,
 				}}
 			>
 				{room.participants.map((p) => {
@@ -125,9 +134,9 @@ export function RoomCard(props: Props) {
 			<button
 				disabled={isRoomFull}
 				className={cn(
-					'flex items-center gap-2 bg-accent/50 border border-accent text-accent-fg px-4 py-1 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto',
+					'flex items-center gap-2 border border-brand/40 bg-brand/20 text-brand-fg px-4 py-1 rounded-md focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto',
 					{
-						'border border-highlight bg-transparent text-muted border-dashed':
+						'border border-border bg-transparent text-muted border-dashed':
 							isRoomFull,
 					}
 				)}

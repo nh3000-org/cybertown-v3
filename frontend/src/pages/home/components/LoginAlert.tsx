@@ -14,15 +14,15 @@ export function LoginAlert() {
 			}}
 		>
 			<Dialog.Portal>
-				<Dialog.Overlay className="bg-overlay/30 fixed inset-0" />
-				<Dialog.Content className="border border-border w-[90vw] max-w-[550px] rounded-md fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none bg-bg-2">
+				<Dialog.Overlay className="bg-bg/30 fixed inset-0" />
+				<Dialog.Content className="bg-bg border border-border w-[90vw] max-w-[550px] rounded-md fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none">
 					<Dialog.Title className="text-xl font-bold mb-2">Login</Dialog.Title>
 					<Dialog.Description className="mb-8 text-muted">
 						You'll redirected to google to login
 					</Dialog.Description>
 					<div className="justify-end flex justify-end gap-4 items-center">
 						<button
-							className="bg-bg-3 text-fg-3 px-4 py-1 rounded-md"
+							className="bg-muted/20 px-4 py-1 rounded-md"
 							onClick={() => {
 								setAlert('login', false)
 							}}
@@ -30,7 +30,7 @@ export function LoginAlert() {
 							Cancel
 						</button>
 						<button
-							className="bg-accent text-accent-fg px-4 py-1 rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+							className="bg-brand px-4 py-1 rounded-md focus:ring-offset-2 focus:ring-offset-bg"
 							onClick={() => {
 								window.location.href = getGoogleOAuthURL()
 							}}

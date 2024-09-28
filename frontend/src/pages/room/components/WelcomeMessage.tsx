@@ -74,11 +74,8 @@ export function WelcomeMessage(props: Props) {
 		<div>
 			<form className="flex flex-col" onSubmit={onSubmit}>
 				<div>
-					<Label
-						className="flex items-center justify-between"
-						htmlFor="welcomeMessage"
-					>
-						<span>Welcome Message</span>
+					<div className="flex items-center justify-between">
+						<Label htmlFor="welcomeMessage">Welcome Message</Label>
 						{mode === 'view' && (
 							<button>
 								<PencilIcon size={18} className="text-muted" />
@@ -89,7 +86,7 @@ export function WelcomeMessage(props: Props) {
 								<CloseIcon size={18} className="text-muted" />
 							</button>
 						)}
-					</Label>
+					</div>
 					<textarea
 						disabled={mode === 'view'}
 						ref={textareaRef}
@@ -104,7 +101,7 @@ export function WelcomeMessage(props: Props) {
 					{error ? <span className="text-danger text-sm">{error}</span> : null}
 				</div>
 				{mode === 'edit' && (
-					<button className="mt-1 bg-accent text-accent-fg px-4 py-[2px] rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-end">
+					<button className="mt-1 bg-brand text-brand-fg px-4 py-[2px] rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg self-end">
 						Save
 					</button>
 				)}

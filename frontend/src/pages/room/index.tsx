@@ -34,7 +34,7 @@ export function RoomPage() {
 	if (isLoading || user === undefined) {
 		return (
 			<div className="h-screen flex items-center justify-center">
-				<LoadingIcon className="text-accent/20 fill-accent w-8 h-8" />
+				<LoadingIcon className="text-brand/20 fill-brand w-8 h-8" />
 			</div>
 		)
 	}

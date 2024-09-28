@@ -28,7 +28,7 @@ export function DMMessage(props: Props) {
 		>
 			<div
 				className={cn(
-					'bg-bg-2 text-fg-2 max-w-[75%] rounded-md p-2 flex flex-col relative',
+					'bg-bg-2 max-w-[75%] rounded-md p-2 flex flex-col relative',
 					{
 						'ml-auto border border-border bg-transparent text-fg': isFromMe,
 						'mr-auto': !isFromMe,

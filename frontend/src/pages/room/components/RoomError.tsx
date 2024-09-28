@@ -67,7 +67,7 @@ export function Error(props: { status: number }) {
 		400: {
 			title: 'Room is full',
 			desc: 'All the spots are occupied by other participants',
-			icon: <FullIcon className="stroke-yellow-500 mb-2 h-12 w-12" />,
+			icon: <FullIcon className="stroke-yellow-400 mb-2 h-12 w-12" />,
 		},
 		429: {
 			title: 'Room disconnected',
@@ -87,7 +87,7 @@ export function Error(props: { status: number }) {
 				{props.status === 401 && (
 					<Link
 						to={getGoogleOAuthURL()}
-						className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+						className="bg-accent px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
 					>
 						Login
 					</Link>
@@ -108,7 +108,7 @@ export function Kicked(props: { expiredAt: string }) {
 				<p className="text-muted mb-3">
 					You got removed from the room. You can rejoin at:
 				</p>
-				<p className="bg-bg-2 text-fg-2 px-4 py-2 rounded-md border border-border">
+				<p className="bg-bg-2 px-4 py-2 rounded-md border border-border">
 					{rejoinAt}
 				</p>
 			</div>

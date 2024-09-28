@@ -27,7 +27,7 @@ export function ReplyTo(props: Props) {
 				scrollToMessage(replyToMsg.id)
 			}}
 			className={cn(
-				'flex gap-3 items-start bg-sidebar p-2 absolute top-0 left-0 -translate-y-full w-full',
+				'flex gap-3 items-start bg-bg-2 p-2 absolute top-0 left-0 -translate-y-full w-full',
 				{
 					'-top-[60px]': props.pm,
 				}

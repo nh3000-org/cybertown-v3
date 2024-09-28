@@ -64,7 +64,7 @@ export function MessageOptions(props: MessageOptionsProps) {
 			</Dropdown.Trigger>
 			<Dropdown.Portal>
 				<Dropdown.Content
-					className="rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border"
+					className="rounded-lg p-2 shadow-md bg-bg flex flex-col gap-2 border border-border"
 					side={side}
 					sideOffset={12}
 					align={align}
@@ -73,14 +73,14 @@ export function MessageOptions(props: MessageOptionsProps) {
 					{isMyMessage && (
 						<>
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={handleEdit}
 							>
 								<PencilIcon size={20} className="text-muted" />
 								<span>Edit</span>
 							</Dropdown.Item>
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={() => {
 									ws.deleteMsg(
 										props.message.id,
@@ -95,14 +95,14 @@ export function MessageOptions(props: MessageOptionsProps) {
 						</>
 					)}
 					<Dropdown.Item
-						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 						onClick={handleReply}
 					>
 						<ReplyIcon size={20} className="text-muted" />
 						<span>Reply</span>
 					</Dropdown.Item>
 					<Dropdown.Item
-						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 						onClick={() => props.setEmojiOpen(true)}
 					>
 						<EmojiIcon size={20} className="text-muted" />

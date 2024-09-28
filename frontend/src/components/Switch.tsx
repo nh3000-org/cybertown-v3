@@ -9,7 +9,7 @@ type Props = {
 export function Switch(props: Props) {
 	return (
 		<RSwitch.Root
-			className="w-[42px] h-[20px] bg-highlight rounded-full relative data-[state=checked]:bg-accent cursor-default"
+			className="w-[42px] h-[20px] bg-accent rounded-full relative data-[state=checked]:bg-brand cursor-default"
 			checked={props.checked}
 			onCheckedChange={props.setChecked}
 			id={props.id}

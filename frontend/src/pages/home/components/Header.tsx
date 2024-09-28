@@ -11,7 +11,7 @@ export function Header() {
 		<header>
 			<div className="flex justify-end">
 				{user === undefined ? (
-					<LoadingIcon className="text-accent/20 fill-accent w-6 h-6 my-2" />
+					<LoadingIcon className="text-brand/20 fill-brand w-6 h-6 my-2" />
 				) : user ? (
 					<UserMenu />
 				) : (
@@ -19,7 +19,7 @@ export function Header() {
 						onClick={() => {
 							setAlert('login', true)
 						}}
-						className="bg-accent text-accent-fg h-8 my-1 px-4 rounded-lg rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+						className="bg-brand text-brand-fg h-8 my-1 px-4 rounded-lg rounded-md focus:ring-brand focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
 					>
 						Login
 					</button>
@@ -28,7 +28,7 @@ export function Header() {
 			<h1 className="text-4xl font-bold text-center my-8">Cybertown</h1>
 			<button
 				onClick={() => setOpen(true)}
-				className="bg-accent text-accent-fg px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+				className="bg-brand text-brand-fg px-4 py-2 rounded-md flex gap-2 focus:ring-brand focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
 			>
 				<span>Create Room</span>
 			</button>

@@ -29,7 +29,7 @@ export function HomePage() {
 
 			{isLoading && (
 				<div className="flex-1 grid place-items-center">
-					<LoadingIcon className="text-accent/20 fill-accent h-7 w-7" />
+					<LoadingIcon className="text-brand/20 fill-brand h-7 w-7" />
 				</div>
 			)}
 
@@ -48,7 +48,7 @@ export function HomePage() {
 			{user && (
 				<div className="fixed bottom-8 right-8">
 					<Popover.Root>
-						<Popover.Trigger className="bg-accent p-3 rounded-full relative">
+						<Popover.Trigger className="bg-brand text-brand-fg p-3 rounded-full relative focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg">
 							<WebhookIcon size={22} />
 							{hasUnread && (
 								<span className="w-3 h-3 rounded-full rounded-full block bg-danger absolute right-0 top-0" />

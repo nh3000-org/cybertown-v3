@@ -4,30 +4,16 @@
 
 @layer base {
 	:root {
-		--bg: 25 26 34;
-		--fg: 255 255 255;
-
-		--accent: 87 90 198;
-		--accent-fg: 255 255 255;
-
-		--bg-2: 34 36 46;
-		--fg-2: 229 229 239;
-
-		--bg-3: 47 49 64;
-		--fg-3: 229 229 239;
-
-		--border: 44 45 58;
-		--muted: 158 159 168;
-		--sidebar: 21 22 28;
-		--highlight: 50 52 70;
-		--danger: 235 86 86;
-		--overlay: 25 26 34;
-		--scrollbar: 94 95 102;
-
-		font-family: Inter, sans-serif;
-		font-feature-settings:
-			'liga' 1,
-			'calt' 1;
+		--bg: 21 32 43;
+		--fg: 247 249 249;
+		--bg-2: 30 39 50;
+		--border: 56 68 77;
+		--muted: 139 152 165;
+		--accent: 255 255 255;
+		--brand: 29 155 240;
+		--brand-fg: 255 255 255;
+		--danger: 239 68 68;
+		--scrollbar: 255 255 255;
 	}
 
 	@supports (font-variation-settings: normal) {
@@ -52,7 +38,7 @@
 	input:focus,
 	textarea:focus,
 	a:focus {
-		@apply outline-none ring-accent ring-1;
+		@apply outline-none ring-brand ring-1;
 	}
 
 	input::placeholder {
@@ -93,10 +79,10 @@
 		background-color: transparent;
 	}
 	25% {
-		background-color: rgb(var(--accent) / 0.2);
+		background-color: rgb(var(--brand) / 0.2);
 	}
 	75% {
-		background-color: rgb(var(--accent) / 0.2);
+		background-color: rgb(var(--brand) / 0.2);
 	}
 	100% {
 		background-color: transparent;
@@ -123,11 +109,11 @@ em-emoji-picker {
 }
 
 .dialog-overlay {
-	@apply bg-overlay/30 inset-0 fixed;
+	@apply bg-bg/30 inset-0 fixed;
 }
 
 .dialog-content {
-	@apply fixed bg-bg-2 text-fg-2 rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none;
+	@apply fixed bg-bg rounded-md shadow-md p-4 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] max-w-[470px] w-[90vw] border border-border focus:outline-none;
 }
 
 #messages-textarea::placeholder {
@@ -135,5 +121,5 @@ em-emoji-picker {
 }
 
 .user-mention {
-	@apply text-yellow-500;
+	@apply text-yellow-400;
 }

@@ -44,7 +44,7 @@ export function EmojiSearch(props: Props) {
 					sideOffset={-20}
 					align="start"
 					side="top"
-					className="rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border w-[280px] focus:outline-none max-h-[200px] scroller overflow-auto"
+					className="rounded-lg p-2 shadow-md bg-bg-2 flex flex-col gap-2 border border-border w-[280px] focus:outline-none max-h-[200px] scroller overflow-auto"
 					onFocusOutside={(e) => e.preventDefault()}
 				>
 					{emojis.map((e) => {
@@ -52,7 +52,7 @@ export function EmojiSearch(props: Props) {
 							<div
 								role="button"
 								key={e.id}
-								className="flex gap-3 items-center px-2 py-1 rounded-md hover:bg-highlight"
+								className="flex gap-3 items-center px-2 py-1 rounded-md hover:bg-accent"
 								onClick={() => {
 									props.selectEmoji(e)
 								}}

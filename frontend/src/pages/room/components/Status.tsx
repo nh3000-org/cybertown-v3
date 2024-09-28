@@ -38,7 +38,7 @@ export function Status(props: Props) {
 						<RadioGroup.Item
 							key={s}
 							className={cn(
-								'px-4 py-[2px] text-muted data-[state=checked]:text-accent-fg data-[state=checked]:bg-accent',
+								'px-4 py-[2px] text-muted data-[state=checked]:text-brand-fg data-[state=checked]:bg-brand',
 								{
 									'rounded-l-md': i === 0,
 									'rounded-r-md': i === constants.status.length - 1,

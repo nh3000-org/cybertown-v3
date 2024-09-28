@@ -39,7 +39,7 @@ export function Message(props: Props) {
 	return (
 		<div
 			className={cn('px-4 py-1 py-2 flex gap-3 items-start group', {
-				'bg-accent/10': props.editMsgID === message.id,
+				'bg-brand/10': props.editMsgID === message.id,
 				'bg-danger/5': isPrivateMessage,
 			})}
 			id={`message-${message.id}`}

@@ -30,7 +30,7 @@ export const RelationList = React.forwardRef((props: Props, _ref) => {
 	if (isLoading) {
 		return (
 			<div className="flex-1 flex items-center justify-center">
-				<LoadingIcon className="text-accent/20 fill-accent w-6 h-6" />
+				<LoadingIcon className="text-brand/20 fill-brand w-6 h-6" />
 			</div>
 		)
 	}

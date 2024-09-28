@@ -37,7 +37,7 @@ export const RelationsTab = React.forwardRef((props: Props, _ref) => {
 						<Tabs.Trigger
 							key={r.value}
 							value={r.value}
-							className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+							className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 						>
 							<p>{r.label}</p>
 						</Tabs.Trigger>

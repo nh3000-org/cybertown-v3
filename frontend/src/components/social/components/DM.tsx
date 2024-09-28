@@ -75,7 +75,7 @@ export function DM(props: Props) {
 
 			{isLoading && (
 				<div className="flex items-center justify-center flex-1">
-					<LoadingIcon className="text-accent/20 fill-accent w-6 h-6" />
+					<LoadingIcon className="text-brand/20 fill-brand w-6 h-6" />
 				</div>
 			)}
 

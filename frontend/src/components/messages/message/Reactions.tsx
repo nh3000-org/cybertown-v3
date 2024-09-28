@@ -27,7 +27,7 @@ export function Reactions(props: Props) {
 						<HoverCard.Trigger asChild>
 							<button
 								key={reaction}
-								className="text-sm focus:ring-0 flex items-center gap-2 border border-accent/60 bg-accent/20 px-[6px] py-[2px] rounded-md"
+								className="text-sm focus:ring-0 flex items-center gap-2 border border-brand/40 bg-brand/20 px-[6px] py-[2px] rounded-md"
 								onClick={() => {
 									ws.reactionToMsg(
 										props.message.id,
@@ -46,7 +46,7 @@ export function Reactions(props: Props) {
 						</HoverCard.Trigger>
 						<HoverCard.Portal>
 							<HoverCard.Content
-								className="rounded-lg p-3 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-3 border border-border"
+								className="rounded-lg p-3 shadow-md bg-bg-2 flex flex-col gap-3 border border-border"
 								sideOffset={10}
 							>
 								{Object.entries(userMap).map(([key, u]) => {

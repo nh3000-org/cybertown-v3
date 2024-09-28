@@ -1,5 +1,5 @@
 .react-select__control {
-	@apply py-[2px] bg-transparent border-border rounded-md text-muted !important;
+	@apply py-[2px] bg-transparent border-border rounded-md !important;
 }
 
 .react-select__input:focus {
@@ -19,15 +19,15 @@
 }
 
 .react-select__control--is-focused {
-	@apply shadow-none ring-1 ring-accent !important;
+	@apply shadow-none ring-1 ring-brand !important;
 }
 
 .react-select__control--is-focused {
-	@apply shadow-none ring-1 ring-accent !important;
+	@apply shadow-none ring-1 ring-brand !important;
 }
 
 .react-select__menu {
-	@apply rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 border border-border !important;
+	@apply rounded-lg p-2 bg-bg border border-border !important;
 }
 
 .react-select__option {
@@ -36,19 +36,19 @@
 
 .react-select__option--is-focused,
 .react-select__option--is-selected {
-	@apply bg-highlight !important;
+	@apply bg-accent !important;
 }
 
 .react-select__option--is-selected {
-	@apply bg-accent/20 !important;
+	@apply bg-brand/20 !important;
 }
 
 .react-select__single-value {
-	@apply text-fg-2 !important;
+	@apply text-fg !important;
 }
 
 .react-select__input-container {
-	@apply text-fg-2 border-0 !important;
+	@apply text-fg border-0 !important;
 }
 
 .react-select__menu-list::-webkit-scrollbar {
@@ -64,11 +64,11 @@
 }
 
 .react-select__multi-value {
-	@apply border border-accent/60 text-accent-fg bg-accent/20 rounded-md !important;
+	@apply border border-brand/40 bg-brand/20 rounded-md !important;
 }
 
 .react-select__multi-value__label {
-	@apply text-accent-fg !important;
+	@apply text-brand-fg !important;
 }
 
 .react-select__multi-value__remove:hover {

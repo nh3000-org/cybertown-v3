@@ -26,7 +26,7 @@ export function Social(props: Props) {
 			<Tabs.List className="flex justify-between border-b border-border p-1 gap-3">
 				<Tabs.Trigger
 					value="messages"
-					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 				>
 					<div className="relative">
 						<p>Messages</p>
@@ -37,7 +37,7 @@ export function Social(props: Props) {
 				</Tabs.Trigger>
 				<Tabs.Trigger
 					value="users"
-					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 				>
 					<p>Social</p>
 				</Tabs.Trigger>

@@ -138,7 +138,9 @@ export function CreateRoom() {
 					</Dialog.Title>
 
 					<div className="flex flex-col gap-3 mb-8">
-						<Label htmlFor="topic">Topic</Label>
+						<Label className="self-start" htmlFor="topic">
+							Topic
+						</Label>
 						<input
 							id="topic"
 							type="text"
@@ -156,7 +158,9 @@ export function CreateRoom() {
 					</div>
 
 					<div className="flex flex-col gap-3 flex-1 mb-8">
-						<Label htmlFor="maxParticipants">Max Participants</Label>
+						<Label className="self-start" htmlFor="maxParticipants">
+							Max Participants
+						</Label>
 						<Select
 							id="maxParticipants"
 							placeholder="Select participants"
@@ -174,7 +178,9 @@ export function CreateRoom() {
 					</div>
 
 					<div className="flex flex-col gap-3 flex-1">
-						<Label htmlFor="languages">Language</Label>
+						<Label className="self-start" htmlFor="languages">
+							Language
+						</Label>
 						<Select
 							id="languages"
 							multiCount={2}
@@ -194,7 +200,7 @@ export function CreateRoom() {
 					<div className="justify-end flex justify-end gap-4 items-center mt-12">
 						<button
 							type="button"
-							className="bg-bg-3 text-fg-3 px-4 py-1 rounded-md"
+							className="bg-muted/20 px-4 py-1 rounded-md"
 							onClick={() => {
 								setOpen(false)
 							}}
@@ -203,12 +209,12 @@ export function CreateRoom() {
 						</button>
 						<button
 							type="submit"
-							className="bg-accent text-accent-fg px-4 py-1 rounded-md focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
+							className="bg-brand px-4 py-1 rounded-md focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
 							disabled={isLoading || isUpdateLoading}
 							onClick={handleCreateRoom}
 						>
 							{isLoading || isUpdateLoading ? (
-								<LoadingIcon className="fill-accent" />
+								<LoadingIcon className="fill-brand" />
 							) : null}
 							<span>Submit</span>
 						</button>

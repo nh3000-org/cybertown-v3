@@ -21,7 +21,7 @@ export function Room(props: Props) {
 			<div className="border border-border rounded-md bg-bg flex flex-col">
 				<div className="flex-1 flex items-center justify-center">
 					{room?.settings.welcomeMessage && (
-						<p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">
+						<p className="text-yellow-400 max-w-[500px] px-4 whitespace-pre-wrap">
 							{room.settings.welcomeMessage.replace(
 								'{username}',
 								user?.username ?? ''

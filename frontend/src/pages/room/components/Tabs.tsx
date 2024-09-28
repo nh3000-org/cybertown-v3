@@ -13,6 +13,7 @@ import { Status } from './Status'
 import { useDMs } from '@/hooks/queries/useDMs'
 import { Social } from '@/components/social'
 import { Tooltip } from '@/components/Tooltip'
+import { cn } from '@/lib/utils'
 
 type Props = {
 	roomID: number
@@ -43,23 +44,33 @@ export function RoomTabs(props: Props) {
 				<Tabs.List className="flex justify-between border-b border-border p-1">
 					<Tabs.Trigger
 						value="messages"
-						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 						asChild
 					>
 						<Tooltip title="Messages">
 							<button>
-								<MessagesIcon size={18} className="text-muted" />
+								<MessagesIcon
+									size={18}
+									className={cn({
+										'text-muted': tab !== 'messages',
+									})}
+								/>
 							</button>
 						</Tooltip>
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="social"
-						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 						asChild
 					>
 						<Tooltip title="Social">
 							<button>
-								<WebhookIcon size={18} className="text-muted" />
+								<WebhookIcon
+									size={18}
+									className={cn({
+										'text-muted': tab !== 'social',
+									})}
+								/>
 								{hasUnread && (
 									<span className="w-2 h-2 rounded-full rounded-full block bg-danger" />
 								)}
@@ -68,12 +79,17 @@ export function RoomTabs(props: Props) {
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="settings"
-						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-highlight/30 data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+						className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
 						asChild
 					>
 						<Tooltip title="Settings">
 							<button>
-								<SettingsIcon size={18} className="text-muted" />
+								<SettingsIcon
+									size={18}
+									className={cn({
+										'text-muted': tab !== 'settings',
+									})}
+								/>
 							</button>
 						</Tooltip>
 					</Tabs.Trigger>

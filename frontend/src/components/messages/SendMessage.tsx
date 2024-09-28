@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TextareaSearch } from './hooks/useMention'
 import { User } from '@/types'
 import { getParticipantID } from '@/lib/utils'
@@ -111,6 +111,14 @@ export function SendMessage(props: Props) {
 		}
 	}
 
+	useEffect(() => {
+		setTimeout(() => {
+			if (textareaRef.current) {
+				textareaRef.current.focus()
+			}
+		}, 0)
+	}, [])
+
 	return (
 		<>
 			<textarea
@@ -124,7 +132,7 @@ export function SendMessage(props: Props) {
 				onKeyDown={handleNewMessage}
 				placeholder="You can use @ to mention someone"
 				rows={3}
-				className="resize-none bg-bg-2 text-fg-2 p-2 rounded-md border border-border scroller"
+				className="resize-none bg-bg p-2 rounded-md border border-border scroller"
 			/>
 			{error ? <span className="text-danger text-sm">{error}</span> : null}
 		</>

@@ -134,7 +134,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 								className="min-h-1 flex items-center justify-center"
 							>
 								{props.prevMsg.isLoading && (
-									<LoadingIcon className="mt-2 text-accent/30 fill-accent" />
+									<LoadingIcon className="mt-2 text-brand/20 fill-brand" />
 								)}
 							</div>
 						)}

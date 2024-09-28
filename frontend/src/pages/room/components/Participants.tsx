@@ -26,7 +26,7 @@ export function Participants(props: Props) {
 						}}
 					>
 						{(isHost || isCoHost || p.status !== 'None') && (
-							<div className="px-[4px] py-[0.5px] bg-accent/90 group-hover:bg-accent absolute bottom-0 left-0 rounded-tr-md text-[11px]">
+							<div className="px-[4px] py-[0.5px] bg-brand/90 group-hover:bg-brand absolute bottom-0 left-0 rounded-tr-md text-[11px]">
 								{p.status !== 'None' && (
 									<>
 										<p>{p.status}</p>

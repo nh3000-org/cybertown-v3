@@ -35,19 +35,19 @@ export function ParticipantOptions(props: Props) {
 		<>
 			<Dropdown.Root>
 				<Dropdown.Trigger asChild>
-					<button className="p-[2px] bg-accent/30 group-hover:bg-accent absolute right-0 top-0 rounded-bl-md">
+					<button className="p-[2px] bg-brand/20 group-hover:bg-brand absolute right-0 top-0 rounded-bl-md">
 						<OptionsIcon size={14} />
 					</button>
 				</Dropdown.Trigger>
 				<Dropdown.Portal>
 					<Dropdown.Content
-						className="min-w-[100px] rounded-lg p-2 shadow-md bg-bg-2 text-fg-2 flex flex-col gap-2 border border-border"
+						className="min-w-[100px] rounded-lg p-2 shadow-md bg-bg flex flex-col gap-2 border border-border"
 						side="top"
 						sideOffset={10}
 						onCloseAutoFocus={(e) => e.preventDefault()}
 					>
 						<Dropdown.Item
-							className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+							className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 							onClick={() => {
 								props.setTab('messages')
 								props.setPM(props.participant)
@@ -64,7 +64,7 @@ export function ParticipantOptions(props: Props) {
 						</Dropdown.Item>
 						{isHost && (
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={() => {
 									ws.assignRole(
 										isParticipantCoHost ? 'guest' : 'coHost',
@@ -78,7 +78,7 @@ export function ParticipantOptions(props: Props) {
 						)}
 						{isHost && (
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={() => {
 									ws.transferRoom(props.participant.id)
 								}}
@@ -89,7 +89,7 @@ export function ParticipantOptions(props: Props) {
 						)}
 						{hasPermissions && (
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={() => {
 									setParticipant(props.participant)
 									setOpen(true)
@@ -101,7 +101,7 @@ export function ParticipantOptions(props: Props) {
 						)}
 						{hasPermissions && (
 							<Dropdown.Item
-								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-highlight px-2 py-1 rounded-md"
+								className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 								onClick={() => {
 									ws.clearChat(props.participant.id)
 								}}
