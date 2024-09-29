@@ -4,21 +4,21 @@ import { useAppStore } from '@/stores/appStore'
 import { LoadingIcon } from './LoadingIcon'
 
 export function LogoutAlert() {
-	const open = useAppStore().alerts.logout
+	const open = useAppStore().popups.logout
 	const { mutateAsync: logout, isLoading } = useLogout()
-	const setAlert = useAppStore().setAlert
+	const setPopup = useAppStore().setPopup
 	const setToast = useAppStore().setToast
 
 	return (
 		<Dialog.Root
 			open={open}
 			onOpenChange={(visibility) => {
-				setAlert('logout', visibility)
+				setPopup('logout', visibility)
 			}}
 		>
 			<Dialog.Portal>
-				<Dialog.Overlay className="bg-bg/30 fixed inset-0" />
-				<Dialog.Content className="bg-bg border border-border w-[90vw] max-w-[550px] rounded-lg fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none">
+				<Dialog.Overlay className="bg-overlay fixed inset-0" />
+				<Dialog.Content className="bg-bg w-[90vw] max-w-[550px] rounded-lg fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] p-8 shadow-md focus:outline-none">
 					<Dialog.Title className="text-xl font-bold mb-2">Logout</Dialog.Title>
 					<Dialog.Description className="mb-8 text-muted">
 						Are you sure you want to logout?
@@ -27,7 +27,7 @@ export function LogoutAlert() {
 						<button
 							className="bg-muted/20 px-4 py-1 rounded"
 							onClick={() => {
-								setAlert('logout', false)
+								setPopup('logout', false)
 							}}
 						>
 							Cancel
@@ -45,7 +45,7 @@ export function LogoutAlert() {
 										description: 'Failed to logout. Try Again',
 									})
 								} finally {
-									setAlert('logout', false)
+									setPopup('logout', false)
 								}
 							}}
 						>

@@ -9,12 +9,13 @@ import { LoginAlert } from '@/pages/home/components/LoginAlert'
 import { useEmoji } from '@/hooks/queries/useEmoji'
 import { init } from 'emoji-mart'
 import { useLanguages } from '@/hooks/queries/useLanguages'
+import { Theme } from './Theme'
 
 type Props = {
 	children?: React.ReactNode
 }
 
-export function App(props: Props) {
+export function Root(props: Props) {
 	const { data: user, isLoading, error } = useMe()
 	const setUser = useAppStore().setUser
 
@@ -40,6 +41,7 @@ export function App(props: Props) {
 			<CreateRoom />
 			<LogoutAlert />
 			<LoginAlert />
+			<Theme />
 		</>
 	)
 }

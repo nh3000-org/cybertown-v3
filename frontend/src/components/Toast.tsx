@@ -13,7 +13,7 @@ export function Toast() {
 
 	return (
 		<RToast.Root
-			className="border border-border bg-sidebar shadow-md rounded-md pl-6 pr-10 py-4 relative flex flex-col gap-2"
+			className="border border-border bg-bg-2 shadow-md rounded-md pl-6 pr-10 py-4 relative flex flex-col gap-2"
 			open={toast.open}
 			onOpenChange={setToast}
 		>

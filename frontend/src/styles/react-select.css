@@ -19,15 +19,11 @@
 }
 
 .react-select__control--is-focused {
-	@apply shadow-none ring-1 ring-brand !important;
-}
-
-.react-select__control--is-focused {
-	@apply shadow-none ring-1 ring-brand !important;
+	@apply shadow-none border-transparent ring-1 ring-brand !important;
 }
 
 .react-select__menu {
-	@apply rounded-lg p-2 bg-bg border border-border !important;
+	@apply rounded-lg shadow-none p-2 bg-bg border border-border !important;
 }
 
 .react-select__option {
@@ -40,7 +36,7 @@
 }
 
 .react-select__option--is-selected {
-	@apply bg-brand/20 !important;
+	@apply text-fg !important;
 }
 
 .react-select__single-value {
@@ -64,11 +60,11 @@
 }
 
 .react-select__multi-value {
-	@apply border border-brand/40 bg-brand/20 rounded-md !important;
+	@apply border border-border bg-transparent text-fg rounded-md !important;
 }
 
 .react-select__multi-value__label {
-	@apply text-brand-fg !important;
+	@apply text-fg !important;
 }
 
 .react-select__multi-value__remove:hover {

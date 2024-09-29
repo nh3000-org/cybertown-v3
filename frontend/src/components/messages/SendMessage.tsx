@@ -132,7 +132,7 @@ export function SendMessage(props: Props) {
 				onKeyDown={handleNewMessage}
 				placeholder="You can use @ to mention someone"
 				rows={3}
-				className="resize-none bg-bg p-2 rounded-md border border-border scroller"
+				className="resize-none bg-bg p-2 rounded-md border border-border scroller focus:border-transparent"
 			/>
 			{error ? <span className="text-danger text-sm">{error}</span> : null}
 		</>

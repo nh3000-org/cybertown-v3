@@ -20,7 +20,7 @@ export function HomePage() {
 	const hasUnread = Object.values(dmUnread).some((isUnread) => isUnread)
 
 	useEffect(() => {
-		bc.sendMessage('VISITED_HOMEPAGE')
+		bc.sendMessage({ name: 'VISITED_HOMEPAGE' })
 	}, [])
 
 	return (

@@ -1,15 +1,37 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <title>Cybertown</title>
-  </head>
-  <body class="scroller">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="preconnect" href="https://rsms.me/" />
+		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+		<title>Cybertown</title>
+		<script>
+			const root = document.documentElement
+
+			const color = localStorage.getItem('color')
+			const allowedColors = [
+				'29 155 240',
+				'0 186 124',
+				'249 24 128',
+				'120 86 255',
+				'255 122 0',
+				'255 212 0',
+			]
+			if (color && allowedColors.includes(color)) {
+				root.style.setProperty('--brand', color)
+			}
+
+			const allowedThemes = ['dark', 'light', 'dim']
+			const theme = localStorage.getItem('theme')
+			if (theme && allowedThemes.includes(theme)) {
+				root.dataset.theme = theme
+			}
+		</script>
+	</head>
+	<body class="scroller">
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>

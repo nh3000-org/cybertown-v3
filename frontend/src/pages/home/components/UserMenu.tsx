@@ -5,7 +5,7 @@ import { LogOut as LogOutIcon } from 'lucide-react'
 
 export function UserMenu() {
 	const user = useAppStore().user!
-	const setAlert = useAppStore().setAlert
+	const setPopup = useAppStore().setPopup
 
 	return (
 		<Dropdown.Root>
@@ -28,14 +28,17 @@ export function UserMenu() {
 						<UserIcon size={20} className="text-muted" />
 						<span>Profile</span>
 					</Dropdown.Item>
-					<Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md">
+					<Dropdown.Item
+						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
+						onClick={() => setPopup('theme', true)}
+					>
 						<SunIcon size={20} className="text-muted" />
 						<span>Switch Theme</span>
 					</Dropdown.Item>
 					<Dropdown.Item
 						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 						onClick={() => {
-							setAlert('logout', true)
+							setPopup('logout', true)
 						}}
 					>
 						<LogOutIcon size={20} className="text-muted" />

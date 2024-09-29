@@ -17,7 +17,7 @@ type Props = {
 
 export function RoomCard(props: Props) {
 	const user = useAppStore().user
-	const setAlert = useAppStore().setAlert
+	const setPopup = useAppStore().setPopup
 	const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
 	const { room } = props
 	const [open, setOpen] = useState<Record<string, boolean>>({})
@@ -35,7 +35,7 @@ export function RoomCard(props: Props) {
 
 	function joinRoom(roomID: number) {
 		if (!user) {
-			setAlert('login', true)
+			setPopup('login', true)
 			return
 		}
 		window.open(`${window.location.origin}/room/${roomID}`)
@@ -134,7 +134,7 @@ export function RoomCard(props: Props) {
 			<button
 				disabled={isRoomFull}
 				className={cn(
-					'flex items-center gap-2 border border-brand/40 bg-brand/20 text-brand-fg px-4 py-1 rounded-md focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto',
+					'flex items-center gap-2 border border-border px-4 py-1 rounded-md focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg self-center mt-auto',
 					{
 						'border border-border bg-transparent text-muted border-dashed':
 							isRoomFull,

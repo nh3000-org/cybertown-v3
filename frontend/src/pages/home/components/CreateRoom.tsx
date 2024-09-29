@@ -144,7 +144,7 @@ export function CreateRoom() {
 						<input
 							id="topic"
 							type="text"
-							className="w-full border border-border bg-transparent rounded-md p-2 px-3"
+							className="w-full border border-border bg-transparent rounded-md p-2 px-3 focus:border-transparent"
 							autoComplete="off"
 							placeholder="Enter topic name"
 							value={room.topic}
@@ -209,7 +209,7 @@ export function CreateRoom() {
 						</button>
 						<button
 							type="submit"
-							className="bg-brand px-4 py-1 rounded-md focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
+							className="bg-brand text-brand-fg px-4 py-1 rounded-md focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
 							disabled={isLoading || isUpdateLoading}
 							onClick={handleCreateRoom}
 						>

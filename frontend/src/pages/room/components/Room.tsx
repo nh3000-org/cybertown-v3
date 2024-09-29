@@ -17,11 +17,11 @@ export function Room(props: Props) {
 	const [tab, setTab] = useState('messages')
 
 	return (
-		<main className="h-full w-full p-4 grid grid-cols-[1fr_400px] bg-sidebar gap-4">
+		<main className="h-full w-full p-4 grid grid-cols-[1fr_400px] bg-bg gap-4">
 			<div className="border border-border rounded-md bg-bg flex flex-col">
 				<div className="flex-1 flex items-center justify-center">
 					{room?.settings.welcomeMessage && (
-						<p className="text-yellow-400 max-w-[500px] px-4 whitespace-pre-wrap">
+						<p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">
 							{room.settings.welcomeMessage.replace(
 								'{username}',
 								user?.username ?? ''

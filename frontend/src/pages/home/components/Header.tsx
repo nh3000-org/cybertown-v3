@@ -4,7 +4,7 @@ import { LoadingIcon } from './LoadingIcon'
 
 export function Header() {
 	const user = useAppStore().user
-	const setAlert = useAppStore().setAlert
+	const setPopup = useAppStore().setPopup
 	const setOpen = useAppStore().setCreateOrUpdateRoom
 
 	return (
@@ -17,7 +17,7 @@ export function Header() {
 				) : (
 					<button
 						onClick={() => {
-							setAlert('login', true)
+							setPopup('login', true)
 						}}
 						className="bg-brand text-brand-fg h-8 my-1 px-4 rounded-lg rounded-md focus:ring-brand focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
 					>

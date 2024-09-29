@@ -95,7 +95,7 @@ export function WelcomeMessage(props: Props) {
 						onChange={() => setError('')}
 						name="welcomeMessage"
 						id="welcomeMessage"
-						className="scroller mt-2 w-full border border-border bg-transparent rounded-md p-2 px-3 disabled:opacity-80 disabled:pointer-events-none"
+						className="scroller mt-2 w-full border border-border bg-transparent rounded-md p-2 px-3 disabled:opacity-80 disabled:pointer-events-none focus:border-transparent"
 						placeholder="You can mention username by {username}"
 					/>
 					{error ? <span className="text-danger text-sm">{error}</span> : null}

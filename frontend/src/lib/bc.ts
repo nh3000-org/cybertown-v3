@@ -19,19 +19,28 @@ class BC {
 			const url = new URL(window.location.href)
 			const roomRegex = /^\/room\/\d+$/
 
-			if (msg.data === 'VISITED_HOMEPAGE' && url.pathname === '/') {
-				window.location.href = config.redirectURL
-			} else if (
-				msg.data === 'VISITED_ROOM_PAGE' &&
-				roomRegex.test(url.pathname)
-			) {
-				useAppStore.getState().setJoinedAnotherRoom(true)
+			try {
+				const event = JSON.parse(msg.data)
+				if (event.name === 'VISITED_HOMEPAGE' && url.pathname === '/') {
+					window.location.href = config.redirectURL
+				} else if (
+					event.name === 'VISITED_ROOM_PAGE' &&
+					roomRegex.test(url.pathname)
+				) {
+					useAppStore.getState().setJoinedAnotherRoom(true)
+				} else if (event.name === 'THEME_CHANGED') {
+					document.documentElement.dataset.theme = event.theme
+				} else if (event.name === 'COLOR_CHANGED') {
+					document.documentElement.style.setProperty('--brand', event.color)
+				}
+			} catch (err) {
+				console.error('failed to parse broadcast event', err)
 			}
 		})
 	}
 
-	sendMessage(event: string) {
-		this.channel.postMessage(event)
+	sendMessage(event: Record<string, any>) {
+		this.channel.postMessage(JSON.stringify(event))
 	}
 }
 

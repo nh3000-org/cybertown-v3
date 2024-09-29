@@ -67,7 +67,7 @@ export function Error(props: { status: number }) {
 		400: {
 			title: 'Room is full',
 			desc: 'All the spots are occupied by other participants',
-			icon: <FullIcon className="stroke-yellow-400 mb-2 h-12 w-12" />,
+			icon: <FullIcon className="stroke-yellow-500 mb-2 h-12 w-12" />,
 		},
 		429: {
 			title: 'Room disconnected',
@@ -87,7 +87,7 @@ export function Error(props: { status: number }) {
 				{props.status === 401 && (
 					<Link
 						to={getGoogleOAuthURL()}
-						className="bg-accent px-4 py-2 rounded-md flex gap-2 focus:ring-accent focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
+						className="bg-bg-2 border border-border px-4 py-2 rounded-md flex gap-2 focus:ring-border focus:ring-1 focus:ring-offset-2 focus:ring-offset-bg"
 					>
 						Login
 					</Link>

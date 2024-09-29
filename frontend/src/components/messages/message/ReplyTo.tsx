@@ -16,7 +16,7 @@ export function ReplyTo(props: Props) {
 		<div
 			role="button"
 			onClick={() => scrollToMessage(message.id)}
-			className="flex gap-3 items-start rounded-md border-l-2 border-yellow-400 bg-bg-2 p-2 mb-1"
+			className="flex gap-3 items-start rounded-md border-l-2 border-yellow-500 bg-bg-2 p-2 mb-1"
 		>
 			{!props.isDM && (
 				<img

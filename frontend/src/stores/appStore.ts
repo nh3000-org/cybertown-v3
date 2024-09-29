@@ -33,9 +33,10 @@ type State = {
 	sid: string | null
 	messages: Message[]
 
-	alerts: {
+	popups: {
 		login: boolean
 		logout: boolean
+		theme: boolean
 	}
 
 	toast: {
@@ -55,7 +56,7 @@ type State = {
 
 type Actions = {
 	setUser: (user: User | null | undefined) => void
-	setAlert: (alert: keyof State['alerts'], visibility: boolean) => void
+	setPopup: (popup: keyof State['popups'], visibility: boolean) => void
 	clearMessages: () => void
 	setToast: (open: boolean, content?: State['toast']['content']) => void
 	setCreateOrUpdateRoom: (open: boolean, room?: Room) => void
@@ -91,7 +92,7 @@ export const useAppStore = create<State & Actions>()(
 		dm: {},
 		dmUnread: {},
 
-		alerts: {
+		popups: {
 			login: false,
 			logout: false,
 		},
@@ -114,9 +115,9 @@ export const useAppStore = create<State & Actions>()(
 				state.joinedAnotherRoom = isJoined
 			}),
 
-		setAlert: (alert, visibility) =>
+		setPopup: (popup, visibility) =>
 			set((state) => {
-				state.alerts[alert] = visibility
+				state.popups[popup] = visibility
 			}),
 
 		clearMessages: () =>
@@ -142,7 +143,7 @@ export const useAppStore = create<State & Actions>()(
 		setCreateOrUpdateRoom: (open, room) =>
 			set((state) => {
 				if (open && !state.user) {
-					state.alerts['login'] = true
+					state.popups['login'] = true
 					return
 				}
 				state.createOrUpdateRoom.open = open

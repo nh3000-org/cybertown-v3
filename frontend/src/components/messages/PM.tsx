@@ -12,7 +12,7 @@ export function PM(props: Props) {
 	}
 
 	return (
-		<div className="flex gap-3 items-start bg-sidebar p-2 absolute top-0 left-0 -translate-y-full w-full">
+		<div className="flex gap-3 items-start bg-bg-2 p-2 absolute top-0 left-0 -translate-y-full w-full">
 			<img
 				className="w-6 h-6 rounded-md"
 				src={props.pm.avatar}

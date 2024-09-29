@@ -28,7 +28,7 @@ export function RoomPage() {
 	}, [isOnboarding, user])
 
 	useEffect(() => {
-		bc.sendMessage('VISITED_ROOM_PAGE')
+		bc.sendMessage({ name: 'VISITED_ROOM_PAGE' })
 	}, [])
 
 	if (isLoading || user === undefined) {

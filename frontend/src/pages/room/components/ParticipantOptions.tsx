@@ -35,7 +35,7 @@ export function ParticipantOptions(props: Props) {
 		<>
 			<Dropdown.Root>
 				<Dropdown.Trigger asChild>
-					<button className="p-[2px] bg-brand/20 group-hover:bg-brand absolute right-0 top-0 rounded-bl-md">
+					<button className="p-[2px] bg-brand/20 text-brand-fg group-hover:bg-brand absolute right-0 top-0 rounded-bl-md">
 						<OptionsIcon size={14} />
 					</button>
 				</Dropdown.Trigger>

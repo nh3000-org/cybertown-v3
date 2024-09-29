@@ -60,7 +60,9 @@ export function KickParticipant(props: Props) {
 					<form onSubmit={onSubmit}>
 						<div className="flex gap-4">
 							<div className="flex flex-col gap-2 flex-2">
-								<Label htmlFor="duration">Duration</Label>
+								<Label className="self-start" htmlFor="duration">
+									Duration
+								</Label>
 								<input
 									onChange={() => {
 										setError('')
@@ -68,13 +70,15 @@ export function KickParticipant(props: Props) {
 									ref={inputRef}
 									id="duration"
 									type="number"
-									className="w-full border border-border bg-transparent rounded-md p-2 px-3"
+									className="w-full border border-border bg-transparent rounded-md p-2 px-3 focus:border-transparent"
 									autoComplete="off"
 									placeholder="Enter duration"
 								/>
 							</div>
 							<div className="flex flex-col gap-2 flex-1">
-								<Label htmlFor="unit">Unit</Label>
+								<Label className="self-start" htmlFor="unit">
+									Unit
+								</Label>
 								<Select
 									id="unit"
 									placeholder="Select duration"
@@ -113,7 +117,7 @@ export function KickParticipant(props: Props) {
 							</button>
 							<button
 								type="submit"
-								className="bg-danger tex-white px-4 py-1 rounded-md focus:ring-danger/40 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
+								className="bg-danger text-white px-4 py-1 rounded-md focus:ring-danger/40 focus:ring-offset-2 focus:ring-offset-bg disabled:opacity-70 flex gap-2 items-center"
 							>
 								Kick
 							</button>

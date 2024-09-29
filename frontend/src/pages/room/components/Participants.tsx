@@ -26,7 +26,7 @@ export function Participants(props: Props) {
 						}}
 					>
 						{(isHost || isCoHost || p.status !== 'None') && (
-							<div className="px-[4px] py-[0.5px] bg-brand/90 group-hover:bg-brand absolute bottom-0 left-0 rounded-tr-md text-[11px]">
+							<div className="px-[4px] py-[0.5px] bg-brand/90 text-brand-fg group-hover:bg-brand absolute bottom-0 left-0 rounded-tr-md text-[11px]">
 								{p.status !== 'None' && (
 									<>
 										<p>{p.status}</p>
@@ -37,7 +37,9 @@ export function Participants(props: Props) {
 								{isCoHost && <p>Co-Host</p>}
 							</div>
 						)}
-						<p className="invisible group-hover:visible">{p.username}</p>
+						<p className="text-white invisible group-hover:visible">
+							{p.username}
+						</p>
 						{user?.id !== p.id && (
 							<ParticipantOptions
 								participant={p}
