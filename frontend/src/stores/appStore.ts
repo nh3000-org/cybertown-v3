@@ -95,6 +95,7 @@ export const useAppStore = create<State & Actions>()(
 		popups: {
 			login: false,
 			logout: false,
+			theme: false,
 		},
 
 		toast: {
