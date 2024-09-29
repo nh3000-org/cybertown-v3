@@ -73,7 +73,7 @@ export function Theme() {
 							<RadioGroup.Root
 								value={theme}
 								id="theme"
-								className="flex justify-between gap-4 text-sm"
+								className="flex justify-between gap-4 text-sm flex-wrap"
 								onValueChange={(theme) => {
 									setTheme(theme)
 									document.documentElement.dataset.theme = theme
@@ -86,7 +86,7 @@ export function Theme() {
 										<RadioGroup.Item
 											key={t.value}
 											value={t.value}
-											className="bg-bg-2 border border-border px-4 py-1 rounded-md flex-1 items-center flex gap-3 justify-center"
+											className="bg-bg-2 border border-border px-4 py-1 rounded-md items-center flex gap-3 justify-center"
 										>
 											<RadioGroup.Indicator asChild>
 												<TickIcon size={16} />
