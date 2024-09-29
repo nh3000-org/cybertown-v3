@@ -73,7 +73,7 @@ export function Theme() {
 							<RadioGroup.Root
 								value={theme}
 								id="theme"
-								className="flex justify-between gap-4"
+								className="flex justify-between gap-4 text-sm"
 								onValueChange={(theme) => {
 									setTheme(theme)
 									document.documentElement.dataset.theme = theme
