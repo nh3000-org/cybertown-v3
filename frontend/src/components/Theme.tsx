@@ -86,7 +86,7 @@ export function Theme() {
 										<RadioGroup.Item
 											key={t.value}
 											value={t.value}
-											className="bg-bg-2 border border-border px-4 py-1 rounded-md items-center flex gap-3 justify-center"
+											className="bg-bg-2 border border-border px-4 py-1 rounded-md flex-1 items-center flex gap-3 justify-center"
 										>
 											<RadioGroup.Indicator asChild>
 												<TickIcon size={16} />
