@@ -19,7 +19,7 @@ export const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			retry: false,
-			refetchOnWindowFocus: import.meta.env.DEV === false,
+			refetchOnWindowFocus: false,
 		},
 	},
 })

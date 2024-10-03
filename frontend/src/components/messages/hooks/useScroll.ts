@@ -35,7 +35,6 @@ export function useScroll(
 			isFocussed &&
 			messagesEndRef.current
 		) {
-			console.log({ isFromMe, isFocussed, hasScrolledDown, isScrollNear })
 			messagesEndRef.current.scrollIntoView()
 		}
 	}, [messages.length])
