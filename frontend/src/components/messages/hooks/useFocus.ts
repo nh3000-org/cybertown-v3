@@ -10,6 +10,9 @@ export function useFocus(messagesRef: RefObject<HTMLDivElement>) {
 
 	useEffect(() => {
 		function onFocus() {
+			if (document.visibilityState === 'hidden') {
+				return
+			}
 			setTimeout(() => {
 				if (!messagesRef.current) {
 					return
@@ -27,10 +30,10 @@ export function useFocus(messagesRef: RefObject<HTMLDivElement>) {
 			}, 300)
 		}
 
-		window.addEventListener('focus', onFocus)
+		document.addEventListener('visibilitychange', onFocus)
 
 		return () => {
-			window.removeEventListener('focus', onFocus)
+			document.removeEventListener('visibilitychange', onFocus)
 		}
 	}, [messagesRef.current])
 }
