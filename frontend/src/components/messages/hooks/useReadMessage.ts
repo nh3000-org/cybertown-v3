@@ -10,15 +10,15 @@ export function useReadMessage(
 	messages: Message[]
 ) {
 	const user = useAppStore().user
-	const setDMRead = useAppStore().setDMReadForParticipant
 	const { mutate: updateDM } = useUpdateDM()
 	const { ref, inView } = useInView()
 	const lastMessageRef = useRef<string | null>(null)
+	const setDMRead = useAppStore().setDMReadForParticipant
 
 	useEffect(() => {
 		let timeoutID: ReturnType<typeof setTimeout>
 
-		if (inView && participantID) {
+		if (inView && participantID && document.hasFocus()) {
 			timeoutID = setTimeout(() => {
 				const allMessages = [...initialMessages, ...messages]
 				if (!allMessages.length) {
@@ -31,10 +31,10 @@ export function useReadMessage(
 					return
 				}
 
-				setDMRead(participantID)
 				updateDM(participantID)
+				setDMRead(participantID)
 				lastMessageRef.current = lastMessage.id
-			}, 1500)
+			}, 300)
 		}
 
 		return () => clearTimeout(timeoutID)

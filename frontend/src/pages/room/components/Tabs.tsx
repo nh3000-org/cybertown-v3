@@ -20,26 +20,27 @@ type Props = {
 	room: RoomRes
 	pm: User | null
 	setPM: (pm: User | null) => void
-	tab: string
-	setTab: (tab: string) => void
 }
 
 export function RoomTabs(props: Props) {
-	const { room, pm, setPM, tab, setTab } = props
+	const { room, pm, setPM } = props
 	const dmUnread = useAppStore().dmUnread
 	const user = useAppStore().user
+	const roomTab = useAppStore().roomTab
+	const setRoomTab = useAppStore().setRoomTab
 	const setUpdateRoom = useAppStore().setCreateOrUpdateRoom
 	const messages = useAppStore().messages
 	const isHost = room?.settings.host.id === user?.id
 	useDMs(Boolean(user))
 	const hasUnread = Object.values(dmUnread).some((isUnread) => isUnread)
+	const unreadCount = useAppStore().unreadCount
 
 	return (
 		<div className="border border-border rounded-md bg-bg overflow-hidden">
 			<Tabs.Root
 				className="flex flex-col h-full"
-				value={tab}
-				onValueChange={setTab}
+				value={roomTab}
+				onValueChange={setRoomTab}
 			>
 				<Tabs.List className="flex justify-between border-b border-border p-1">
 					<Tabs.Trigger
@@ -52,9 +53,12 @@ export function RoomTabs(props: Props) {
 								<MessagesIcon
 									size={18}
 									className={cn({
-										'text-muted': tab !== 'messages',
+										'text-muted': roomTab !== 'messages',
 									})}
 								/>
+								{unreadCount > 0 && (
+									<span className="w-2 h-2 rounded-full rounded-full block bg-danger" />
+								)}
 							</button>
 						</Tooltip>
 					</Tabs.Trigger>
@@ -68,7 +72,7 @@ export function RoomTabs(props: Props) {
 								<WebhookIcon
 									size={18}
 									className={cn({
-										'text-muted': tab !== 'social',
+										'text-muted': roomTab !== 'social',
 									})}
 								/>
 								{hasUnread && (
@@ -87,7 +91,7 @@ export function RoomTabs(props: Props) {
 								<SettingsIcon
 									size={18}
 									className={cn({
-										'text-muted': tab !== 'settings',
+										'text-muted': roomTab !== 'settings',
 									})}
 								/>
 							</button>

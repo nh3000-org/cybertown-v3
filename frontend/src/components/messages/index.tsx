@@ -1,30 +1,17 @@
-import { useRef, useState, useEffect } from 'react'
-import {
-	CircleX as CloseIcon,
-	SmilePlus as EmojiIcon,
-	Hand as NoMessagesIcon,
-} from 'lucide-react'
-import { cn, getParticipantID } from '@/lib/utils'
-import { EmojiPicker } from '@/components/EmojiPicker'
+import { useRef, useState } from 'react'
+import { Hand as NoMessagesIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { VerticalScrollbar } from '@/components/VerticalScrollbar'
-import { useAppStore } from '@/stores/appStore'
-import { ws } from '@/lib/ws'
 import { Message } from '@/components/messages/message'
 import { RoomRes, User } from '@/types'
 import React from 'react'
-import { MentionParticipants } from './MentionParticipants'
-import { ReplyTo } from './ReplyTo'
-import { PM } from './PM'
-import { useMention } from './hooks/useMention'
-import { SendMessage } from './SendMessage'
-import { Emoji, useEmojiSearch } from './hooks/useEmojiSearch'
-import { EmojiSearch } from './EmojiSearch'
 import { Message as TMessage } from '@/types/broadcast'
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { useScroll } from './hooks/useScroll'
 import { useReadMessage } from './hooks/useReadMessage'
-import { useScrollPercentage } from './hooks/useScrollPercentage'
+import { BottomPanel } from './BottomPanel'
+import { useFocus } from './hooks/useFocus'
 
 type Props = {
 	pm: User | null
@@ -45,67 +32,22 @@ type Props = {
 export const Messages = React.forwardRef((props: Props, _ref) => {
 	const { initialMessages = [] } = props
 	const previousMessages = props.prevMsg?.messages ?? []
-	const user = useAppStore().user
 	const messages = [...previousMessages, ...initialMessages, ...props.messages]
 	const messagesRef = useRef<HTMLDivElement>(null)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const [editMsgID, setEditMsgID] = useState<string | undefined>(undefined)
-	const [emojiOpen, setEmojiOpen] = useState(false)
 	const [replyTo, setReplyTo] = useState<string | undefined>(undefined)
-	const replyToMsg = messages.find((msg) => replyTo && msg.id === replyTo)
-	const [content, setContent] = useState('')
-	const { search, setSearch, mentionedParticipants } = useMention(
-		content,
-		props.room
-	)
-	const {
-		search: emojiSearch,
-		setSearch: setEmojiSearch,
-		emojis,
-	} = useEmojiSearch(content)
 
 	const viewRef = useReadMessage(props.dm?.id, initialMessages, props.messages)
-	const scrollPercent = useScrollPercentage(messagesRef)
-	useScroll(messagesEndRef, scrollPercent, initialMessages, props.messages)
-
-	function selectParticipant(participant: User) {
-		setSearch({
-			query: '',
-			show: false,
-		})
-		const index = content.lastIndexOf('@')
-		if (index === -1) {
-			return
-		}
-		let at = '`@'
-		if (index !== 0 && content[index - 1] !== ' ') {
-			at = ' `@'
-		}
-		const value = content.substring(0, index) + at + participant.username + '` '
-		setContent(value)
-	}
-
-	function selectEmoji(emoji: Emoji) {
-		setEmojiSearch({
-			query: '',
-			show: false,
-		})
-		const index = content.lastIndexOf(':')
-		if (index === -1) {
-			return
-		}
-		const value = content.substring(0, index) + ' ' + emoji.emoji + ' '
-		setContent(value)
-	}
-
-	// am now lazy to lift the state up and do it declaratively
-	useEffect(() => {
-		if (props.pm) {
-			setEditMsgID(undefined)
-			setContent('')
-		}
-	}, [props.pm])
+	useScroll(
+		props.dm,
+		messagesRef,
+		messagesEndRef,
+		initialMessages,
+		props.messages
+	)
+	useFocus(messagesRef)
 
 	return (
 		<div className="flex-1 flex flex-col bg-bg rounded-md overflow-hidden">
@@ -160,91 +102,19 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 				</ScrollArea.Root>
 			)}
 
-			<div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
-				<div className="flex">
-					{props.room && (
-						<MentionParticipants
-							setSearch={setSearch}
-							search={search}
-							selectParticipant={selectParticipant}
-							textareaRef={textareaRef}
-							room={props.room}
-							mentionedParticipants={mentionedParticipants}
-						/>
-					)}
-
-					<EmojiSearch
-						setSearch={setEmojiSearch}
-						search={emojiSearch}
-						textareaRef={textareaRef}
-						emojis={emojis}
-						selectEmoji={selectEmoji}
-					/>
-
-					<div className="gap-1 ml-auto mr-1.5 flex">
-						<EmojiPicker
-							trigger={
-								<button>
-									<EmojiIcon
-										strokeWidth={1.5}
-										size={20}
-										className="text-muted"
-									/>
-								</button>
-							}
-							open={emojiOpen}
-							setOpen={setEmojiOpen}
-							onSelect={(_, emoji) => {
-								const participantID =
-									props.pm?.id ||
-									getParticipantID(replyToMsg, user!) ||
-									props.dm?.id
-								ws.newMessage(emoji, replyTo, participantID, props.dm !== null)
-								setReplyTo(undefined)
-								setEmojiOpen(false)
-							}}
-						/>
-						{editMsgID && (
-							<button
-								className="ml-auto"
-								onClick={() => {
-									setEditMsgID(undefined)
-									setContent('')
-								}}
-							>
-								<CloseIcon size={20} className="text-muted" />
-							</button>
-						)}
-					</div>
-				</div>
-
-				<ReplyTo
-					replyTo={replyTo}
-					setReplyTo={setReplyTo}
-					pm={props.pm}
-					messages={messages}
-				/>
-				<PM pm={props.pm} setPM={props.setPM} />
-
-				<SendMessage
-					messages={messages}
-					setReplyTo={setReplyTo}
-					replyTo={replyTo}
-					content={content}
-					setContent={setContent}
-					search={search}
-					setEditMsgID={setEditMsgID}
-					editMsgID={editMsgID}
-					selectParticipant={selectParticipant}
-					selectEmoji={selectEmoji}
-					emojis={emojis}
-					emojiSearch={emojiSearch}
-					mentionedParticipants={mentionedParticipants}
-					textareaRef={textareaRef}
-					pm={props.pm}
-					dm={props.dm}
-				/>
-			</div>
+			<BottomPanel
+				messages={messages}
+				textareaRef={textareaRef}
+				editMsgID={editMsgID}
+				setEditMsgID={setEditMsgID}
+				setReplyTo={setReplyTo}
+				setPM={props.setPM}
+				dm={props.dm}
+				pm={props.pm}
+				room={props.room}
+				replyTo={replyTo}
+				messagesEndRef={messagesEndRef}
+			/>
 		</div>
 	)
 })

@@ -5,7 +5,6 @@ import { useAppStore } from '@/stores/appStore'
 type Props = {
 	room: RoomRes
 	setPM: (pm: User | null) => void
-	setTab: (tab: string) => void
 }
 
 export function Participants(props: Props) {
@@ -45,7 +44,6 @@ export function Participants(props: Props) {
 								participant={p}
 								room={room}
 								setPM={props.setPM}
-								setTab={props.setTab}
 							/>
 						)}
 					</div>

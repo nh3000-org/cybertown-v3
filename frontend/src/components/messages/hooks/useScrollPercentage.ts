@@ -1,9 +1,16 @@
-import { useState, useEffect, RefObject } from 'react'
+import { useAppStore } from '@/stores/appStore'
+import { User } from '@/types'
+import { useEffect, RefObject } from 'react'
 
 export const useScrollPercentage = (
+	dm: User | null,
 	containerRef: RefObject<HTMLDivElement>
 ) => {
-	const [scrollPercentage, setScrollPercentage] = useState(0)
+	const setUnreadCount = useAppStore().setUnreadCount
+	const setDMRead = useAppStore().setDMReadForParticipant
+	const hasScrolledDown = useAppStore().scroll.hasScrolledDown
+	const setScrollPercent = useAppStore().setScrollPercent
+	const setScrolledDown = useAppStore().setScrolledDown
 
 	const debounce = (func: Function, delay: number) => {
 		let timeout: ReturnType<typeof setTimeout>
@@ -28,7 +35,17 @@ export const useScrollPercentage = (
 			const totalScroll = scrollHeight - clientHeight
 			const scrollPercent = (scrollTop / totalScroll) * 100
 
-			setScrollPercentage(scrollPercent)
+			if (!hasScrolledDown && scrollPercent >= 98) {
+				setScrolledDown(true)
+			}
+
+			if (!dm && scrollPercent >= 98) {
+				setUnreadCount(0)
+			} else if (dm && scrollPercent >= 98) {
+				setDMRead(dm.id)
+			}
+
+			setScrollPercent(scrollPercent)
 		}, 300)
 
 		if (container) {
@@ -38,9 +55,8 @@ export const useScrollPercentage = (
 		return () => {
 			if (container) {
 				container.removeEventListener('scroll', handleScroll)
+				setScrolledDown(false)
 			}
 		}
-	}, [containerRef])
-
-	return scrollPercentage
+	}, [containerRef.current])
 }

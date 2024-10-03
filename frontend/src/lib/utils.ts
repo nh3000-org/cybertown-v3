@@ -54,16 +54,18 @@ export function toHHMM(createdAt: string) {
 	return formattedTime
 }
 
-export function scrollToMessage(id: string) {
+export function scrollToMessage(id: string, blink = true) {
 	const el = document.getElementById(`message-${id}`)
 	if (!el) {
 		return
 	}
-	el.classList.add('blink-bg')
 	el.scrollIntoView()
-	setTimeout(() => {
-		el.classList.remove('blink-bg')
-	}, 1500)
+	if (blink) {
+		el.classList.add('blink-bg')
+		setTimeout(() => {
+			el.classList.remove('blink-bg')
+		}, 1500)
+	}
 }
 
 export function flattenError(error: ZodError) {
@@ -114,17 +116,57 @@ export function secondsToHHMMSS(seconds: number) {
 }
 
 export function toHTML(md: string): string {
-	const clean = DOMPurify.sanitize(md, { USE_PROFILES: { html: true } })
+	const allowedTags = [
+		'h1',
+		'h2',
+		'h3',
+		'h4',
+		'h5',
+		'h6',
+		'strong',
+		'em',
+		'b',
+		'i',
+		'u',
+		'ul',
+		'ol',
+		'li',
+		'p',
+		'blockquote',
+		'hr',
+		'pre',
+		'code',
+		'a',
+		'table',
+		'tr',
+		'td',
+		'th',
+		'br',
+	]
+
+	const allowedAttributes = ['class', 'href', 'rel', 'title', 'target']
+
 	// akshually it returns Promise<string>
-	let html = marked.parse(clean, { renderer }) as string
+	const html = marked.parse(md, { renderer, breaks: true }) as string
+
+	let cleanHTML = DOMPurify.sanitize(html, {
+		ALLOWED_TAGS: allowedTags,
+		ALLOWED_ATTR: allowedAttributes,
+	})
+
 	const username = useAppStore.getState().user?.username
 	if (username) {
-		html = html.replace(
+		cleanHTML = cleanHTML.replace(
 			`<code>@${username}</code>`,
 			`<code class="user-mention">@${username}</code>`
 		)
 	}
-	return html
+
+	if (!cleanHTML) {
+		return toHTML('```' + md + '```')
+	}
+
+	return cleanHTML
 }
 
 export function formatDate(date: string) {

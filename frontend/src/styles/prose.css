@@ -26,7 +26,7 @@
 
 	ul li,
 	ol li {
-		@apply pl-3;
+		@apply px-3;
 	}
 
 	ul li::before,

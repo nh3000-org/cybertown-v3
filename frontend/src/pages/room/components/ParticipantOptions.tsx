@@ -17,12 +17,12 @@ type Props = {
 	participant: User
 	room: RoomRes
 	setPM: (pm: User | null) => void
-	setTab: (tab: string) => void
 }
 
 export function ParticipantOptions(props: Props) {
 	const { settings } = props.room
 	const user = useAppStore().user
+	const setRoomTab = useAppStore().setRoomTab
 	const isHost = settings.host.id === user?.id
 	const isCoHost = settings.coHosts?.includes(user?.id as unknown as number)
 	const isParticipantCoHost = settings.coHosts?.includes(props.participant.id)
@@ -49,7 +49,7 @@ export function ParticipantOptions(props: Props) {
 						<Dropdown.Item
 							className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
 							onClick={() => {
-								props.setTab('messages')
+								setRoomTab('messages')
 								props.setPM(props.participant)
 								setTimeout(() => {
 									const el = document.getElementById('messages-textarea')

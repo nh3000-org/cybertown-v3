@@ -10,6 +10,7 @@ import {
 	usePreviousMessages,
 } from '../hooks/usePreviousMessages'
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
+import { scrollToMessage } from '@/lib/utils'
 
 type Props = {
 	user: User
@@ -46,9 +47,14 @@ export function DM(props: Props) {
 
 	useEffect(() => {
 		if (inView && !isPrevMessagesLoading && messages.length >= MESSAGES_LIMIT) {
-			fetchMessages(messages[0].createdAt).then((messages) => {
+			const oldMessage = messages[0]
+			fetchMessages(oldMessage.createdAt).then((messages) => {
 				if (messages) {
 					setDM(props.user.id, messages)
+					// maintain scroll position when old messages are added
+					setTimeout(() => {
+						scrollToMessage(oldMessage.id, false)
+					}, 0)
 				}
 			})
 		}

@@ -22,7 +22,7 @@ func (app *application) router() http.Handler {
 	router.Handle("GET /dms", ensureAuthed(http.HandlerFunc(app.getDMsHandler)))
 	router.Handle("PUT /dms/{participantID}", ensureAuthed(http.HandlerFunc(app.updateDMsHandler)))
 	router.Handle("POST /messages/{participantID}", ensureAuthed(http.HandlerFunc(app.getMessagesHandler)))
-	router.Handle("GET /languages", ensureAuthed(http.HandlerFunc(app.getLanguagesHandler)))
+	router.Handle("GET /languages", http.HandlerFunc(app.getLanguagesHandler))
 
 	v1 := http.NewServeMux()
 	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))

@@ -23,15 +23,23 @@ type State = {
 
 	dm: Record<string, Message[]>
 	dmUnread: Record<string, boolean>
+	selectedDM: number | null /* points to the participant id */
 
 	/*
-   undefined -> /me api call is not made yet
-   null      -> /me api call is made but no user
-  */
+	 undefined -> /me api call is not made yet
+	 null      -> /me api call is made but no user
+	*/
 	user: User | null | undefined
 
 	sid: string | null
+
 	messages: Message[]
+	roomTab: string
+	unreadCount: number /* room messages unread count */
+	scroll: {
+		/* messages container scroll position */ percent: number
+		hasScrolledDown: boolean
+	}
 
 	popups: {
 		login: boolean
@@ -61,6 +69,12 @@ type Actions = {
 	setToast: (open: boolean, content?: State['toast']['content']) => void
 	setCreateOrUpdateRoom: (open: boolean, room?: Room) => void
 	setJoinedAnotherRoom: (isJoined: boolean) => void
+	setRoomTab: (tab: string) => void
+	setUnreadCount: (count: number) => void
+
+	// scroll
+	setScrollPercent: (percent: number) => void
+	setScrolledDown: (hasScrolledDown: boolean) => void
 
 	// dm
 	setDM: (participantID: number, messages: Message[]) => void
@@ -87,10 +101,18 @@ export const useAppStore = create<State & Actions>()(
 		user: undefined,
 
 		sid: null,
+
 		messages: [],
+		roomTab: 'messages',
+		unreadCount: 0,
 
 		dm: {},
 		dmUnread: {},
+		selectedDM: null,
+		scroll: {
+			percent: 0,
+			hasScrolledDown: false,
+		},
 
 		popups: {
 			login: false,
@@ -109,6 +131,26 @@ export const useAppStore = create<State & Actions>()(
 		setUser: (user) =>
 			set((state) => {
 				state.user = user
+			}),
+
+		setRoomTab: (tab) =>
+			set((state) => {
+				state.roomTab = tab
+			}),
+
+		setUnreadCount: (count) =>
+			set((state) => {
+				state.unreadCount = count
+			}),
+
+		setScrolledDown: (hasScrolledDown) =>
+			set((state) => {
+				state.scroll.hasScrolledDown = hasScrolledDown
+			}),
+
+		setScrollPercent: (percent) =>
+			set((state) => {
+				state.scroll.percent = percent
 			}),
 
 		setJoinedAnotherRoom: (isJoined) =>
@@ -160,10 +202,24 @@ export const useAppStore = create<State & Actions>()(
 
 		addMsg: (event) =>
 			set((state) => {
+				const isFromMe = event.data.from.id === state.user?.id
+				const hasScrolledUp = state.scroll.percent < 98
+				const hasScrolledDown = state.scroll.hasScrolledDown
+				const isMessagesTab = state.roomTab === 'messages'
+				const hasScrolled = hasScrolledDown && hasScrolledUp
+				const isFocussed = document.hasFocus()
+
 				if (event.data.roomID === ws.roomID) {
+					if (
+						!isFromMe &&
+						(!isMessagesTab || !isFocussed || (isMessagesTab && hasScrolled))
+					) {
+						state.unreadCount += 1
+					}
 					state.messages.push(event.data)
 					return
 				}
+
 				const id = getDMParticipant(
 					event.data.from,
 					event.data.participant!,
@@ -173,7 +229,12 @@ export const useAppStore = create<State & Actions>()(
 					state.dm[id] = []
 				}
 				state.dm[id].push(event.data)
-				if (event.data.from.id !== state.user?.id) {
+
+				const isCurrentDM = state.selectedDM === id
+				if (
+					!isFromMe &&
+					(!isCurrentDM || !isFocussed || (isCurrentDM && hasScrolled))
+				) {
 					state.dmUnread[id] = true
 				}
 			}),
@@ -279,11 +340,13 @@ export const useAppStore = create<State & Actions>()(
 				}
 				const currentMessages = state.dm[participantID]
 				state.dm[participantID] = [...messages, ...currentMessages]
+				state.selectedDM = participantID
 			}),
 
 		clearDM: (participantID) =>
 			set((state) => {
 				state.dm[participantID] = []
+				state.selectedDM = null
 			}),
 
 		error: (event) =>
