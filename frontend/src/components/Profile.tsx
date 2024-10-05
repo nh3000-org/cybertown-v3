@@ -80,22 +80,25 @@ export function Profile(props: Props) {
 							</div>
 						)}
 					</div>
-					<p className="font-bold mb-6">{props.user.username}</p>
+					<p className="font-bold">{props.user.username}</p>
 					{profile && (
-						<div className="flex items-center gap-4">
-							<p className="font-medium">
-								{profile.followingCount}{' '}
-								<span className="text-muted">Following</span>
-							</p>
-							<p className="font-medium">
-								{profile.followersCount}{' '}
-								<span className="text-muted">Followers</span>
-							</p>
-							<p className="font-medium">
-								{profile.friendsCount}{' '}
-								<span className="text-muted">Friends</span>
-							</p>
-						</div>
+						<>
+							<p className="max-w-[280px] my-3">{profile.bio}</p>
+							<div className="flex items-center gap-4">
+								<p className="font-medium">
+									{profile.followingCount}{' '}
+									<span className="text-muted">Following</span>
+								</p>
+								<p className="font-medium">
+									{profile.followersCount}{' '}
+									<span className="text-muted">Followers</span>
+								</p>
+								<p className="font-medium">
+									{profile.friendsCount}{' '}
+									<span className="text-muted">Friends</span>
+								</p>
+							</div>
+						</>
 					)}
 				</div>
 			</Popover.Content>

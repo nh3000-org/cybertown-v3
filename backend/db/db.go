@@ -321,6 +321,7 @@ func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*t.Pr
 		  id, 
 		  username, 
 	    avatar,
+	    bio,
 		  id = $1 as is_me,
 		  EXISTS 
 			  (select 1 from follows f where f.follower_id = $1 AND f.followee_id = $2) as is_following,
@@ -348,6 +349,7 @@ func (r *Repo) GetProfile(ctx context.Context, userID int, profileID int) (*t.Pr
 		&profile.ID,
 		&profile.Username,
 		&profile.Avatar,
+		&profile.Bio,
 		&profile.IsMe,
 		&profile.IsFollowing,
 		&profile.FollowersCount,
@@ -678,4 +680,12 @@ func (r *Repo) CountRoomsHosted(ctx context.Context, userID int) (int, error) {
 	var count int
 	err := r.pool.QueryRow(ctx, query, userID).Scan(&count)
 	return count, err
+}
+
+func (r *Repo) UpdateUser(ctx context.Context, id int, bio string) error {
+	query := `
+	  UPDATE users SET bio = $2 WHERE id = $1;
+	`
+	_, err := r.pool.Exec(ctx, query, id, bio)
+	return err
 }

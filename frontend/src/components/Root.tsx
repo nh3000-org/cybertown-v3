@@ -10,6 +10,8 @@ import { useEmoji } from '@/hooks/queries/useEmoji'
 import { init } from 'emoji-mart'
 import { useLanguages } from '@/hooks/queries/useLanguages'
 import { Theme } from './Theme'
+import { ChangeProfile } from '@/pages/home/components/ChangeProfile'
+import { EditBio } from '@/pages/home/components/EditBio'
 
 type Props = {
 	children?: React.ReactNode
@@ -42,6 +44,8 @@ export function Root(props: Props) {
 			<LogoutAlert />
 			<LoginAlert />
 			<Theme />
+			<ChangeProfile />
+			<EditBio />
 		</>
 	)
 }

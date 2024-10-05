@@ -9,6 +9,7 @@ func (app *application) router() http.Handler {
 	router.HandleFunc("GET /auth/google/callback", app.authCallbackHandler)
 	router.Handle("DELETE /auth/logout", ensureAuthed(http.HandlerFunc(app.logoutHandler)))
 	router.Handle("GET /me", ensureAuthed(http.HandlerFunc(app.meHandler)))
+	router.Handle("PUT /me", ensureAuthed(http.HandlerFunc(app.updateMeHandler)))
 
 	router.Handle("POST /rooms", ensureAuthed(http.HandlerFunc(app.createRoomHandler)))
 	router.Handle("PUT /rooms/{roomID}", ensureAuthed(http.HandlerFunc(app.updateRoomHandler)))

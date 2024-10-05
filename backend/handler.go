@@ -420,3 +420,27 @@ func (app *application) getLanguagesHandler(w http.ResponseWriter, _ *http.Reque
 		"languages": t.AllowedLanguages,
 	})
 }
+
+func (app *application) updateMeHandler(w http.ResponseWriter, r *http.Request) {
+	var req t.UpdateMeRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		badRequest(w, err)
+		return
+	}
+
+	ok, err := req.Validate()
+	if !ok {
+		badRequest(w, err)
+		return
+	}
+
+	u := r.Context().Value("user").(*t.User)
+	err = app.repo.UpdateUser(context.Background(), u.ID, req.Bio)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	msgResponse(w, "ok")
+}

@@ -8,6 +8,7 @@ import (
 const (
 	minTopicLen = 3
 	maxTopicLen = 128
+	maxBioLen   = 128
 )
 
 var (
@@ -49,4 +50,14 @@ func (s *OAuthState) Validate(config *Config) bool {
 		return false
 	}
 	return a.Host == b.Host
+}
+
+type UpdateMeRequest struct {
+	Bio string `json:"bio"`
+}
+
+func (r *UpdateMeRequest) Validate() (bool, error) {
+	vd := v.NewValidator()
+	vd.Count("bio", &r.Bio, "max", maxBioLen)
+	return vd.IsValid(), vd
 }

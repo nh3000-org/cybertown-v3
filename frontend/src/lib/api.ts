@@ -19,6 +19,15 @@ export const api = {
 		return data.user
 	},
 
+	async updateMe(bio: string) {
+		const url = config.apiURL + '/me'
+		const data = await fetchWrapper<'message', string>(url, {
+			method: 'PUT',
+			body: JSON.stringify({ bio }),
+		})
+		return data.message
+	},
+
 	async logout() {
 		const url = config.apiURL + '/auth/logout'
 		const data = await fetchWrapper<'message', string>(url, {

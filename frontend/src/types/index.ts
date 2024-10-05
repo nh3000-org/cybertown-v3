@@ -5,6 +5,7 @@ export type User = {
 }
 
 export type Profile = {
+	bio: string
 	isMe: boolean
 	isFollowing: boolean
 	isFriend: boolean

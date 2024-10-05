@@ -44,7 +44,9 @@ type State = {
 	popups: {
 		login: boolean
 		logout: boolean
-		theme: boolean
+		theme: boolean /* change color and theme */
+		profile: boolean /* change profile */
+		bio: boolean /* edit bio */
 	}
 
 	toast: {

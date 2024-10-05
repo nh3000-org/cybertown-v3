@@ -1,6 +1,10 @@
 import { useAppStore } from '@/stores/appStore'
 import * as Dropdown from '@radix-ui/react-dropdown-menu'
-import { User as UserIcon, Sun as SunIcon } from 'lucide-react'
+import {
+	User as UserIcon,
+	Sun as SunIcon,
+	SquarePen as EditIcon,
+} from 'lucide-react'
 import { LogOut as LogOutIcon } from 'lucide-react'
 
 export function UserMenu() {
@@ -24,9 +28,23 @@ export function UserMenu() {
 					sideOffset={8}
 					onCloseAutoFocus={(e) => e.preventDefault()}
 				>
-					<Dropdown.Item className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md">
+					<Dropdown.Item
+						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
+						onClick={() => {
+							setPopup('profile', true)
+						}}
+					>
 						<UserIcon size={20} className="text-muted" />
-						<span>Profile</span>
+						<span>My Profile</span>
+					</Dropdown.Item>
+					<Dropdown.Item
+						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"
+						onClick={() => {
+							setPopup('bio', true)
+						}}
+					>
+						<EditIcon size={20} className="text-muted" />
+						<span>Edit Bio</span>
 					</Dropdown.Item>
 					<Dropdown.Item
 						className="flex gap-3 items-center data-[highlighted]:outline-none data-[highlighted]:bg-accent px-2 py-1 rounded-md"

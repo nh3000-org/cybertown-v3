@@ -10,12 +10,13 @@ type User struct {
 
 type Profile struct {
 	User
-	IsMe           bool `json:"isMe"`
-	IsFollowing    bool `json:"isFollowing"`
-	IsFriend       bool `json:"isFriend"`
-	FriendsCount   int  `json:"friendsCount"`
-	FollowingCount int  `json:"followingCount"`
-	FollowersCount int  `json:"followersCount"`
+	Bio            *string `json:"bio,omitempty"`
+	IsMe           bool    `json:"isMe"`
+	IsFollowing    bool    `json:"isFollowing"`
+	IsFriend       bool    `json:"isFriend"`
+	FriendsCount   int     `json:"friendsCount"`
+	FollowingCount int     `json:"followingCount"`
+	FollowersCount int     `json:"followersCount"`
 }
 
 type Participant struct {
