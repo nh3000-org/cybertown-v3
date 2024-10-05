@@ -703,7 +703,7 @@ func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage)
 func (s *socketServer) sendAIReply(req *t.AIMessageRequest) {
 	reply, err := s.svc.GetReplyFromAI(*req.RoomID, req.From, req.Content, req.AIReply)
 	if err != nil {
-		log.Printf("failed to get reply from ai: %v", err)
+		log.Printf("failed to get reply from ai for msg %q: %v", req.Content, err)
 		return
 	}
 
