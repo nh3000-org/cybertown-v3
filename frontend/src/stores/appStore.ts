@@ -120,6 +120,8 @@ export const useAppStore = create<State & Actions>()(
 			login: false,
 			logout: false,
 			theme: false,
+			bio: false,
+			profile: false,
 		},
 
 		toast: {
