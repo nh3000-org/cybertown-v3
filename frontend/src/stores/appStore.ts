@@ -1,6 +1,6 @@
-import { getDMParticipant } from '@/lib/utils'
+import { getDMParticipant, queryClient } from '@/lib/utils'
 import { ws } from '@/lib/ws'
-import { Room, User } from '@/types'
+import { DMsRes, Room, User } from '@/types'
 import {
 	ClearChatBroadcastEvent,
 	DeleteMsgBroadcastEvent,
@@ -22,7 +22,12 @@ type State = {
 	joinedAnotherRoom: boolean
 
 	dm: Record<string, Message[]>
-	dmUnread: Record<string, boolean>
+
+	/* if the value is "string", then it points to the
+	 * recent message received via socket
+	 */
+	dmUnread: Record<string, boolean | string>
+
 	selectedDM: number | null /* points to the participant id */
 
 	/*
@@ -234,12 +239,22 @@ export const useAppStore = create<State & Actions>()(
 				}
 				state.dm[id].push(event.data)
 
+				// if this is the first message between these two
+				// participants, fetch the dms to show in "messages" tab
+				const dms: DMsRes[] = queryClient.getQueryData('dms') ?? []
+				const hasDM = dms.findIndex((dm) => dm.user.id === id) !== -1
+				if (!hasDM) {
+					queryClient.invalidateQueries({
+						queryKey: ['dms'],
+					})
+				}
+
 				const isCurrentDM = state.selectedDM === id
 				if (
 					!isFromMe &&
 					(!isCurrentDM || !isFocussed || (isCurrentDM && hasScrolled))
 				) {
-					state.dmUnread[id] = true
+					state.dmUnread[id] = event.data.content
 				}
 			}),
 

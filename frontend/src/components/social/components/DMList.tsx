@@ -36,6 +36,7 @@ export const DMList = React.forwardRef((_props, _ref) => {
 	return (
 		<div className="flex-1 px-3 pb-3 focus:outline-none flex flex-col overflow-auto scroller">
 			{dms.map((dm) => {
+				const latestMsgContent = dmUnread[dm.user.id]
 				return (
 					<div key={dm.user.id} className="flex gap-3 mt-4">
 						<Profile
@@ -66,16 +67,18 @@ export const DMList = React.forwardRef((_props, _ref) => {
 										</p>
 									)}
 								</div>
-								{dm.lastMessage && (
+								{(dm.lastMessage || typeof latestMsgContent === 'string') && (
 									<div className="flex items-center">
 										<p
 											className={cn('text-muted text-sm ellipsis flex-1', {
-												italic: dm.lastMessage.isDeleted,
+												italic: dm.lastMessage?.isDeleted,
 											})}
 										>
-											{dm.lastMessage.isDeleted
+											{dm.lastMessage?.isDeleted
 												? 'This message has been deleted'
-												: dm.lastMessage.content}
+												: typeof latestMsgContent === 'string'
+													? latestMsgContent
+													: dm.lastMessage?.content}
 										</p>
 										{dmUnread[dm.user.id] && (
 											<span className="w-2 h-2 rounded-full rounded-full block bg-danger" />
