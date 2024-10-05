@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type Repo struct {
 	pool *pgxpool.Pool
 	conf *t.Config
+	rdb  *redis.Client
 }
 
 type RoomFilter struct {
@@ -20,10 +22,11 @@ type RoomFilter struct {
 	UserID *int
 }
 
-func NewRepo(pool *pgxpool.Pool, conf *t.Config) *Repo {
+func NewRepo(pool *pgxpool.Pool, rdb *redis.Client, conf *t.Config) *Repo {
 	return &Repo{
 		pool: pool,
 		conf: conf,
+		rdb:  rdb,
 	}
 }
 
@@ -41,6 +44,22 @@ func NewPool(url string) *pgxpool.Pool {
 
 	log.Println("connected to database")
 	return p
+}
+
+func NewRedisClient(url string) *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     url,
+		Password: "",
+		DB:       0,
+	})
+
+	_, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("failed to ping redis: %v", err)
+	}
+
+	log.Println("connected to redis")
+	return rdb
 }
 
 func (r *Repo) DeleteRooms(ctx context.Context, roomIDs []int) error {
@@ -87,6 +106,16 @@ func (r *Repo) GetUserFromSession(ctx context.Context, sessionID string) (*t.Use
 	`
 	var u t.User
 	err := r.pool.QueryRow(ctx, query, sessionID).Scan(&u.ID, &u.Username, &u.Avatar)
+	return &u, err
+}
+
+func (r *Repo) GetUserByName(ctx context.Context, username string) (*t.User, error) {
+	query := `
+		SELECT u.id, u.username, u.avatar 
+		FROM users u WHERE u.username = $1
+	`
+	var u t.User
+	err := r.pool.QueryRow(ctx, query, username).Scan(&u.ID, &u.Username, &u.Avatar)
 	return &u, err
 }
 
@@ -671,6 +700,7 @@ func (r *Repo) GetMessages(ctx context.Context, userID, participantID int, curso
 
 	return messages, nil
 }
+
 func (r *Repo) CountRoomsHosted(ctx context.Context, userID int) (int, error) {
 	query := `
 		SELECT COUNT(*) FROM rooms r

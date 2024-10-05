@@ -68,3 +68,16 @@ type KickParticipant struct {
 	Duration      string `json:"duration"`
 	ClearChat     bool   `json:"clearChat"`
 }
+
+type AIMessageRequest struct {
+	*NewMessage
+	From    int
+	MsgType MsgType
+	MsgID   string
+	AIReply string
+}
+
+type AIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}

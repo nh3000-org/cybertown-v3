@@ -55,7 +55,7 @@ export const Messages = React.forwardRef((props: Props, _ref) => {
 				<div className="flex-1 text-muted flex flex-col items-center justify-center gap-3">
 					<NoMessagesIcon strokeWidth={1.5} />
 					<p className="max-w-[300px] text-center">
-						Start a conversation! Messages older than 15 days will be
+						Start a conversation! Messages older than 7 days will be
 						automatically deleted
 					</p>
 				</div>

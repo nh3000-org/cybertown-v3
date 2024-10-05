@@ -12,8 +12,9 @@ import { Emoji, useEmojiSearch } from './hooks/useEmojiSearch'
 import { useAppStore } from '@/stores/appStore'
 import { CircleX as CloseIcon, SmilePlus as EmojiIcon } from 'lucide-react'
 import { ws } from '@/lib/ws'
-import { cn, getParticipantID } from '@/lib/utils'
-import { ChevronDown as DownIcon } from 'lucide-react'
+import { getParticipantID } from '@/lib/utils'
+import { AI } from './AI'
+import { NewMessages } from './NewMessages'
 
 type Props = {
 	pm: User | null
@@ -41,7 +42,6 @@ export function BottomPanel(props: Props) {
 	)
 	const [content, setContent] = useState('')
 	const [emojiOpen, setEmojiOpen] = useState(false)
-	const unreadCount = useAppStore().unreadCount
 
 	const { search, setSearch, mentionedParticipants } = useMention(
 		content,
@@ -94,28 +94,7 @@ export function BottomPanel(props: Props) {
 
 	return (
 		<div className="flex flex-col gap-2 border-t border-border p-2.5 relative">
-			<div className="flex relative">
-				{!props.dm && (
-					<button
-						onClick={() => {
-							props.messagesEndRef.current?.scrollIntoView()
-						}}
-						className={cn(
-							'absolute -top-[2px] bg-brand text-brand-fg focus:ring-0 px-[6px] rounded-md flex items-center gap-1 text-sm visible',
-							{
-								invisible: unreadCount === 0,
-							}
-						)}
-					>
-						<span>
-							Scroll down to see{' '}
-							{unreadCount > 100 ? `${unreadCount}+` : unreadCount} new
-							message(s)
-						</span>
-						<DownIcon strokeWidth={1.5} className="relative top-[1px]" />
-					</button>
-				)}
-
+			<div className="flex">
 				{props.room && (
 					<MentionParticipants
 						setSearch={setSearch}
@@ -135,7 +114,9 @@ export function BottomPanel(props: Props) {
 					selectEmoji={selectEmoji}
 				/>
 
-				<div className="gap-1 ml-auto mr-1.5 flex">
+				<div className="gap-1 ml-auto mr-1.5 flex items-end gap-1.5">
+					{!props.dm && <AI />}
+
 					<EmojiPicker
 						trigger={
 							<button>
@@ -179,6 +160,8 @@ export function BottomPanel(props: Props) {
 				pm={props.pm}
 				messages={props.messages}
 			/>
+
+			{!props.dm && <NewMessages messagesEndRef={props.messagesEndRef} />}
 
 			<PM pm={props.pm} setPM={props.setPM} />
 

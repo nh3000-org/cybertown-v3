@@ -30,3 +30,11 @@ func Filter[T string | int](slice []T, callback func(T) bool) []T {
 	}
 	return result
 }
+
+func IsAIMsgReq(msg *string) bool {
+	res := strings.HasPrefix(*msg, "/ai ")
+	if res {
+		*msg = strings.Replace(*msg, "/ai", "`@AI`", 1)
+	}
+	return res
+}

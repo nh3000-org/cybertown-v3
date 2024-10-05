@@ -43,7 +43,7 @@ export function UserMenu() {
 							setPopup('bio', true)
 						}}
 					>
-						<EditIcon size={20} className="text-muted" />
+						<EditIcon size={18} className="text-muted" />
 						<span>Edit Bio</span>
 					</Dropdown.Item>
 					<Dropdown.Item
@@ -59,7 +59,7 @@ export function UserMenu() {
 							setPopup('logout', true)
 						}}
 					>
-						<LogOutIcon size={20} className="text-muted" />
+						<LogOutIcon size={18} className="text-muted" />
 						<span>Log Out</span>
 					</Dropdown.Item>
 				</Dropdown.Content>

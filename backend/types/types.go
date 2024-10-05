@@ -63,15 +63,24 @@ type Kick struct {
 }
 
 type Config struct {
-	CookieExpiration time.Duration `env:"COOKIE_EXPIRATION"`
-	GoogleOAuth      struct {
-		RedirectURL  string `env:"GOOGLE_OAUTH_REDIRECT_URL"`
-		ClientID     string `env:"GOOGLE_OAUTH_CLIENT_ID"`
-		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
+	CookieExpiration        time.Duration `env:"COOKIE_EXPIRATION,required"`
+	RoomInactivityThreshold time.Duration `env:"ROOM_INACTIVITY_THRESHOLD,required"`
+	MaxRoomsHosted          int           `env:"MAX_ROOMS_HOSTED,required"`
+
+	GoogleOAuth struct {
+		RedirectURL  string `env:"GOOGLE_OAUTH_REDIRECT_URL,required"`
+		ClientID     string `env:"GOOGLE_OAUTH_CLIENT_ID,required"`
+		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`
 	}
-	PostgresURL    string `env:"POSTGRES_URL"`
-	WebURL         string `env:"WEB_URL"`
-	MaxRoomsHosted int    `env:"MAX_ROOMS_HOSTED"`
+
+	PostgresURL string `env:"POSTGRES_URL,required"`
+	RedisURL    string `env:"REDIS_URL,required"`
+	WebURL      string `env:"WEB_URL,required"`
+
+	Gemini struct {
+		APIKey  string `env:"GEMINI_API_KEY,required"`
+		AIModel string `env:"GEMINI_AI_MODEL,required"`
+	}
 }
 
 type RoomsResponse struct {

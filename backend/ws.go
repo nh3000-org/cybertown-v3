@@ -24,8 +24,8 @@ type socketRoom struct {
 	conns        map[*websocket.Conn]struct{}
 	lastActivity time.Time
 }
-
 type socketServer struct {
+	bot          *t.User
 	conns        map[*websocket.Conn]string
 	participants map[string]*t.Participant
 	users        map[int][]string
@@ -34,9 +34,10 @@ type socketServer struct {
 	emojis       map[string]struct{}
 	svc          *service.Service
 	cfg          *t.Config
+	aiMsgRequest chan *t.AIMessageRequest
 }
 
-func newSocketServer(repo *db.Repo, svc *service.Service, cfg *t.Config, emojis map[string]struct{}) *socketServer {
+func newSocketServer(repo *db.Repo, svc *service.Service, cfg *t.Config, bot *t.User, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
 		conns:        make(map[*websocket.Conn]string),
 		rooms:        make(map[int]*socketRoom),
@@ -46,6 +47,9 @@ func newSocketServer(repo *db.Repo, svc *service.Service, cfg *t.Config, emojis 
 		repo:         repo,
 		svc:          svc,
 		cfg:          cfg,
+		// TODO: learn about the buffered channel
+		aiMsgRequest: make(chan *t.AIMessageRequest, 1000),
+		bot:          bot,
 	}
 }
 
@@ -234,12 +238,31 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 		msgType,
 		data,
 	)
+
+	var (
+		isAIMsgReq bool
+		aiReply    string
+	)
+
 	if msgType == t.DMMsg {
 		mID, err := s.svc.CreateMessage(context.Background(), msg, p.ID, *data.ParticipantID)
 		msg.ID = mID
 		if err != nil {
 			log.Printf("new message event: failed to create message: %v", err)
 			return
+		}
+	} else {
+		isAIMsgReq = utils.IsAIMsgReq(&msg.Content)
+		if data.ReplyTo != nil {
+			var err error
+			aiReply, err = s.repo.IsReplyToAI(context.Background(), *data.RoomID, *data.ReplyTo)
+			if err != nil {
+				log.Printf("new message event: failed to check if reply is from ai: %v", err)
+				return
+			}
+			if len(aiReply) != 0 {
+				isAIMsgReq = true
+			}
 		}
 	}
 
@@ -253,6 +276,16 @@ func (s *socketServer) newMessageHandler(conn *websocket.Conn, b []byte) {
 	} else {
 		pIDs := []int{p.ID, *data.ParticipantID}
 		s.broadcastMsgEvent(pIDs, event)
+	}
+
+	if isAIMsgReq {
+		s.aiMsgRequest <- &t.AIMessageRequest{
+			MsgType:    msgType,
+			NewMessage: data,
+			MsgID:      msg.ID,
+			From:       p.ID,
+			AIReply:    aiReply,
+		}
 	}
 }
 
@@ -665,6 +698,41 @@ func (s *socketServer) createMessage(user *t.User, m t.MsgType, d *t.NewMessage)
 	}
 
 	return &msg
+}
+
+func (s *socketServer) sendAIReply(req *t.AIMessageRequest) {
+	reply, err := s.svc.GetReplyFromAI(*req.RoomID, req.From, req.Content, req.AIReply)
+	if err != nil {
+		log.Printf("failed to get reply from ai: %v", err)
+		return
+	}
+
+	msg := s.createMessage(s.bot, req.MsgType, &t.NewMessage{
+		Content:       reply,
+		RoomID:        req.RoomID,
+		ParticipantID: req.ParticipantID,
+		ReplyTo:       &req.MsgID,
+	})
+
+	s.repo.SetAIReply(context.Background(), *req.RoomID, msg.ID, req.From, []string{req.Content, reply})
+
+	event := &t.Event{
+		Name: "NEW_MESSAGE_BROADCAST",
+		Data: msg,
+	}
+
+	if req.MsgType == t.RoomMsg {
+		s.broadcastRoomEvent(*req.RoomID, event)
+	} else if req.MsgType == t.PrivateRoomMsg {
+		pIDs := []int{req.From, *req.ParticipantID}
+		s.broadcastMsgEvent(pIDs, event)
+	}
+}
+
+func (s *socketServer) processAIMsgRequest() {
+	for req := range s.aiMsgRequest {
+		go s.sendAIReply(req)
+	}
 }
 
 func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
