@@ -1,21 +1,18 @@
 import React, { useState } from 'react'
 import { useDMs } from '@/hooks/queries/useDMs'
-import { User } from '@/types'
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { Mail as MessagesIcon } from 'lucide-react'
 import { cn, formatDate } from '@/lib/utils'
 import { Profile } from '@/components/Profile'
 import { useAppStore } from '@/stores/appStore'
+import { useSocial } from '@/context/SocialContext'
 
-type Props = {
-	setDM: (dm: User | null) => void
-}
-
-export const DMList = React.forwardRef((props: Props, _ref) => {
+export const DMList = React.forwardRef((_props, _ref) => {
 	const user = useAppStore().user
 	const { data: dms, isLoading } = useDMs(Boolean(user))
 	const [open, setOpen] = useState<Record<number, boolean>>({})
 	const dmUnread = useAppStore().dmUnread
+	const socialActions = useSocial().actions
 
 	if (isLoading) {
 		return (
@@ -55,7 +52,12 @@ export const DMList = React.forwardRef((props: Props, _ref) => {
 						<div className="flex items-center justify-between flex-1 overflow-x-hidden">
 							<div className="w-full overflow-x-hidden">
 								<div className="flex justify-between items-baseline gap-4">
-									<p role="button" onClick={() => props.setDM(dm.user)}>
+									<p
+										role="button"
+										onClick={() => {
+											socialActions.setDM(dm.user)
+										}}
+									>
 										{dm.user.username}
 									</p>
 									{dm.lastMessage && (

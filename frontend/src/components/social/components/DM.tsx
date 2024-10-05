@@ -1,7 +1,6 @@
 import { Messages } from '@/components/messages'
 import { useMessages } from '@/hooks/queries/useMessages'
 import { useAppStore } from '@/stores/appStore'
-import { User } from '@/types'
 import { ChevronLeft as LeftIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
@@ -11,21 +10,19 @@ import {
 } from '../hooks/usePreviousMessages'
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { scrollToMessage } from '@/lib/utils'
+import { useSocial } from '@/context/SocialContext'
 
-type Props = {
-	user: User
-	setDM: (dm: User | null) => void
-}
-
-export function DM(props: Props) {
+export function DM() {
 	const clearDM = useAppStore().clearDM
 	const setDM = useAppStore().setDM
 	const dmUnread = useAppStore().dmUnread
-	const { data: initialMessages, isLoading } = useMessages(props.user.id)
-	const messages = useAppStore().dm[props.user.id] ?? []
+	const dmUser = useSocial().state.dm!
+	const socialActions = useSocial().actions
+	const { data: initialMessages, isLoading } = useMessages(dmUser.id)
+	const messages = useAppStore().dm[dmUser.id] ?? []
 	const { ref: messagesStartRef, inView } = useInView()
 	const { loading: isPrevMessagesLoading, fetchMessages } = usePreviousMessages(
-		props.user.id
+		dmUser.id
 	)
 
 	const hasMessages = initialMessages?.length
@@ -38,19 +35,19 @@ export function DM(props: Props) {
 
 	useEffect(() => {
 		if (initialMessages) {
-			setDM(props.user.id, initialMessages)
+			setDM(dmUser.id, initialMessages)
 		}
 		return function () {
-			clearDM(props.user.id)
+			clearDM(dmUser.id)
 		}
-	}, [props.user.id, initialMessages])
+	}, [dmUser.id, initialMessages])
 
 	useEffect(() => {
 		if (inView && !isPrevMessagesLoading && messages.length >= MESSAGES_LIMIT) {
 			const oldMessage = messages[0]
 			fetchMessages(oldMessage.createdAt).then((messages) => {
 				if (messages) {
-					setDM(props.user.id, messages)
+					setDM(dmUser.id, messages)
 					// maintain scroll position when old messages are added
 					setTimeout(() => {
 						scrollToMessage(oldMessage.id, false)
@@ -63,20 +60,25 @@ export function DM(props: Props) {
 	return (
 		<div className="flex flex-col h-full">
 			<div className="p-3 border-b border-border flex gap-2 items-center">
-				<button className="focus:ring-0" onClick={() => props.setDM(null)}>
+				<button
+					className="focus:ring-0"
+					onClick={() => {
+						socialActions.setDM(null)
+					}}
+				>
 					<LeftIcon size={22} className="text-muted" />
 				</button>
 				<div className="relative">
 					<img
 						className="w-8 h-8 rounded-full mr-1"
-						src={props.user.avatar}
+						src={dmUser.avatar}
 						referrerPolicy="no-referrer"
 					/>
-					{dmUnread[props.user.id] && (
+					{dmUnread[dmUser.id] && (
 						<span className="w-[10px] h-[10px] rounded-full rounded-full block bg-danger absolute right-[2px] top-0" />
 					)}
 				</div>
-				<p>{props.user.username}</p>
+				<p>{dmUser.username}</p>
 			</div>
 
 			{isLoading && (
@@ -91,7 +93,7 @@ export function DM(props: Props) {
 					setPM={() => {}}
 					messages={messages.slice(endIdx === -1 ? 0 : endIdx + 1)}
 					room={null}
-					dm={props.user}
+					dm={dmUser}
 					initialMessages={
 						startIdx === -1 || endIdx === -1
 							? []

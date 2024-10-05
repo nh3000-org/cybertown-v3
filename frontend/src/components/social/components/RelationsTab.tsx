@@ -1,7 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import React, { useState } from 'react'
+import React from 'react'
 import { RelationList } from './RelationList'
-import { User } from '@/types'
+import { useSocial } from '@/context/SocialContext'
 
 const relations = [
 	{
@@ -18,18 +18,16 @@ const relations = [
 	},
 ]
 
-type Props = {
-	setDM: (user: User | null) => void
-}
-
-export const RelationsTab = React.forwardRef((props: Props, _ref) => {
-	const [relation, setRelation] = useState('following')
+export const RelationsTab = React.forwardRef((_props, _ref) => {
+	const { state: socialState, actions: socialActions } = useSocial()
 
 	return (
 		<Tabs.Root
 			className="flex-1 flex flex-col overflow-hidden"
-			value={relation}
-			onValueChange={setRelation}
+			value={socialState.relationsTab}
+			onValueChange={(tab) => {
+				socialActions.setRelationsTab(tab)
+			}}
 		>
 			<Tabs.List className="flex justify-between border-b border-border p-1 gap-3">
 				{relations.map((r) => {
@@ -45,13 +43,13 @@ export const RelationsTab = React.forwardRef((props: Props, _ref) => {
 				})}
 			</Tabs.List>
 			<Tabs.Content asChild value="following">
-				<RelationList setDM={props.setDM} relation="following" />
+				<RelationList relation="following" />
 			</Tabs.Content>
 			<Tabs.Content asChild value="followers">
-				<RelationList setDM={props.setDM} relation="followers" />
+				<RelationList relation="followers" />
 			</Tabs.Content>
 			<Tabs.Content asChild value="friends">
-				<RelationList setDM={props.setDM} relation="friends" />
+				<RelationList relation="friends" />
 			</Tabs.Content>
 		</Tabs.Root>
 	)

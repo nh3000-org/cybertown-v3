@@ -10,6 +10,7 @@ import { LoadingIcon } from './components/LoadingIcon'
 import { NoRooms } from './components/NoRooms'
 import { RoomCard } from './components/RoomCard'
 import { Header } from './components/Header'
+import { SocialProvider } from '@/context/SocialContext'
 
 export function HomePage() {
 	const user = useAppStore().user
@@ -46,25 +47,27 @@ export function HomePage() {
 			)}
 
 			{user && (
-				<div className="fixed bottom-8 right-8">
-					<Popover.Root>
-						<Popover.Trigger className="bg-brand text-brand-fg p-3 rounded-full relative focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg">
-							<WebhookIcon size={22} />
-							{hasUnread && (
-								<span className="w-3 h-3 rounded-full rounded-full block bg-danger absolute right-0 top-0" />
-							)}
-						</Popover.Trigger>
-						<Popover.Anchor />
-						<Popover.Content
-							sideOffset={56}
-							side="top"
-							align="end"
-							className="focus:outline-none border border-border rounded-md h-[470px] w-[360px] bg-bg"
-						>
-							<Social hasUnread={hasUnread} />
-						</Popover.Content>
-					</Popover.Root>
-				</div>
+				<SocialProvider>
+					<div className="fixed bottom-8 right-8">
+						<Popover.Root>
+							<Popover.Trigger className="bg-brand text-brand-fg p-3 rounded-full relative focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg">
+								<WebhookIcon size={22} />
+								{hasUnread && (
+									<span className="w-3 h-3 rounded-full rounded-full block bg-danger absolute right-0 top-0" />
+								)}
+							</Popover.Trigger>
+							<Popover.Anchor />
+							<Popover.Content
+								sideOffset={56}
+								side="top"
+								align="end"
+								className="focus:outline-none border border-border rounded-md h-[470px] w-[360px] bg-bg"
+							>
+								<Social hasUnread={hasUnread} />
+							</Popover.Content>
+						</Popover.Root>
+					</div>
+				</SocialProvider>
 			)}
 		</main>
 	)

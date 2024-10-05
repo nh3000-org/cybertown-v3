@@ -1,10 +1,11 @@
-import { RelationRes, User } from '@/types'
+import { RelationRes } from '@/types'
 import { useState } from 'react'
 import { useRelation } from '@/hooks/queries/useRelation'
 import { Users as UsersIcon } from 'lucide-react'
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { Profile } from '@/components/Profile'
 import React from 'react'
+import { useSocial } from '@/context/SocialContext'
 
 const text = {
 	following: "You're not following anyone yet. Pick your favorites!",
@@ -13,17 +14,17 @@ const text = {
 } as const
 
 type Props = {
-	setDM: (dm: User | null) => void
 	relation: 'followers' | 'following' | 'friends'
 }
 
 export const RelationList = React.forwardRef((props: Props, _ref) => {
 	const [open, setOpen] = useState<Record<number, boolean>>({})
 	const { data: users, isLoading } = useRelation(props.relation)
+	const { actions: socialActions } = useSocial()
 
 	function openDM(user: RelationRes) {
 		if (user.isFriend) {
-			props.setDM(user)
+			socialActions.setDM(user)
 		}
 	}
 
