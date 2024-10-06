@@ -70,11 +70,11 @@ export function HomePage() {
 						/>
 					</div>
 					{open && (
-						<div className="top-0 left-0 fixed h-full w-full flex flex-col sm:hidden bg-bg p-2 gap-2">
+						<div className="top-0 left-0 fixed h-full w-full flex flex-col sm:hidden bg-bg p-2 gap-2 overflow-hidden">
 							<button className="ml-auto pr-2" onClick={() => setOpen(false)}>
 								close
 							</button>
-							<div className="border border-border h-full rounded-md">
+							<div className="border border-border h-full rounded-md overflow-hidden">
 								<Social hasUnread={hasUnread} />
 							</div>
 						</div>
