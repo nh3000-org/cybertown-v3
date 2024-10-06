@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { TextareaSearch } from './hooks/useMention'
 import { User } from '@/types'
 import { getParticipantID } from '@/lib/utils'
