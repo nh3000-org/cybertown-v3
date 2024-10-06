@@ -1,8 +1,7 @@
 import { RoomRes, User } from '@/types'
 import { ParticipantOptions } from './ParticipantOptions'
 import { useAppStore } from '@/stores/appStore'
-import { cn, getFallback } from '@/lib/utils'
-import { Avatar } from '@/components/Avatar'
+import { cn } from '@/lib/utils'
 
 type Props = {
 	room: RoomRes
