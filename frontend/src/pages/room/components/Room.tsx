@@ -16,8 +16,8 @@ export function Room(props: Props) {
 	const [pm, setPM] = useState<User | null>(null)
 
 	return (
-		<main className="h-full w-full p-4 grid grid-cols-[1fr_400px] bg-bg gap-4">
-			<div className="border border-border rounded-md bg-bg flex flex-col">
+		<main className="size-full md:p-4 flex flex-col md:grid md:grid-cols-2 lg:grid-cols-[auto_30%] bg-bg gap-4">
+			<div className="md:border md:border-border rounded-md bg-bg flex flex-col min-h-[320px]">
 				<div className="flex-1 flex items-center justify-center">
 					{room?.settings.welcomeMessage && (
 						<p className="text-yellow-500 max-w-[500px] px-4 whitespace-pre-wrap">
@@ -28,9 +28,7 @@ export function Room(props: Props) {
 						</p>
 					)}
 				</div>
-				<div className="p-4">
-					{!isLoading && room && <Participants room={room} setPM={setPM} />}
-				</div>
+				{!isLoading && room && <Participants room={room} setPM={setPM} />}
 			</div>
 			<RoomTabs roomID={props.roomID} room={room!} pm={pm} setPM={setPM} />
 		</main>

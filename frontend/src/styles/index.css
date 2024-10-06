@@ -149,15 +149,6 @@ em-emoji-picker {
 	--color-border: theme('colors.accent');
 }
 
-.participant:hover {
-	border-image: linear-gradient(
-			to bottom,
-			rgba(0, 0, 0, 0.7),
-			rgba(0, 0, 0, 0.7)
-		)
-		fill 1;
-}
-
 .dialog-overlay {
 	@apply bg-overlay inset-0 fixed;
 }
@@ -172,4 +163,12 @@ em-emoji-picker {
 
 .user-mention {
 	@apply text-yellow-500;
+}
+
+.participant::before {
+	@apply content-[""] absolute inset-0;
+}
+
+.participant:hover::before {
+	@apply bg-black/85;
 }

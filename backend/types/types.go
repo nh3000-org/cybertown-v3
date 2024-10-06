@@ -141,3 +141,8 @@ type DMResponse struct {
 	User        User           `json:"user"`
 	LastMessage map[string]any `json:"lastMessage"`
 }
+
+type AIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}

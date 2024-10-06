@@ -76,8 +76,3 @@ type AIMessageRequest struct {
 	MsgID   string
 	AIReply string
 }
-
-type AIMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
