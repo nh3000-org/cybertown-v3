@@ -74,7 +74,7 @@ export function HomePage() {
 							<button className="ml-auto pr-2" onClick={() => setOpen(false)}>
 								close
 							</button>
-							<div className="border border-border flex-1 rounded-md">
+							<div className="border border-border h-full rounded-md">
 								<Social hasUnread={hasUnread} />
 							</div>
 						</div>
