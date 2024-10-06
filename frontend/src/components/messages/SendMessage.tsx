@@ -111,13 +111,13 @@ export function SendMessage(props: Props) {
 		}
 	}
 
-	useEffect(() => {
-		setTimeout(() => {
-			if (textareaRef.current) {
-				textareaRef.current.focus()
-			}
-		}, 0)
-	}, [])
+	// useEffect(() => {
+	// 	setTimeout(() => {
+	// 		if (textareaRef.current) {
+	// 			textareaRef.current.focus()
+	// 		}
+	// 	}, 0)
+	// }, [])
 
 	return (
 		<>
