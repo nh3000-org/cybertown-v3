@@ -7,14 +7,16 @@ import { cn } from '@/lib/utils'
 
 type Props = {
 	hasUnread: boolean
-	widget?: boolean
+	widget?: {
+		close: () => void
+	}
 }
 
 export function Social(props: Props) {
 	const { state: socialState, actions: socialActions } = useSocial()
 
 	if (socialState.dm) {
-		return <DM />
+		return <DM widget={props.widget} />
 	}
 
 	return (

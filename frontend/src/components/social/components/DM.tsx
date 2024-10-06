@@ -11,8 +11,15 @@ import {
 import { LoadingIcon } from '@/pages/home/components/LoadingIcon'
 import { scrollToMessage } from '@/lib/utils'
 import { useSocial } from '@/context/SocialContext'
+import { X as CloseIcon } from 'lucide-react'
 
-export function DM() {
+type Props = {
+	widget?: {
+		close: () => void
+	}
+}
+
+export function DM(props: Props) {
 	const clearDM = useAppStore().clearDM
 	const setDM = useAppStore().setDM
 	const dmUnread = useAppStore().dmUnread
@@ -79,6 +86,11 @@ export function DM() {
 					)}
 				</div>
 				<p>{dmUser.username}</p>
+				{props.widget && (
+					<button className="ml-auto focus:ring-0" onClick={props.widget.close}>
+						<CloseIcon className="text-muted" size={20} />
+					</button>
+				)}
 			</div>
 
 			{isLoading && (
