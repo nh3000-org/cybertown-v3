@@ -32,7 +32,9 @@ export function Room(props: Props) {
 			<Panel defaultSize={30}>
 				<RoomStagingArea setPM={setPM} isLoading={isLoading} room={room} />
 			</Panel>
-			<PanelResizeHandle />
+			<PanelResizeHandle className="text-xs bg-bg-2 py-[2px] flex items-center justify-center text-muted">
+				Touch and drag here to resize
+			</PanelResizeHandle>
 			<Panel defaultSize={70}>
 				<RoomTabs roomID={props.roomID} room={room!} pm={pm} setPM={setPM} />
 			</Panel>
