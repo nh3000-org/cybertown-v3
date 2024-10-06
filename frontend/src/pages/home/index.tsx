@@ -5,17 +5,19 @@ import { bc } from '@/lib/bc'
 import { useAppStore } from '@/stores/appStore'
 import * as Popover from '@radix-ui/react-popover'
 import { Webhook as WebhookIcon } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LoadingIcon } from './components/LoadingIcon'
 import { NoRooms } from './components/NoRooms'
 import { RoomCard } from './components/RoomCard'
 import { Header } from './components/Header'
 import { SocialProvider } from '@/context/SocialContext'
+import { SocialBtn } from '@/components/social/components/SocialBtn'
 
 export function HomePage() {
 	const user = useAppStore().user
 	const dmUnread = useAppStore().dmUnread
 	const { data: rooms, isLoading } = useRooms()
+	const [open, setOpen] = useState(false)
 
 	useDMs(Boolean(user))
 	const hasUnread = Object.values(dmUnread).some((isUnread) => isUnread)
@@ -50,11 +52,8 @@ export function HomePage() {
 				<SocialProvider>
 					<div className="fixed bottom-8 right-8">
 						<Popover.Root>
-							<Popover.Trigger className="bg-brand text-brand-fg p-3 rounded-full relative focus:ring-brand/40 focus:ring-offset-2 focus:ring-offset-bg">
-								<WebhookIcon size={22} />
-								{hasUnread && (
-									<span className="w-3 h-3 rounded-full rounded-full block bg-danger absolute right-0 top-0" />
-								)}
+							<Popover.Trigger asChild>
+								<SocialBtn classNames="hidden sm:block" />
 							</Popover.Trigger>
 							<Popover.Anchor />
 							<Popover.Content
@@ -66,7 +65,24 @@ export function HomePage() {
 								<Social hasUnread={hasUnread} />
 							</Popover.Content>
 						</Popover.Root>
+						<SocialBtn
+							classNames="block sm:hidden"
+							onClick={() => setOpen(true)}
+						/>
 					</div>
+					{open && (
+						<div className="top-0 left-0 fixed h-full w-full flex flex-col sm:hidden bg-bg p-2">
+							<button
+								className="ml-auto pb-2 pr-2"
+								onClick={() => setOpen(false)}
+							>
+								close
+							</button>
+							<div className="border border-border h-full rounded-md">
+								<Social hasUnread={hasUnread} />
+							</div>
+						</div>
+					)}
 				</SocialProvider>
 			)}
 		</main>
