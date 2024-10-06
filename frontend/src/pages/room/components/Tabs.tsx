@@ -38,7 +38,7 @@ export function RoomTabs(props: Props) {
 
 	return (
 		<SocialProvider>
-			<div className="flex-1 border-t border-border md:border md:rounded-md bg-bg overflow-hidden">
+			<div className="h-full border-t border-border md:border md:rounded-md bg-bg overflow-hidden">
 				<Tabs.Root
 					className="flex flex-col h-full"
 					value={roomTab}
