@@ -3,9 +3,11 @@ import { RelationsTab } from './components/RelationsTab'
 import { DM } from './components/DM'
 import { DMList } from './components/DMList'
 import { useSocial } from '@/context/SocialContext'
+import { cn } from '@/lib/utils'
 
 type Props = {
 	hasUnread: boolean
+	widget?: boolean
 }
 
 export function Social(props: Props) {
@@ -23,10 +25,15 @@ export function Social(props: Props) {
 				socialActions.setTab(tab)
 			}}
 		>
-			<Tabs.List className="flex justify-between border-b border-border p-1 gap-3">
+			<Tabs.List className="flex between border-b border-border p-1 gap-3">
 				<Tabs.Trigger
 					value="messages"
-					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+					className={cn(
+						'px-2 py-1 rounded-md text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center',
+						{
+							'flex-1': !props.widget,
+						}
+					)}
 				>
 					<div className="relative">
 						<p>Messages</p>
@@ -37,7 +44,12 @@ export function Social(props: Props) {
 				</Tabs.Trigger>
 				<Tabs.Trigger
 					value="relations"
-					className="px-2 py-1 rounded-md flex-1 text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center"
+					className={cn(
+						'px-2 py-1 rounded-md text-muted data-[state=active]:bg-accent data-[state=active]:text-fg data-[state=active]:ring-0 flex gap-2 items-center justify-center',
+						{
+							'flex-1': !props.widget,
+						}
+					)}
 				>
 					<p>People</p>
 				</Tabs.Trigger>

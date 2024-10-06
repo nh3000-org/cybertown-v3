@@ -11,10 +11,13 @@ import { RoomCard } from './components/RoomCard'
 import { Header } from './components/Header'
 import { SocialProvider } from '@/context/SocialContext'
 import { SocialBtn } from '@/components/social/components/SocialBtn'
+import { X as CloseIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function HomePage() {
 	const user = useAppStore().user
 	const dmUnread = useAppStore().dmUnread
+	const selectedDM = useAppStore().selectedDM
 	const { data: rooms, isLoading } = useRooms()
 	const [open, setOpen] = useState(false)
 
@@ -71,11 +74,16 @@ export function HomePage() {
 					</div>
 					{open && (
 						<div className="top-0 left-0 fixed h-full w-full flex flex-col sm:hidden bg-bg p-2 gap-2 overflow-hidden">
-							<button className="ml-auto pr-2" onClick={() => setOpen(false)}>
-								close
-							</button>
-							<div className="border border-border h-full rounded-md overflow-hidden">
-								<Social hasUnread={hasUnread} />
+							<div className="border border-border h-full rounded-md overflow-hidden relative">
+								<Social widget hasUnread={hasUnread} />
+								<button
+									className={cn('focus:ring-0 absolute right-2 top-[10px]', {
+										'top-[19px]': selectedDM !== null,
+									})}
+									onClick={() => setOpen(false)}
+								>
+									<CloseIcon className="text-muted" size={20} />
+								</button>
 							</div>
 						</div>
 					)}
