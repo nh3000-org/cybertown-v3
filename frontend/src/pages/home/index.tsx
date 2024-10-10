@@ -12,15 +12,17 @@ import { Header } from './components/Header'
 import { SocialProvider } from '@/context/SocialContext'
 import { SocialBtn } from '@/components/social/components/SocialBtn'
 import { SocialWidget } from '@/components/social/components/SocialWidget'
+import { useFavicon } from '@/hooks/useFavicon'
 
 export function HomePage() {
 	const user = useAppStore().user
 	const dmUnread = useAppStore().dmUnread
 	const { data: rooms, isLoading } = useRooms()
 	const [open, setOpen] = useState(false)
-
-	useDMs(Boolean(user))
 	const hasUnread = Object.values(dmUnread).some((isUnread) => isUnread)
+
+	useFavicon(hasUnread)
+	useDMs(Boolean(user))
 
 	useEffect(() => {
 		bc.sendMessage({ name: 'VISITED_HOMEPAGE' })

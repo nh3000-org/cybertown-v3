@@ -1,4 +1,5 @@
 import { useUpdateDM } from '@/hooks/mutations/useUpdateDM'
+import { bc } from '@/lib/bc'
 import { useAppStore } from '@/stores/appStore'
 import { Message } from '@/types/broadcast'
 import { useEffect, useRef } from 'react'
@@ -33,6 +34,7 @@ export function useReadMessage(
 
 				updateDM(participantID)
 				setDMRead(participantID)
+				bc.sendMessage({ name: 'DM_READ_PARTICIPANT', participantID })
 				lastMessageRef.current = lastMessage.id
 			}, 300)
 		}

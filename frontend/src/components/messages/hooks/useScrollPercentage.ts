@@ -1,3 +1,4 @@
+import { bc } from '@/lib/bc'
 import { useAppStore } from '@/stores/appStore'
 import { User } from '@/types'
 import { useEffect, RefObject } from 'react'
@@ -43,6 +44,7 @@ export const useScrollPercentage = (
 				setUnreadCount(0)
 			} else if (dm && scrollPercent >= 98) {
 				setDMRead(dm.id)
+				bc.sendMessage({ name: 'DM_READ_PARTICIPANT', participantID: dm.id })
 			}
 
 			setScrollPercent(scrollPercent)

@@ -51,7 +51,7 @@ export function Message(props: Props) {
 			/>
 			<div className="flex-1">
 				<div className="flex items-center justify-between text-muted text-sm mb-1">
-					<div className="flex items-center gap-3">
+					<div className="flex items-center gap-1.5">
 						{props.dm === null &&
 						message.participant &&
 						message.from?.id === user?.id ? (

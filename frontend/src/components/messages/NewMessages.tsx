@@ -9,9 +9,11 @@ type Props = {
 
 export function NewMessages(props: Props) {
 	const unreadCount = useAppStore().unreadCount
+	const setUnreadCount = useAppStore().setUnreadCount
 	return (
 		<button
 			onClick={() => {
+				setUnreadCount(0)
 				props.messagesEndRef.current?.scrollIntoView()
 			}}
 			className={cn(

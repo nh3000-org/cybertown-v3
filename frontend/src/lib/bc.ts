@@ -32,6 +32,8 @@ class BC {
 					document.documentElement.dataset.theme = event.theme
 				} else if (event.name === 'COLOR_CHANGED') {
 					document.documentElement.style.setProperty('--brand', event.color)
+				} else if (event.name === 'DM_READ_PARTICIPANT') {
+					useAppStore.getState().setDMReadForParticipant(event.participantID)
 				}
 			} catch (err) {
 				console.error('failed to parse broadcast event', err)

@@ -5,6 +5,8 @@ import { RoomTabs } from './Tabs'
 import { RoomStagingArea } from './RoomStagingArea'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import { useFavicon } from '@/hooks/useFavicon'
+import { useAppStore } from '@/stores/appStore'
 
 type Props = {
 	roomID: number
@@ -15,6 +17,11 @@ export function Room(props: Props) {
 	const room = rooms?.find((room) => room.id === props.roomID)
 	const [pm, setPM] = useState<User | null>(null)
 	const matches = useMediaQuery('(min-width: 768px)')
+
+	const unreadCount = useAppStore().unreadCount
+	const dmUnread = useAppStore().dmUnread
+	const hasUnread = Object.values(dmUnread).some((isUnread) => isUnread)
+	useFavicon(unreadCount !== 0 || hasUnread)
 
 	// two column horizontal layout
 	if (matches) {

@@ -1,5 +1,6 @@
 import { RefObject, useEffect } from 'react'
 import { useAppStore } from '../../../stores/appStore'
+import { bc } from '@/lib/bc'
 
 export function useFocus(messagesRef: RefObject<HTMLDivElement>) {
 	const selectedDM = useAppStore().selectedDM
@@ -26,6 +27,10 @@ export function useFocus(messagesRef: RefObject<HTMLDivElement>) {
 
 				if (selectedDM && dmUnread[selectedDM] && !hasScrollbar) {
 					setDMRead(selectedDM)
+					bc.sendMessage({
+						name: 'DM_READ_PARTICIPANT',
+						participantID: selectedDM,
+					})
 				}
 			}, 300)
 		}
