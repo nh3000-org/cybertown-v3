@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/lithammer/shortuuid/v4"
+	"github.com/pion/webrtc/v4"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -23,10 +24,17 @@ import (
 type socketRoom struct {
 	conns        map[*websocket.Conn]struct{}
 	lastActivity time.Time
+	tracks       map[string]*webrtc.TrackLocalStaticRTP
 }
+
+type socketConn struct {
+	pID  string
+	peer *Peer
+}
+
 type socketServer struct {
 	bot          *t.User
-	conns        map[*websocket.Conn]string
+	conns        map[*websocket.Conn]*socketConn
 	participants map[string]*t.Participant
 	users        map[int][]string
 	rooms        map[int]*socketRoom
@@ -39,7 +47,7 @@ type socketServer struct {
 
 func newSocketServer(repo *db.Repo, svc *service.Service, cfg *t.Config, bot *t.User, emojis map[string]struct{}) *socketServer {
 	return &socketServer{
-		conns:        make(map[*websocket.Conn]string),
+		conns:        make(map[*websocket.Conn]*socketConn),
 		rooms:        make(map[int]*socketRoom),
 		participants: make(map[string]*t.Participant),
 		users:        make(map[int][]string),
@@ -70,7 +78,9 @@ func (s *socketServer) accept(conn *websocket.Conn, user *t.User) {
 		}
 	}
 
-	s.conns[conn] = p.SID
+	s.conns[conn] = &socketConn{
+		pID: p.SID,
+	}
 	s.participants[p.SID] = p
 }
 
@@ -99,7 +109,11 @@ func (s *socketServer) leaveRoom(conn *websocket.Conn, user *t.User, roomID int)
 	// remove participants from users map
 	if _, ok := s.users[user.ID]; ok {
 		s.users[user.ID] = utils.Filter(s.users[user.ID], func(val string) bool {
-			return val != s.conns[conn]
+			c := s.conns[conn]
+			if c != nil {
+				return val != c.pID
+			}
+			return false
 		})
 
 		if len(s.users[user.ID]) == 0 {
@@ -133,8 +147,8 @@ func (s *socketServer) broadcastMsgEvent(userIDs []int, event *t.Event) {
 		}
 	}
 
-	for conn, sID := range s.conns {
-		if utils.Includes(sIDs, sID) {
+	for conn, val := range s.conns {
+		if utils.Includes(sIDs, val.pID) {
 			utils.WriteEvent(conn, event)
 		}
 	}
@@ -156,8 +170,8 @@ func (s *socketServer) getParticipantsInRoom(roomID int) []*t.Participant {
 	participants := make([]*t.Participant, 0)
 	if _, ok := s.rooms[roomID]; ok {
 		for conn := range s.rooms[roomID].conns {
-			if pID, ok := s.conns[conn]; ok {
-				participants = append(participants, s.participants[pID])
+			if val, ok := s.conns[conn]; ok {
+				participants = append(participants, s.participants[val.pID])
 			}
 		}
 	}
@@ -192,15 +206,64 @@ func (s *socketServer) joinRoomHandler(conn *websocket.Conn, b []byte) (int, err
 		return 0, errors.New("max participants limit reached")
 	}
 
+	p, err := NewPeer(data.RoomID, conn)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create peer: %v", err)
+	}
+
+	s.conns[conn].peer = p
 	room.conns[conn] = struct{}{}
 	room.lastActivity = time.Now().UTC()
+
+	p.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
+		log.Println("received track yay")
+		track, err := s.addTrack(data.RoomID, tr)
+		if err != nil {
+			log.Printf("failed to add track: %v", err)
+			return
+		}
+		defer s.removeTrack(data.RoomID, track.ID())
+
+		buf := make([]byte, 1500)
+		for {
+			i, _, err := tr.Read(buf)
+			if err != nil {
+				log.Printf("failed to read remote track: %v", err)
+				return
+			}
+			if _, err := track.Write(buf[:i]); err != nil {
+				log.Printf("failed to write to remote track: %v", err)
+				return
+			}
+			// log.Println("wrote", i)
+		}
+	})
+
+	p.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		log.Printf("connection state: %v", state)
+		if state == webrtc.PeerConnectionStateConnected {
+			for id, track := range s.rooms[data.RoomID].tracks {
+				if _, err := p.AddTrack(track); err != nil {
+					log.Printf("failed to add track to newly joined peer: %v", err)
+					return
+				}
+				utils.WriteEvent(conn, &t.Event{
+					Name: "PEER_RENEGOTIATE",
+					Data: map[string]any{
+						"roomID": data.RoomID,
+					},
+				})
+				log.Printf("added track %s to peer %s", id, s.conns[conn].pID)
+			}
+		}
+	})
 
 	s.broadcastEvent(&t.Event{
 		Name: "JOINED_ROOM_BROADCAST",
 		Data: map[string]any{
 			"roomID": data.RoomID,
 			"user":   s.getParticipant(conn).User,
-			"sid":    s.conns[conn],
+			"sid":    s.conns[conn].pID,
 			"key":    data.Key,
 		},
 	})
@@ -584,9 +647,9 @@ func (s *socketServer) kickParticipantHandler(conn *websocket.Conn, b []byte) {
 	})
 
 	sIDs := s.users[data.ParticipantID]
-	for conn, sID := range s.conns {
-		if utils.Includes(sIDs, sID) {
-			s.leaveRoom(conn, &s.participants[sID].User, data.RoomID)
+	for conn, val := range s.conns {
+		if utils.Includes(sIDs, val.pID) {
+			s.leaveRoom(conn, &s.participants[val.pID].User, data.RoomID)
 		}
 	}
 }
@@ -645,13 +708,14 @@ func (s *socketServer) populateRooms() error {
 		s.rooms[r.ID] = &socketRoom{
 			lastActivity: time.Now().UTC(),
 			conns:        make(map[*websocket.Conn]struct{}),
+			tracks:       make(map[string]*webrtc.TrackLocalStaticRTP),
 		}
 	}
 	return nil
 }
 
 func (s *socketServer) getParticipant(conn *websocket.Conn) *t.Participant {
-	return s.participants[s.conns[conn]]
+	return s.participants[s.conns[conn].pID]
 }
 
 func (s *socketServer) getUser(userID int) *t.User {
@@ -735,6 +799,20 @@ func (s *socketServer) processAIMsgRequest() {
 	}
 }
 
+func (s *socketServer) addTrack(roomID int, t *webrtc.TrackRemote) (*webrtc.TrackLocalStaticRTP, error) {
+	track, err := webrtc.NewTrackLocalStaticRTP(t.Codec().RTPCodecCapability, t.ID(), t.StreamID())
+	if err != nil {
+		return nil, err
+	}
+	s.rooms[roomID].tracks[t.ID()] = track
+	return track, nil
+}
+
+func (s *socketServer) removeTrack(roomID int, trackID string) {
+	log.Println("removing track", trackID)
+	delete(s.rooms[roomID].tracks, trackID)
+}
+
 func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 	host := strings.Split(app.conf.WebURL, "//")[1]
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
@@ -802,6 +880,14 @@ func (app *application) wsHandler(w http.ResponseWriter, r *http.Request) {
 			app.ss.setStatusHandler(conn, b)
 		case "KICK_PARTICIPANT":
 			app.ss.kickParticipantHandler(conn, b)
+		case "PEER_ICE_CANDIDATE":
+			if val, ok := app.ss.conns[conn]; ok && val != nil {
+				val.peer.addICECandidate(b)
+			}
+		case "PEER_OFFER":
+			if val, ok := app.ss.conns[conn]; ok && val != nil {
+				val.peer.acceptOffer(b)
+			}
 		}
 	}
 }

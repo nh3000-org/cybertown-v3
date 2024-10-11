@@ -1,4 +1,5 @@
 import { RoomRole } from '.'
+import { PeerICECandidateEvent, PeerOfferEvent } from './peer'
 
 export type ClientEvent =
 	| JoinRoomEvent
@@ -11,6 +12,8 @@ export type ClientEvent =
 	| UpdateWelcomeMsgEvent
 	| SetStatusEvent
 	| KickPartcipantEvent
+	| PeerICECandidateEvent
+	| PeerOfferEvent
 
 export type JoinRoomEvent = {
 	name: 'JOIN_ROOM'

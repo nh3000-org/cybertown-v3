@@ -8,10 +8,10 @@ import {
 	ErrorBroadcastEvent,
 	JoinedRoomBroadcastEvent,
 	KickParticipantBroadcastEvent,
-	Message,
 	NewMsgBroadcastEvent,
 	ReactionToMsgBroadcastEvent,
-} from '@/types/broadcast'
+} from '@/types/server-event'
+import { Message } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 

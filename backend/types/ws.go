@@ -69,6 +69,16 @@ type KickParticipant struct {
 	ClearChat     bool   `json:"clearChat"`
 }
 
+type ICECandiate struct {
+	RoomID    int    `json:"roomID"`
+	Candidate string `json:"candidate"`
+}
+
+type PeerOffer struct {
+	RoomID int    `json:"roomID"`
+	Offer  string `json:"offer"`
+}
+
 type AIMessageRequest struct {
 	*NewMessage
 	From    int
